@@ -19,6 +19,7 @@ ENV uniresolver_driver_did_btcr_rpcUrlMainnet=http://user:pass@localhost:8332/
 ENV uniresolver_driver_did_btcr_rpcUrlTestnet=http://user:pass@localhost:18332/
 ENV uniresolver_driver_did_btcr_rpcCertMainnet=
 ENV uniresolver_driver_did_btcr_rpcCertTestnet=
+ENV uniresolver_driver_did_btcr_ipfs=/ip4/127.0.0.1/tcp/5001
 
 # copy from build stage
 COPY --from=build --chown=jetty /opt/driver-did-btcr/target/*.war /var/lib/jetty/webapps/ROOT.war

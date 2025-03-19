@@ -26,6 +26,10 @@
 			<id>danubetech-maven-public</id>
 			<url>https://repo.danubetech.com/repository/maven-public/</url>
 		</repository>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
 	</repositories>
 
 	<properties>
@@ -36,7 +40,6 @@
 
 		<did-common-java.version>1.11.0</did-common-java.version>
 
-		<io.leonard-base58.version>0.0.2</io.leonard-base58.version>
 		<jcl-over-slf4j.version>2.0.17</jcl-over-slf4j.version>
 		<log4j-slf4j2-impl.version>2.24.3</log4j-slf4j2-impl.version>
 	</properties>
@@ -128,16 +131,6 @@
 		</profile>
 	</profiles>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>io.leonard</groupId>
-				<artifactId>base58</artifactId>
-				<version>${io.leonard-base58.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -169,9 +162,19 @@
 			<version>1.12.0</version>
 		</dependency>
 		<dependency>
+			<groupId>com.github.ipfs</groupId>
+			<artifactId>java-ipfs-http-client</artifactId>
+			<version>1.4.4</version>
+		</dependency>
+		<dependency>
 			<groupId>info.weboftrust</groupId>
 			<artifactId>btc-tx-lookup-java</artifactId>
 			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>design.contract</groupId>
+			<artifactId>libbech32</artifactId>
+			<version>1.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.apicatalog</groupId>
@@ -179,13 +182,19 @@
 			<version>1.1.0</version>
 		</dependency>
 		<dependency>
-			<groupId>io.leonard</groupId>
-			<artifactId>base58</artifactId>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.18.0</version>
 		</dependency>
 		<dependency>
-			<groupId>design.contract</groupId>
-			<artifactId>libbech32</artifactId>
-			<version>1.1.0</version>
+			<groupId>io.leonard</groupId>
+			<artifactId>base58</artifactId>
+			<version>0.0.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.14</version>
 		</dependency>
 	</dependencies>
 

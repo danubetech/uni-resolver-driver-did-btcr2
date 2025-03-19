@@ -4,9 +4,11 @@ import info.weboftrust.btctxlookup.Chain;
 import info.weboftrust.btctxlookup.bitcoinconnection.BTCDRPCBitcoinConnection;
 import info.weboftrust.btctxlookup.bitcoinconnection.BitcoindRPCBitcoinConnection;
 import info.weboftrust.btctxlookup.bitcoinconnection.BlockcypherAPIBitcoinConnection;
+import io.ipfs.api.IPFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btc1.DidBtc1Driver;
+import uniresolver.driver.did.btc1.Resolver;
 import uniresolver.driver.did.btc1.tls.Tls;
 
 import java.util.HashMap;
@@ -29,12 +31,14 @@ public class Configuration {
             String env_rpcUrlTestnet = System.getenv("uniresolver_driver_did_btc1_rpcUrlTestnet");
             String env_rpcCertMainnet = System.getenv("uniresolver_driver_did_btc1_rpcCertMainnet");
             String env_rpcCertTestnet = System.getenv("uniresolver_driver_did_btc1_rpcCertTestnet");
+            String env_ipfs = System.getenv("uniresolver_driver_did_btc1_ipfs");
 
             if (env_bitcoinConnection != null) properties.put("bitcoinConnection", env_bitcoinConnection);
             if (env_rpcUrlMainnet != null) properties.put("rpcUrlMainnet", env_rpcUrlMainnet);
             if (env_rpcUrlTestnet != null) properties.put("rpcUrlTestnet", env_rpcUrlTestnet);
             if (env_rpcCertMainnet != null) properties.put("rpcCertMainnet", env_rpcCertMainnet);
             if (env_rpcCertTestnet != null) properties.put("rpcCertTestnet", env_rpcCertTestnet);
+            if (env_ipfs != null) properties.put("ipfs", env_ipfs);
         } catch (Exception ex) {
             throw new IllegalArgumentException(ex.getMessage(), ex);
         }
@@ -47,6 +51,11 @@ public class Configuration {
         if (log.isDebugEnabled()) log.debug("Configuring from properties: " + properties);
 
         try {
+
+            // parse ipfs
+
+            String prop_ipfs = (String) properties.get("ipfs");
+            didBtc1Driver.setResolver(new Resolver(new IPFS(prop_ipfs)));
 
             // parse bitcoinConnection
 

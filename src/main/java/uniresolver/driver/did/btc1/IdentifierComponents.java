@@ -1,9 +1,11 @@
 package uniresolver.driver.did.btc1;
 
+import design.contract.bech32.Bech32;
+import design.contract.bech32.DecodedResult;
 import foundation.identity.did.DID;
-import org.bitcoinj.core.Bech32;
 import uniresolver.ResolutionException;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -96,15 +98,15 @@ public class IdentifierComponents {
 
         // 10. Decode idBech32 using the Bech32 algorithm to get decodeResult.
 
-        Bech32.Bech32Data decodeResult = Bech32.decode(idBech32);
+        DecodedResult decodeResult = Bech32.decode(idBech32);
 
         // 11. Set identifierComponents.hrp to decodeResult.hrp.
 
-        identifierComponents.hrp = decodeResult.hrp;
+        identifierComponents.hrp = decodeResult.getHrp();
 
         // 12. Set identifierComponents.genesisBytes to decodeResult.value.
 
-        identifierComponents.genesisBytes = decodeResult.data;
+        identifierComponents.genesisBytes = new String(decodeResult.getDp()).getBytes(StandardCharsets.UTF_8);
 
         // 13. Return identifierComponents.
 
