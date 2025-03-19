@@ -38,7 +38,7 @@ public class DidBtc1Driver implements Driver {
 	}
 
 	@Override
-	public ResolveResult resolve(DID identifier, Map<String, Object> resolveOptions) throws ResolutionException {
+	public ResolveResult resolve(DID identifier, Map<String, Object> resolutionOptions) throws ResolutionException {
 
 		// parse identifier
 
@@ -47,7 +47,9 @@ public class DidBtc1Driver implements Driver {
 
 		// resolve initial DID document
 
-		DIDDocument didDocument = this.getResolver().resolveInitialDIDDocument(identifier, identifierComponents, resolveOptions);
+		DIDDocument didDocument = this.getResolver().resolveInitialDIDDocument(identifier, identifierComponents, resolutionOptions);
+
+		// resolve target DID document
 
 		// create METHOD METADATA
 

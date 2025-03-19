@@ -39,14 +39,14 @@ public class Resolver {
     }
 
     // See https://dcdpr.github.io/did-btc1/#resolve-initial-document
-    public DIDDocument resolveInitialDIDDocument(DID identifier, IdentifierComponents identifierComponents, Map<String, Object> resolveOptions) throws ResolutionException {
+    public DIDDocument resolveInitialDIDDocument(DID identifier, IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions) throws ResolutionException {
 
         DIDDocument didDocument;
 
         if ("k".equals(identifierComponents.getHrp())) {
             didDocument = this.deterministicallyGenerateInitialDIDDocument(identifier, identifierComponents);
         } else if ("x".equals(identifierComponents.getHrp())) {
-            didDocument = this.externalResolution(identifier, identifierComponents, resolveOptions);
+            didDocument = this.externalResolution(identifier, identifierComponents, resolutionOptions);
         } else {
             throw new ResolutionException("invalidHRPValue", "Invalid HRP value: " + identifierComponents.getHrp());
         }
@@ -130,12 +130,12 @@ public class Resolver {
     }
 
     // See https://dcdpr.github.io/did-btc1/#external-resolution
-    private DIDDocument externalResolution(DID identifier, IdentifierComponents identifierComponents, Map<String, Object> resolveOptions) throws ResolutionException {
+    private DIDDocument externalResolution(DID identifier, IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions) throws ResolutionException {
 
         DIDDocument initialDocument;
 
-        if (resolveOptions.containsKey("sidecarData") && resolveOptions.get("sidecarData") instanceof Map && ((Map<String, Object>) resolveOptions.get("sidecarData")).containsKey("initialDocument")) {
-            String sidecarInitialDocument = (String) ((Map<String, Object>) resolveOptions.get("sidecarData")).get("initialDocument");
+        if (resolutionOptions.containsKey("sidecarData") && resolutionOptions.get("sidecarData") instanceof Map && ((Map<String, Object>) resolutionOptions.get("sidecarData")).containsKey("initialDocument")) {
+            String sidecarInitialDocument = (String) ((Map<String, Object>) resolutionOptions.get("sidecarData")).get("initialDocument");
             initialDocument = this.sidecarInitialDocumentValidation(identifier, identifierComponents, sidecarInitialDocument);
         } else {
             initialDocument = this.casRetrieval(identifier, identifierComponents);
@@ -187,6 +187,14 @@ public class Resolver {
 
         if (log.isDebugEnabled()) log.debug("casRetrieval: " + parsedInitialDocument);
         return parsedInitialDocument;
+    }
+
+    // See https://dcdpr.github.io/did-btc1/#resolve-target-document
+    public DIDDocument resolveTargetDocument(DIDDocument initialDocument, Map<String, Object> resolutionOptions) throws ResolutionException {
+
+        // TODO
+
+        return null;
     }
 
     /*

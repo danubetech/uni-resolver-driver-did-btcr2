@@ -98,6 +98,7 @@ public class IdentifierComponents {
 
         // 10. Decode idBech32 using the Bech32 algorithm to get decodeResult.
 
+        org.bitcoinj.base.Bech32.Bech32Data bech32Data = org.bitcoinj.base.Bech32.decode(idBech32);
         DecodedResult decodeResult = Bech32.decode(idBech32);
 
         // 11. Set identifierComponents.hrp to decodeResult.hrp.
