@@ -2,16 +2,17 @@
 
 This is a [Universal Resolver](https://github.com/decentralized-identity/universal-resolver/) driver for **did:btc1** identifiers.
 
+(work in progress)
+
 ## Specifications
 
 * [Decentralized Identifiers](https://w3c.github.io/did-core/)
 * [DID Method Specification](https://dcdpr.github.io/did-btc1/)
 
-
 ## Example DIDs
 
 ```
- did:btc1:TODO
+ did:btc1:regtest:k1qvadgpl5qfuz6emq7c8sqw28z0r0gzvyra3je3pp2cuk83uqnnyvckvw8cf
  did:btc1:TODO
  did:btc1:TODO
 ```
