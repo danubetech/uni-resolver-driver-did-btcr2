@@ -1,11 +1,9 @@
 package uniresolver.driver.did.btc1;
 
-import design.contract.bech32.Bech32;
-import design.contract.bech32.DecodedResult;
 import foundation.identity.did.DID;
+import org.bitcoinj.base.Bech32;
 import uniresolver.ResolutionException;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -79,7 +77,7 @@ public class IdentifierComponents {
 
         // 9. Check the validity of the identifier components. The scheme MUST be the value did. The methodId
         // MUST be the value btc1. The identifierComponents.version MUST be convertible to a positive integer
-        // value. The identifierComponents.network MUST be one of mainnet, signet, testnet, or regnet. If any
+        // value. The identifierComponents.network MUST be one of mainnet, signet, testnet, or regtest. If any
         // of these requirements fail then an InvalidDID error MUST be raised.
 
         if (! "btc1".equals(methodId)) {
@@ -98,16 +96,15 @@ public class IdentifierComponents {
 
         // 10. Decode idBech32 using the Bech32 algorithm to get decodeResult.
 
-        org.bitcoinj.base.Bech32.Bech32Data bech32Data = org.bitcoinj.base.Bech32.decode(idBech32);
-        DecodedResult decodeResult = Bech32.decode(idBech32);
+        Bech32.Bech32Data bech32Data = Bech32.decode(idBech32);
 
         // 11. Set identifierComponents.hrp to decodeResult.hrp.
 
-        identifierComponents.hrp = decodeResult.getHrp();
+        identifierComponents.hrp = bech32Data.hrp;
 
         // 12. Set identifierComponents.genesisBytes to decodeResult.value.
 
-        identifierComponents.genesisBytes = new String(decodeResult.getDp()).getBytes(StandardCharsets.UTF_8);
+        identifierComponents.genesisBytes = bech32Data.decode5to8();
 
         // 13. Return identifierComponents.
 
