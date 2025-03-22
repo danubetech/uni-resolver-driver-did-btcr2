@@ -8,7 +8,7 @@ import io.ipfs.api.IPFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btc1.DidBtc1Driver;
-import uniresolver.driver.did.btc1.Resolver;
+import uniresolver.driver.did.btc1.crud.read.Read;
 import uniresolver.driver.did.btc1.tls.Tls;
 
 import java.util.HashMap;
@@ -55,7 +55,7 @@ public class Configuration {
             // parse ipfs
 
             String prop_ipfs = (String) properties.get("ipfs");
-            didBtc1Driver.setResolver(new Resolver(new IPFS(prop_ipfs)));
+            didBtc1Driver.setRead(new Read(new IPFS(prop_ipfs)));
 
             // parse bitcoinConnection
 

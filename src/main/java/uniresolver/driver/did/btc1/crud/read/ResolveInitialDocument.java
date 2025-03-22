@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btc1;
+package uniresolver.driver.did.btc1.crud.read;
 
 import com.apicatalog.multicodec.codec.KeyCodec;
 import com.danubetech.dataintegrity.jsonld.DataIntegrityContexts;
@@ -14,10 +14,11 @@ import io.ipfs.multihash.Multihash;
 import org.bitcoinj.base.Address;
 import org.bitcoinj.base.ScriptType;
 import org.bitcoinj.crypto.ECKey;
-import org.bitcoinj.uri.BitcoinURI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
+import uniresolver.driver.did.btc1.Network;
+import uniresolver.driver.did.btc1.beacons.singleton.SingletonBeacon;
 import uniresolver.driver.did.btc1.util.SHA256Util;
 
 import java.io.IOException;
@@ -28,27 +29,31 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class Resolver {
+public class ResolveInitialDocument {
 
-    private static final Logger log = LoggerFactory.getLogger(Resolver.class);
+    private static final Logger log = LoggerFactory.getLogger(ResolveInitialDocument.class);
 
     private IPFS ipfs;
 
-    public Resolver(IPFS ipfs) {
+    public ResolveInitialDocument(IPFS ipfs) {
         this.ipfs = ipfs;
     }
 
+    /*
+     * 4.2.2 Resolve Initial Document
+     */
+
     // See https://dcdpr.github.io/did-btc1/#resolve-initial-document
-    public DIDDocument resolveInitialDIDDocument(DID identifier, IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions) throws ResolutionException {
+    public DIDDocument resolveInitialDIDDocument(DID identifier, ParseDidBtc1Identifier.IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions) throws ResolutionException {
 
         DIDDocument didDocument;
 
-        if ("k".equals(identifierComponents.getHrp())) {
+        if ("k".equals(identifierComponents.hrp())) {
             didDocument = this.deterministicallyGenerateInitialDIDDocument(identifier, identifierComponents);
-        } else if ("x".equals(identifierComponents.getHrp())) {
+        } else if ("x".equals(identifierComponents.hrp())) {
             didDocument = this.externalResolution(identifier, identifierComponents, resolutionOptions);
         } else {
-            throw new ResolutionException("invalidHRPValue", "Invalid HRP value: " + identifierComponents.getHrp());
+            throw new ResolutionException("invalidHRPValue", "Invalid HRP value: " + identifierComponents.hrp());
         }
 
         if (log.isDebugEnabled()) log.debug("resolveInitialDIDDocument: " + didDocument);
@@ -56,9 +61,9 @@ public class Resolver {
     }
 
     // See https://dcdpr.github.io/did-btc1/#deterministically-generate-initial-did-document
-    private DIDDocument deterministicallyGenerateInitialDIDDocument(DID identifier, IdentifierComponents identifierComponents) throws ResolutionException {
+    private DIDDocument deterministicallyGenerateInitialDIDDocument(DID identifier, ParseDidBtc1Identifier.IdentifierComponents identifierComponents) throws ResolutionException {
 
-        byte[] keyBytes = identifierComponents.getGenesisBytes();
+        byte[] keyBytes = identifierComponents.genesisBytes();
 
         DIDDocument.Builder<? extends DIDDocument.Builder<?>> didDocumentBuilder = DIDDocument.builder();
         didDocumentBuilder.id(identifier.toUri());
@@ -79,7 +84,7 @@ public class Resolver {
         didDocumentBuilder.capabilityInvocationVerificationMethodReference(verificationMethod.getId());
         didDocumentBuilder.capabilityDelegationVerificationMethodReference(verificationMethod.getId());
 
-        List<Service> services = this.deterministicallyGenerateBeaconServices(keyBytes, identifierComponents.getNetwork());
+        List<Service> services = deterministicallyGenerateBeaconServices(keyBytes, identifierComponents.network());
 
         didDocumentBuilder.services(services);
 
@@ -89,7 +94,7 @@ public class Resolver {
     }
 
     // See https://dcdpr.github.io/did-btc1/#deterministically-generate-beacon-services
-    private List<Service> deterministicallyGenerateBeaconServices(byte[] keyBytes, Network network) {
+    private static List<Service> deterministicallyGenerateBeaconServices(byte[] keyBytes, Network network) {
 
         ECKey ecKey = ECKey.fromPublicOnly(keyBytes);
 
@@ -97,40 +102,25 @@ public class Resolver {
 
         URI initialP2PKHServiceId = URI.create("#initialP2PKH");
         Address initialP2PKHBeaconAddress = ecKey.toAddress(ScriptType.P2PKH, network.toBitcoinjNetwork());
-        Service p2pkhBeacon = this.establishSingletonBeacon(initialP2PKHServiceId, initialP2PKHBeaconAddress, network);
+        Service p2pkhBeacon = SingletonBeacon.establishSingletonBeacon(initialP2PKHServiceId, initialP2PKHBeaconAddress, network);
         services.add(p2pkhBeacon);
 
         URI initialP2WPKHServiceId = URI.create("#initialP2WPKH");
         Address initialP2WPKHBeaconAddress = ecKey.toAddress(ScriptType.P2WPKH, network.toBitcoinjNetwork());
-        Service p2wpkhBeacon = this.establishSingletonBeacon(initialP2WPKHServiceId, initialP2WPKHBeaconAddress, network);
+        Service p2wpkhBeacon = SingletonBeacon.establishSingletonBeacon(initialP2WPKHServiceId, initialP2WPKHBeaconAddress, network);
         services.add(p2wpkhBeacon);
 
         URI initialP2TRServiceId = URI.create("#initialP2TR");
         Address initialP2TRBeaconAddress = ecKey.toAddress(ScriptType.P2TR, network.toBitcoinjNetwork());
-        Service p2trBeacon = this.establishSingletonBeacon(initialP2TRServiceId, initialP2TRBeaconAddress, network);
+        Service p2trBeacon = SingletonBeacon.establishSingletonBeacon(initialP2TRServiceId, initialP2TRBeaconAddress, network);
         services.add(p2trBeacon);
 
         if (log.isDebugEnabled()) log.debug("deterministicallyGenerateBeaconServices: " + services);
         return services;
     }
 
-    // See https://dcdpr.github.io/did-btc1/#establish-singleton-beacon
-    private Service establishSingletonBeacon(URI serviceId, Address beaconAddress, Network network) {
-
-        URI bip21ServiceEndpoint = URI.create(BitcoinURI.convertToBitcoinURI(network.toBitcoinjNetwork(), beaconAddress.toString(), null, null, null));
-
-        Service.Builder<? extends Service.Builder<?>> serviceBuilder = Service.builder();
-        serviceBuilder.id(serviceId);
-        serviceBuilder.type("SingletonBeacon");
-        serviceBuilder.serviceEndpoint(bip21ServiceEndpoint);
-
-        Service service = serviceBuilder.build();
-        if (log.isDebugEnabled()) log.debug("establishSingletonBeacon: " + service);
-        return service;
-    }
-
     // See https://dcdpr.github.io/did-btc1/#external-resolution
-    private DIDDocument externalResolution(DID identifier, IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions) throws ResolutionException {
+    private DIDDocument externalResolution(DID identifier, ParseDidBtc1Identifier.IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions) throws ResolutionException {
 
         DIDDocument initialDocument;
 
@@ -152,11 +142,11 @@ public class Resolver {
     }
 
     // See https://dcdpr.github.io/did-btc1/#sidecar-initial-document-validation
-    private DIDDocument sidecarInitialDocumentValidation(DID identifier, IdentifierComponents identifierComponents, String initialDocument) throws ResolutionException {
+    private DIDDocument sidecarInitialDocumentValidation(DID identifier, ParseDidBtc1Identifier.IdentifierComponents identifierComponents, String initialDocument) throws ResolutionException {
 
         String intermediateDocumentRepresentation = initialDocument.replace(identifier.toString(), "did:btc1:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
         byte[] hashBytes = SHA256Util.sha256(intermediateDocumentRepresentation.getBytes(StandardCharsets.UTF_8));
-        if (! Arrays.equals(hashBytes, identifierComponents.getGenesisBytes())) {
+        if (! Arrays.equals(hashBytes, identifierComponents.genesisBytes())) {
             throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Initial document cannot be validated");
         }
 
@@ -167,9 +157,9 @@ public class Resolver {
     }
 
     // https://dcdpr.github.io/did-btc1/#cas-retrieval
-    private DIDDocument casRetrieval(DID identifier, IdentifierComponents identifierComponents) throws ResolutionException {
+    private DIDDocument casRetrieval(DID identifier, ParseDidBtc1Identifier.IdentifierComponents identifierComponents) throws ResolutionException {
 
-        byte[] hashBytes = identifierComponents.getGenesisBytes();
+        byte[] hashBytes = identifierComponents.genesisBytes();
         Cid cid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.id, hashBytes);
         String intermediateDocumentRepresentation;
         try {
@@ -187,14 +177,6 @@ public class Resolver {
 
         if (log.isDebugEnabled()) log.debug("casRetrieval: " + parsedInitialDocument);
         return parsedInitialDocument;
-    }
-
-    // See https://dcdpr.github.io/did-btc1/#resolve-target-document
-    public DIDDocument resolveTargetDocument(DIDDocument initialDocument, Map<String, Object> resolutionOptions) throws ResolutionException {
-
-        // TODO
-
-        return null;
     }
 
     /*

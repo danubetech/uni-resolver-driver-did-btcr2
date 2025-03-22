@@ -1,26 +1,32 @@
-package uniresolver.driver.did.btc1;
+package uniresolver.driver.did.btc1.crud.read;
 
 import foundation.identity.did.DID;
 import org.bitcoinj.base.Bech32;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
+import uniresolver.driver.did.btc1.Network;
 
-import java.util.Arrays;
-import java.util.Objects;
+public class ParseDidBtc1Identifier {
 
-public class IdentifierComponents {
+    private static final Logger log = LoggerFactory.getLogger(ParseDidBtc1Identifier.class);
 
-    private Network network;
-    private Integer version;
-    private String hrp;
-    private byte[] genesisBytes;
+    /*
+     * 4.2.1 Parse did:btc1 Identifier
+     */
 
-    public static IdentifierComponents parse(DID identifier) throws ResolutionException {
+    // See https://dcdpr.github.io/did-btc1/#parse-didbtc1-identifier
+    public static IdentifierComponents parseDidBtc1Identifier(DID identifier) throws ResolutionException {
 
         if (identifier == null) throw new IllegalArgumentException("Identifier cannot be null");
 
         // 1. Set identifierComponents to an empty object.
 
-        IdentifierComponents identifierComponents = new IdentifierComponents();
+        IdentifierComponents identifierComponents;
+        Network identifierComponentsNetwork;
+        Integer identifierComponentsVersion;
+        String identifierComponentsHrp;
+        byte[] identifierComponentsGenesisBytes;
 
         // 2. Using a colon (:) as the delimiter, split the identifier into an array of components.
         // 3. Set scheme to components[0].
@@ -84,12 +90,12 @@ public class IdentifierComponents {
             throw new ResolutionException(ResolutionException.ERROR_METHODNOTSUPPORTED, "Method not supported: " + methodId);
         }
         try {
-            identifierComponents.version = Integer.parseInt(version);
+            identifierComponentsVersion = Integer.parseInt(version);
         } catch (NumberFormatException ex) {
             throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Invalid version: " + version);
         }
         try {
-            identifierComponents.network = Network.valueOf(network);
+            identifierComponentsNetwork = Network.valueOf(network);
         } catch (IllegalArgumentException ex) {
             throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Invalid network: " + network);
         }
@@ -100,16 +106,25 @@ public class IdentifierComponents {
 
         // 11. Set identifierComponents.hrp to decodeResult.hrp.
 
-        identifierComponents.hrp = bech32Data.hrp;
+        identifierComponentsHrp = bech32Data.hrp;
 
         // 12. Set identifierComponents.genesisBytes to decodeResult.value.
 
-        identifierComponents.genesisBytes = bech32Data.decode5to8();
+        identifierComponentsGenesisBytes = bech32Data.decode5to8();
 
         // 13. Return identifierComponents.
 
+        identifierComponents = new IdentifierComponents(identifierComponentsNetwork, identifierComponentsVersion, identifierComponentsHrp, identifierComponentsGenesisBytes);
+
+        if (log.isDebugEnabled()) log.debug("parseDidBtc1Identifier: " + identifierComponents);
         return identifierComponents;
     }
+
+    /*
+     * Helper records
+     */
+
+    public record IdentifierComponents(Network network, Integer version, String hrp, byte[] genesisBytes) { }
 
     /*
      * Helper methods
@@ -122,67 +137,5 @@ public class IdentifierComponents {
             return false;
         }
         return true;
-    }
-
-    /*
-     * Getters and setters
-     */
-
-    public Network getNetwork() {
-        return network;
-    }
-
-    public void setNetwork(Network network) {
-        this.network = network;
-    }
-
-    public Integer getVersion() {
-        return version;
-    }
-
-    public void setVersion(Integer version) {
-        this.version = version;
-    }
-
-    public String getHrp() {
-        return hrp;
-    }
-
-    public void setHrp(String hrp) {
-        this.hrp = hrp;
-    }
-
-    public byte[] getGenesisBytes() {
-        return genesisBytes;
-    }
-
-    public void setGenesisBytes(byte[] genesisBytes) {
-        this.genesisBytes = genesisBytes;
-    }
-
-    /*
-     * Object methods
-     */
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        IdentifierComponents that = (IdentifierComponents) o;
-        return network == that.network && Objects.equals(version, that.version) && Objects.equals(hrp, that.hrp) && Objects.deepEquals(genesisBytes, that.genesisBytes);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(network, version, hrp, Arrays.hashCode(genesisBytes));
-    }
-
-    @Override
-    public String toString() {
-        return "IdentifierComponents{" +
-                "network=" + network +
-                ", version=" + version +
-                ", hrp='" + hrp + '\'' +
-                ", genesisBytes=" + Arrays.toString(genesisBytes) +
-                '}';
     }
 }

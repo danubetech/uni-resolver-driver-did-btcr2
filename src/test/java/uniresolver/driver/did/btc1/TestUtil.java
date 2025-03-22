@@ -15,7 +15,7 @@ public class TestUtil {
 
     static String readResourceString(String resourceName) {
         try {
-            return Files.readString(Paths.get(ResolverTest.class.getResource(resourceName).toURI()), StandardCharsets.UTF_8);
+            return Files.readString(Paths.get(ResolveInitialDocumentTest.class.getResource(resourceName).toURI()), StandardCharsets.UTF_8);
         } catch (URISyntaxException | IOException ex) {
             throw new RuntimeException(ex.getMessage(), ex);
         }

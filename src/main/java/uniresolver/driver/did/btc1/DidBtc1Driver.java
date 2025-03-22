@@ -12,6 +12,8 @@ import uniresolver.DereferencingException;
 import uniresolver.ResolutionException;
 import uniresolver.driver.Driver;
 import uniresolver.driver.did.btc1.config.Configuration;
+import uniresolver.driver.did.btc1.crud.read.ParseDidBtc1Identifier;
+import uniresolver.driver.did.btc1.crud.read.Read;
 import uniresolver.result.DereferenceResult;
 import uniresolver.result.ResolveResult;
 
@@ -24,7 +26,7 @@ public class DidBtc1Driver implements Driver {
 
 	private Map<String, Object> properties;
 
-	private Resolver resolver;
+	private Read read;
 	private BitcoinConnection bitcoinConnectionMainnet;
 	private BitcoinConnection bitcoinConnectionTestnet;
 	private HttpClient httpClient = HttpClients.createDefault();
@@ -40,23 +42,19 @@ public class DidBtc1Driver implements Driver {
 	@Override
 	public ResolveResult resolve(DID identifier, Map<String, Object> resolutionOptions) throws ResolutionException {
 
-		// parse identifier
-
-		IdentifierComponents identifierComponents = IdentifierComponents.parse(identifier);
-		if (log.isDebugEnabled()) log.debug("Parsed identifier: " + identifierComponents);
+		// TODO
+		ParseDidBtc1Identifier.IdentifierComponents identifierComponents = null;
 
 		// resolve initial DID document
 
-		DIDDocument didDocument = this.getResolver().resolveInitialDIDDocument(identifier, identifierComponents, resolutionOptions);
-
-		// resolve target DID document
+		DIDDocument didDocument = this.getRead().read(identifier, resolutionOptions);
 
 		// create METHOD METADATA
 
 		Map<String, Object> didDocumentMetadata = new LinkedHashMap<>();
-		didDocumentMetadata.put("network", identifierComponents.getNetwork().name());
-		didDocumentMetadata.put("version", identifierComponents.getVersion());
-		didDocumentMetadata.put("hrp", identifierComponents.getHrp());
+		didDocumentMetadata.put("network", identifierComponents.network().name());
+		didDocumentMetadata.put("version", identifierComponents.version());
+		didDocumentMetadata.put("hrp", identifierComponents.hrp());
 
 		// done
 
@@ -86,12 +84,12 @@ public class DidBtc1Driver implements Driver {
 		Configuration.configureFromProperties(this, properties);
 	}
 
-	public Resolver getResolver() {
-		return this.resolver;
+	public Read getRead() {
+		return this.read;
 	}
 
-	public void setResolver(Resolver resolver) {
-		this.resolver = resolver;
+	public void setRead(Read read) {
+		this.read = read;
 	}
 
 	public BitcoinConnection getBitcoinConnectionMainnet() {
