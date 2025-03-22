@@ -3,7 +3,9 @@ package uniresolver.driver.did.btc1.crud.read;
 import com.google.api.client.util.DateTime;
 import foundation.identity.did.DIDDocument;
 import foundation.identity.did.Service;
+import foundation.identity.did.validation.Validation;
 import io.ipfs.api.IPFS;
+import org.apache.commons.codec.binary.Hex;
 import org.bitcoinj.base.Address;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
@@ -13,13 +15,13 @@ import uniresolver.ResolutionException;
 import uniresolver.driver.did.btc1.beacons.singleton.CIDAggregateBeacon;
 import uniresolver.driver.did.btc1.beacons.singleton.SMTAggregateBeacon;
 import uniresolver.driver.did.btc1.beacons.singleton.SingletonBeacon;
+import uniresolver.driver.did.btc1.util.DIDDocumentUtil;
+import uniresolver.driver.did.btc1.util.JSONPatchUtil;
+import uniresolver.driver.did.btc1.util.JsonCanonicalizationAndHashUtil;
 import uniresolver.driver.did.btc1.util.SHA256Util;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ResolveTargetDocument {
 
@@ -54,7 +56,7 @@ public class ResolveTargetDocument {
         Integer currentVersionId = 1;
         if (currentVersionId.equals(targetVersionId)) return initialDocument;
 
-        Object[] updateHashHistory = new Object[0];
+        List<byte[]> updateHashHistory = new ArrayList<>();
 
         Integer contemporaryBlockheight = 0;
 
@@ -94,7 +96,7 @@ public class ResolveTargetDocument {
     }
 
     // See https://dcdpr.github.io/did-btc1/#traverse-blockchain-history
-    private static DIDDocument traverseBlockchainHistory(DIDDocument  contemporaryDIDDocument, Integer contemporaryBlockheight, Integer currentVersionId, Integer targetVersionId, Integer targetBlockheight, Object[] updateHashHistory, Map<String, Object> sidecarData) throws ResolutionException {
+    private static DIDDocument traverseBlockchainHistory(DIDDocument contemporaryDIDDocument, Integer contemporaryBlockheight, Integer currentVersionId, Integer targetVersionId, Integer targetBlockheight, List<byte[]> updateHashHistory, Map<String, Object> sidecarData) throws ResolutionException {
 
         // TODO: NEED TO DEAL WITH CANONICALIZATION
         byte[] contemporaryHash = SHA256Util.sha256(contemporaryDIDDocument.toJson().getBytes(StandardCharsets.UTF_8));
@@ -117,9 +119,31 @@ public class ResolveTargetDocument {
 
         List<Update> updates = processBeaconSignals(signals, sidecarData);
 
-        // TODO
+        List<Update> orderedUpdates = updates.stream().sorted(Comparator.comparing(Update::targetVersionId)).toList();
 
-        DIDDocument targetDocument = null;
+        for (Update update : orderedUpdates) {
+            if (update.targetVersionId() <= currentVersionId) {
+                confirmDuplicateUpdate(update, updateHashHistory, contemporaryHash);
+            } else if (update.targetVersionId() == currentVersionId + 1) {
+                if (! Arrays.equals(update.sourceHash, contemporaryHash)) {
+                    throw new ResolutionException("latePublishing", "update.sourceHash " + Hex.encodeHexString(update.sourceHash) + " does not match contemporaryHash: " + Hex.encodeHexString(contemporaryHash));
+                }
+                contemporaryDIDDocument = applyDIDUpdate(contemporaryDIDDocument, update);
+                currentVersionId++;
+                if (currentVersionId.equals(targetVersionId)) {
+                    return contemporaryDIDDocument;
+                }
+                byte[] updateHash = JsonCanonicalizationAndHashUtil.jsonCanonicalizationAndHash(update);
+                updateHashHistory.add(updateHash);
+                contemporaryHash = JsonCanonicalizationAndHashUtil.jsonCanonicalizationAndHash(contemporaryDIDDocument);
+            } else if (update.targetVersionId() > currentVersionId + 1) {
+                throw new ResolutionException("latePublishing", "update.targetVersionId " + update.targetVersionId() + " is greater than currentVersionId + 1: " + (currentVersionId + 1));
+            }
+        }
+
+        contemporaryBlockheight++;
+
+        DIDDocument targetDocument = traverseBlockchainHistory(contemporaryDIDDocument, contemporaryBlockheight, currentVersionId, targetVersionId, targetBlockheight, updateHashHistory, sidecarData);
 
         if (log.isDebugEnabled()) log.debug("traverseBlockchainHistory: " + targetDocument);
         return targetDocument;
@@ -164,6 +188,36 @@ public class ResolveTargetDocument {
         return updates;
     }
 
+    // See https://dcdpr.github.io/did-btc1/#confirm-duplicate-update
+    private static void confirmDuplicateUpdate(Update update, List<byte[]> updateHashHistory, byte[] contemporaryHash) throws ResolutionException {
+
+        byte[] updateHash = JsonCanonicalizationAndHashUtil.jsonCanonicalizationAndHash(update);
+        Integer updateHashIndex = update.targetVersionId() - 2;
+        byte[] historicalUpdateHash = updateHashHistory.get(updateHashIndex);
+        if (! Arrays.equals(historicalUpdateHash, updateHash)) {
+            throw new ResolutionException("latePublishing", "historicalUpdateHash " + Hex.encodeHexString(historicalUpdateHash) + " does not match updateHash: " + Hex.encodeHexString(updateHash));
+        }
+    }
+
+    // See https://dcdpr.github.io/did-btc1/#apply-did-update
+    private static DIDDocument applyDIDUpdate(DIDDocument contemporaryDIDDocument, Update update) throws ResolutionException {
+
+/*        DataIntegrityProof dataIntegrityProof = DataIntegrityProof.builder()
+                .type(DataIntegritySuites.DATA_INTEGRITY_SUITE_DATAINTEGRITYPROOF.getTerm())
+                .cryptosuite("bip340-rdfc-2025")*/
+
+        DIDDocument targetDIDDocument = DIDDocumentUtil.copy(contemporaryDIDDocument);
+        targetDIDDocument = JSONPatchUtil.apply(targetDIDDocument, update.patch());
+        Validation.validate(targetDIDDocument);
+        byte[] targetHash = SHA256Util.sha256(targetDIDDocument.toJson().getBytes(StandardCharsets.UTF_8));
+        if (! Arrays.equals(targetHash, update.targetHash())) {
+            throw new ResolutionException("invalidDidUpdate", "targetHash " + Hex.encodeHexString(targetHash) + " does not match update.targetHash: " + Hex.encodeHexString(update.targetHash()));
+        }
+
+        if (log.isDebugEnabled()) log.debug("applyDIDUpdate: " + targetDIDDocument);
+        return targetDIDDocument;
+    }
+
     /*
      * Helper records
      */
@@ -172,7 +226,7 @@ public class ResolveTargetDocument {
     public record NextSignals(Integer blockHeight, List<Signal> signals) { }
     public record Signal(String beaconId, String beaconType, Tx tx) { }
     public record Tx(String id) { }
-    public record Update() { }
+    public record Update(Integer targetVersionId, byte[] sourceHash, byte[] targetHash, String patch) { }
 
     /*
      * Getters and setters
