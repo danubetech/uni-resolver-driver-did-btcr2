@@ -6,7 +6,8 @@ import org.bitcoinj.uri.BitcoinURI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btc1.Network;
-import uniresolver.driver.did.btc1.crud.read.ResolveTargetDocument;
+import uniresolver.driver.did.btc1.bitcoinconnection.records.Tx;
+import uniresolver.driver.did.btc1.crud.read.records.Update;
 
 import java.net.URI;
 import java.util.Map;
@@ -42,7 +43,7 @@ public class SingletonBeacon {
      */
 
     // See https://dcdpr.github.io/did-btc1/#process-singleton-beacon-signal
-    public static ResolveTargetDocument.Update processSingletonBeaconSignal(ResolveTargetDocument.Tx signalTx, Map<String, Object> signalSidecarData) {
+    public static Update processSingletonBeaconSignal(Tx signalTx, Map<String, Object> signalSidecarData) {
 
         // TODO
         return null;

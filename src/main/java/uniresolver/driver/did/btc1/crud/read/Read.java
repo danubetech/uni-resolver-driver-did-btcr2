@@ -6,6 +6,7 @@ import io.ipfs.api.IPFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
+import uniresolver.driver.did.btc1.crud.read.records.IdentifierComponents;
 
 import java.util.Map;
 
@@ -29,7 +30,7 @@ public class Read {
 
     public DIDDocument read(DID identifier, Map<String, Object> resolutionOptions) throws ResolutionException {
 
-        ParseDidBtc1Identifier.IdentifierComponents identifierComponents = ParseDidBtc1Identifier.parseDidBtc1Identifier(identifier);
+        IdentifierComponents identifierComponents = ParseDidBtc1Identifier.parseDidBtc1Identifier(identifier);
         if (log.isDebugEnabled()) log.debug("Parsed identifier: " + identifierComponents);
 
         DIDDocument initialDocument = this.resolveInitialDocument.resolveInitialDIDDocument(identifier, identifierComponents, resolutionOptions);

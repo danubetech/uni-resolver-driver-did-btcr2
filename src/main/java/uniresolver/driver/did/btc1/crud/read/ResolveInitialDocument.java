@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
 import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.beacons.singleton.SingletonBeacon;
+import uniresolver.driver.did.btc1.crud.read.records.IdentifierComponents;
 import uniresolver.driver.did.btc1.util.SHA256Util;
 
 import java.io.IOException;
@@ -44,7 +45,7 @@ public class ResolveInitialDocument {
      */
 
     // See https://dcdpr.github.io/did-btc1/#resolve-initial-document
-    public DIDDocument resolveInitialDIDDocument(DID identifier, ParseDidBtc1Identifier.IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions) throws ResolutionException {
+    public DIDDocument resolveInitialDIDDocument(DID identifier, IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions) throws ResolutionException {
 
         DIDDocument didDocument;
 
@@ -61,7 +62,7 @@ public class ResolveInitialDocument {
     }
 
     // See https://dcdpr.github.io/did-btc1/#deterministically-generate-initial-did-document
-    private DIDDocument deterministicallyGenerateInitialDIDDocument(DID identifier, ParseDidBtc1Identifier.IdentifierComponents identifierComponents) throws ResolutionException {
+    private DIDDocument deterministicallyGenerateInitialDIDDocument(DID identifier, IdentifierComponents identifierComponents) throws ResolutionException {
 
         byte[] keyBytes = identifierComponents.genesisBytes();
 
@@ -120,7 +121,7 @@ public class ResolveInitialDocument {
     }
 
     // See https://dcdpr.github.io/did-btc1/#external-resolution
-    private DIDDocument externalResolution(DID identifier, ParseDidBtc1Identifier.IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions) throws ResolutionException {
+    private DIDDocument externalResolution(DID identifier, IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions) throws ResolutionException {
 
         DIDDocument initialDocument;
 
@@ -142,7 +143,7 @@ public class ResolveInitialDocument {
     }
 
     // See https://dcdpr.github.io/did-btc1/#sidecar-initial-document-validation
-    private DIDDocument sidecarInitialDocumentValidation(DID identifier, ParseDidBtc1Identifier.IdentifierComponents identifierComponents, String initialDocument) throws ResolutionException {
+    private DIDDocument sidecarInitialDocumentValidation(DID identifier, IdentifierComponents identifierComponents, String initialDocument) throws ResolutionException {
 
         String intermediateDocumentRepresentation = initialDocument.replace(identifier.toString(), "did:btc1:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
         byte[] hashBytes = SHA256Util.sha256(intermediateDocumentRepresentation.getBytes(StandardCharsets.UTF_8));
@@ -157,7 +158,7 @@ public class ResolveInitialDocument {
     }
 
     // https://dcdpr.github.io/did-btc1/#cas-retrieval
-    private DIDDocument casRetrieval(DID identifier, ParseDidBtc1Identifier.IdentifierComponents identifierComponents) throws ResolutionException {
+    private DIDDocument casRetrieval(DID identifier, IdentifierComponents identifierComponents) throws ResolutionException {
 
         byte[] hashBytes = identifierComponents.genesisBytes();
         Cid cid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.id, hashBytes);

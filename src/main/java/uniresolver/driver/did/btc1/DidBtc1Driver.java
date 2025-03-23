@@ -12,8 +12,8 @@ import uniresolver.DereferencingException;
 import uniresolver.ResolutionException;
 import uniresolver.driver.Driver;
 import uniresolver.driver.did.btc1.config.Configuration;
-import uniresolver.driver.did.btc1.crud.read.ParseDidBtc1Identifier;
 import uniresolver.driver.did.btc1.crud.read.Read;
+import uniresolver.driver.did.btc1.crud.read.records.IdentifierComponents;
 import uniresolver.result.DereferenceResult;
 import uniresolver.result.ResolveResult;
 
@@ -43,7 +43,7 @@ public class DidBtc1Driver implements Driver {
 	public ResolveResult resolve(DID identifier, Map<String, Object> resolutionOptions) throws ResolutionException {
 
 		// TODO
-		ParseDidBtc1Identifier.IdentifierComponents identifierComponents = null;
+		IdentifierComponents identifierComponents = null;
 
 		// resolve initial DID document
 

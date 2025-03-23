@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
 import uniresolver.driver.did.btc1.Network;
+import uniresolver.driver.did.btc1.crud.read.records.IdentifierComponents;
 
 public class ParseDidBtc1Identifier {
 
@@ -119,12 +120,6 @@ public class ParseDidBtc1Identifier {
         if (log.isDebugEnabled()) log.debug("parseDidBtc1Identifier: " + identifierComponents);
         return identifierComponents;
     }
-
-    /*
-     * Helper records
-     */
-
-    public record IdentifierComponents(Network network, Integer version, String hrp, byte[] genesisBytes) { }
 
     /*
      * Helper methods

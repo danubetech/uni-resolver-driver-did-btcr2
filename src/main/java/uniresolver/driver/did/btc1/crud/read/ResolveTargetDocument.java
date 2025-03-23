@@ -4,6 +4,7 @@ import com.google.api.client.util.DateTime;
 import foundation.identity.did.DIDDocument;
 import foundation.identity.did.Service;
 import foundation.identity.did.validation.Validation;
+import foundation.identity.jsonld.JsonLDUtils;
 import io.ipfs.api.IPFS;
 import org.apache.commons.codec.binary.Hex;
 import org.bitcoinj.base.Address;
@@ -12,9 +13,18 @@ import org.bitcoinj.uri.BitcoinURIParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
+import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.beacons.singleton.CIDAggregateBeacon;
 import uniresolver.driver.did.btc1.beacons.singleton.SMTAggregateBeacon;
 import uniresolver.driver.did.btc1.beacons.singleton.SingletonBeacon;
+import uniresolver.driver.did.btc1.bitcoinconnection.BitcoinConnection;
+import uniresolver.driver.did.btc1.bitcoinconnection.records.Block;
+import uniresolver.driver.did.btc1.bitcoinconnection.records.Tx;
+import uniresolver.driver.did.btc1.bitcoinconnection.records.TxIn;
+import uniresolver.driver.did.btc1.crud.read.records.Beacon;
+import uniresolver.driver.did.btc1.crud.read.records.NextSignals;
+import uniresolver.driver.did.btc1.crud.read.records.Signal;
+import uniresolver.driver.did.btc1.crud.read.records.Update;
 import uniresolver.driver.did.btc1.util.DIDDocumentUtil;
 import uniresolver.driver.did.btc1.util.JSONPatchUtil;
 import uniresolver.driver.did.btc1.util.JsonCanonicalizationAndHashUtil;
@@ -115,7 +125,7 @@ public class ResolveTargetDocument {
 
         NextSignals nextSignals = findNextSignals(contemporaryBlockheight, beacons);
 
-        List<Signal> signals = nextSignals.signals;
+        List<Signal> signals = nextSignals.signals();
 
         List<Update> updates = processBeaconSignals(signals, sidecarData);
 
@@ -125,8 +135,8 @@ public class ResolveTargetDocument {
             if (update.targetVersionId() <= currentVersionId) {
                 confirmDuplicateUpdate(update, updateHashHistory, contemporaryHash);
             } else if (update.targetVersionId() == currentVersionId + 1) {
-                if (! Arrays.equals(update.sourceHash, contemporaryHash)) {
-                    throw new ResolutionException("latePublishing", "update.sourceHash " + Hex.encodeHexString(update.sourceHash) + " does not match contemporaryHash: " + Hex.encodeHexString(contemporaryHash));
+                if (! Arrays.equals(update.sourceHash(), contemporaryHash)) {
+                    throw new ResolutionException("latePublishing", "update.sourceHash " + Hex.encodeHexString(update.sourceHash()) + " does not match contemporaryHash: " + Hex.encodeHexString(contemporaryHash));
                 }
                 contemporaryDIDDocument = applyDIDUpdate(contemporaryDIDDocument, update);
                 currentVersionId++;
@@ -150,11 +160,27 @@ public class ResolveTargetDocument {
     }
 
     // See https://dcdpr.github.io/did-btc1/#find-next-signals
-    private static NextSignals findNextSignals(Integer contemporaryBlockheight, List<Beacon> beacons) {
+    private static NextSignals findNextSignals(Integer contemporaryBlockheight, List<Beacon> beacons, Network network, Service beaconService) {
 
-        // TODO
+        Block block = BitcoinConnection.getInstance().getBlockByBlockHeight(network, contemporaryBlockheight);
 
-        NextSignals nextSignals = null;
+        List<Signal> beaconSignals = new ArrayList<>();
+
+        for (Tx tx : block.txs()) {
+            for (TxIn txIn : tx.txIns()) {
+                if (beacons.stream().anyMatch(beacon -> beacon.address().equals(/* TODO */ txIn.address()))) {
+                    beaconSignals.add(new Signal(JsonLDUtils.uriToString(beaconService.getId()), beaconService.getType(), tx));
+                }
+            }
+        }
+
+        NextSignals nextSignals;
+
+        if (beaconSignals.isEmpty()) {
+            nextSignals = findNextSignals(contemporaryBlockheight + 1, beacons, network, beaconService);
+        } else {
+            nextSignals = new NextSignals(block.blockHeight(), beaconSignals);
+        }
 
         if (log.isDebugEnabled()) log.debug("findNextSignals: " + nextSignals);
         return nextSignals;
@@ -167,9 +193,9 @@ public class ResolveTargetDocument {
 
         for (Signal beaconSignal : beaconSignals) {
 
-            String type = beaconSignal.beaconType;
-            Tx signalTx = beaconSignal.tx;
-            String signalId = signalTx.id;
+            String type = beaconSignal.beaconType();
+            Tx signalTx = beaconSignal.tx();
+            String signalId = signalTx.id();
             Map<String, Object> signalSidecarData = (Map<String, Object>) sidecarData.get(signalId);
 
             Update didUpdatePayload = switch(type) {
@@ -217,16 +243,6 @@ public class ResolveTargetDocument {
         if (log.isDebugEnabled()) log.debug("applyDIDUpdate: " + targetDIDDocument);
         return targetDIDDocument;
     }
-
-    /*
-     * Helper records
-     */
-
-    public record Beacon(Address address, String serviceEndpoint) { }
-    public record NextSignals(Integer blockHeight, List<Signal> signals) { }
-    public record Signal(String beaconId, String beaconType, Tx tx) { }
-    public record Tx(String id) { }
-    public record Update(Integer targetVersionId, byte[] sourceHash, byte[] targetHash, String patch) { }
 
     /*
      * Getters and setters

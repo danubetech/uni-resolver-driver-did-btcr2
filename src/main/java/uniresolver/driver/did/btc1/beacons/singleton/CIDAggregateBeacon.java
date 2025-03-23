@@ -2,7 +2,8 @@ package uniresolver.driver.did.btc1.beacons.singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uniresolver.driver.did.btc1.crud.read.ResolveTargetDocument;
+import uniresolver.driver.did.btc1.bitcoinconnection.records.Tx;
+import uniresolver.driver.did.btc1.crud.read.records.Update;
 
 import java.util.Map;
 
@@ -17,7 +18,7 @@ public class CIDAggregateBeacon {
      */
 
     // See https://dcdpr.github.io/did-btc1/#process-cidaggregate-beacon-signal
-    public static ResolveTargetDocument.Update processCIDAggregateBeaconSignal(ResolveTargetDocument.Tx signalTx, Map<String, Object> signalSidecarData) {
+    public static Update processCIDAggregateBeaconSignal(Tx signalTx, Map<String, Object> signalSidecarData) {
 
         // TODO
         return null;

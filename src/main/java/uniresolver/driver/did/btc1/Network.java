@@ -9,7 +9,7 @@ public enum Network {
     testnet,
     regtest;
 
-    public org.bitcoinj.base.Network toBitcoinjNetwork() {
+    public org.bitcoinj.base.BitcoinNetwork toBitcoinjNetwork() {
         return switch (this) {
             case mainnet -> BitcoinNetwork.MAINNET;
             case signet -> BitcoinNetwork.SIGNET;
