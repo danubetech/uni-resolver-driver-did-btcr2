@@ -74,7 +74,7 @@ public class ResolveInitialDocument {
         VerificationMethod.Builder<? extends VerificationMethod.Builder<?>> verificationMethodBuilder = VerificationMethod.builder();
         verificationMethodBuilder.id(URI.create("#initialKey"));
         verificationMethodBuilder.type("MultiKey");
-        verificationMethodBuilder.context(identifier.toUri());
+        verificationMethodBuilder.controller(identifier.toUri());
         verificationMethodBuilder.publicKeyMultibase(Multibase.encode(Multibase.Base.Base58BTC, KeyCodec.SECP256K1_PUBLIC_KEY.encode(keyBytes)));
 
         VerificationMethod verificationMethod = verificationMethodBuilder.build();
