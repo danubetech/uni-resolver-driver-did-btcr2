@@ -111,10 +111,11 @@ public class ResolveInitialDocument {
         Service p2wpkhBeacon = SingletonBeacon.establishSingletonBeacon(initialP2WPKHServiceId, initialP2WPKHBeaconAddress, network);
         services.add(p2wpkhBeacon);
 
+/*      TODO. disable for now, P2TR not yet supported by bitcoinj
         URI initialP2TRServiceId = URI.create("#initialP2TR");
         Address initialP2TRBeaconAddress = ecKey.toAddress(ScriptType.P2TR, network.toBitcoinjNetwork());
         Service p2trBeacon = SingletonBeacon.establishSingletonBeacon(initialP2TRServiceId, initialP2TRBeaconAddress, network);
-        services.add(p2trBeacon);
+        services.add(p2trBeacon);*/
 
         if (log.isDebugEnabled()) log.debug("deterministicallyGenerateBeaconServices: " + services);
         return services;

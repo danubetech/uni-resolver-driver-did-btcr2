@@ -48,7 +48,7 @@ public class ResolveTargetDocument {
      */
 
     // See https://dcdpr.github.io/did-btc1/#resolve-target-document
-    public DIDDocument resolveTargetDocument(DIDDocument initialDocument, Map<String, Object> resolutionOptions) throws ResolutionException {
+    public DIDDocument resolveTargetDocument(DIDDocument initialDocument, Map<String, Object> resolutionOptions, /* TODO: extra, not in spec */ Network network) throws ResolutionException {
 
         Integer targetVersionId = null;
         Long targetTime = null;
@@ -79,7 +79,8 @@ public class ResolveTargetDocument {
                 targetVersionId,
                 targetBlockheight,
                 updateHashHistory,
-                sidecarData);
+                sidecarData,
+                network);
 
         if (log.isDebugEnabled()) log.debug("resolveTargetDocument: " + targetDocument);
         return targetDocument;
@@ -106,24 +107,24 @@ public class ResolveTargetDocument {
     }
 
     // See https://dcdpr.github.io/did-btc1/#traverse-blockchain-history
-    private static DIDDocument traverseBlockchainHistory(DIDDocument contemporaryDIDDocument, Integer contemporaryBlockheight, Integer currentVersionId, Integer targetVersionId, Integer targetBlockheight, List<byte[]> updateHashHistory, Map<String, Object> sidecarData) throws ResolutionException {
+    private static DIDDocument traverseBlockchainHistory(DIDDocument contemporaryDIDDocument, Integer contemporaryBlockheight, Integer currentVersionId, Integer targetVersionId, Integer targetBlockheight, List<byte[]> updateHashHistory, Map<String, Object> sidecarData, /* TODO: extra, not in spec */ Network network) throws ResolutionException {
 
         // TODO: NEED TO DEAL WITH CANONICALIZATION
         byte[] contemporaryHash = SHA256Util.sha256(contemporaryDIDDocument.toJson().getBytes(StandardCharsets.UTF_8));
 
         List<Beacon> beacons = new ArrayList<>();
-        for (Service service : contemporaryDIDDocument.getServices().stream().filter(service -> Arrays.asList(SingletonBeacon.TYPE, CIDAggregateBeacon.TYPE, SMTAggregateBeacon.TYPE).contains(service.getType())).toList()) {
+        for (Service beaconService : contemporaryDIDDocument.getServices().stream().filter(service -> Arrays.asList(SingletonBeacon.TYPE, CIDAggregateBeacon.TYPE, SMTAggregateBeacon.TYPE).contains(service.getType())).toList()) {
             Address beaconAddress;
             try {
-                beaconAddress = BitcoinURI.of((String) service.getServiceEndpoint()).getAddress();
+                beaconAddress = BitcoinURI.of((String) beaconService.getServiceEndpoint()).getAddress();
             } catch (BitcoinURIParseException ex) {
                 throw new ResolutionException("invalidDidDocument", "Invalid DID document: " + ex.getMessage(), ex);
             }
-            String beaconServiceEndpoint = (String) service.getServiceEndpoint();
-            beacons.add(new Beacon(beaconAddress, beaconServiceEndpoint));
+            String beaconServiceEndpoint = (String) beaconService.getServiceEndpoint();
+            beacons.add(new Beacon(beaconAddress, beaconServiceEndpoint, beaconService));
         }
 
-        NextSignals nextSignals = findNextSignals(contemporaryBlockheight, beacons);
+        NextSignals nextSignals = findNextSignals(contemporaryBlockheight, beacons, network);
 
         List<Signal> signals = nextSignals.signals();
 
@@ -153,14 +154,14 @@ public class ResolveTargetDocument {
 
         contemporaryBlockheight++;
 
-        DIDDocument targetDocument = traverseBlockchainHistory(contemporaryDIDDocument, contemporaryBlockheight, currentVersionId, targetVersionId, targetBlockheight, updateHashHistory, sidecarData);
+        DIDDocument targetDocument = traverseBlockchainHistory(contemporaryDIDDocument, contemporaryBlockheight, currentVersionId, targetVersionId, targetBlockheight, updateHashHistory, sidecarData, network);
 
         if (log.isDebugEnabled()) log.debug("traverseBlockchainHistory: " + targetDocument);
         return targetDocument;
     }
 
     // See https://dcdpr.github.io/did-btc1/#find-next-signals
-    private static NextSignals findNextSignals(Integer contemporaryBlockheight, List<Beacon> beacons, Network network, Service beaconService) {
+    private static NextSignals findNextSignals(Integer contemporaryBlockheight, List<Beacon> beacons, /* TODO: extra, not in spec */ Network network) {
 
         Block block = BitcoinConnection.getInstance().getBlockByBlockHeight(network, contemporaryBlockheight);
 
@@ -168,8 +169,9 @@ public class ResolveTargetDocument {
 
         for (Tx tx : block.txs()) {
             for (TxIn txIn : tx.txIns()) {
-                if (beacons.stream().anyMatch(beacon -> beacon.address().equals(/* TODO */ txIn.address()))) {
-                    beaconSignals.add(new Signal(JsonLDUtils.uriToString(beaconService.getId()), beaconService.getType(), tx));
+                Optional<Beacon> foundBeacon = beacons.stream().filter(beacon -> beacon.address().equals(/* TODO */ txIn.address())).findAny();
+                if (foundBeacon.isPresent()) {
+                    beaconSignals.add(new Signal(JsonLDUtils.uriToString(foundBeacon.get().beaconService().getId()), foundBeacon.get().beaconService().getType(), tx));
                 }
             }
         }
@@ -177,7 +179,7 @@ public class ResolveTargetDocument {
         NextSignals nextSignals;
 
         if (beaconSignals.isEmpty()) {
-            nextSignals = findNextSignals(contemporaryBlockheight + 1, beacons, network, beaconService);
+            nextSignals = findNextSignals(contemporaryBlockheight + 1, beacons, /* TODO: extra, not in spec */ network);
         } else {
             nextSignals = new NextSignals(block.blockHeight(), beaconSignals);
         }

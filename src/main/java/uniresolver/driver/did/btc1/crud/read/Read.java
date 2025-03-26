@@ -35,7 +35,8 @@ public class Read {
 
         DIDDocument initialDocument = this.resolveInitialDocument.resolveInitialDIDDocument(identifier, identifierComponents, resolutionOptions);
 
-        DIDDocument targetDocument = this.resolveTargetDocument.resolveTargetDocument(initialDocument, resolutionOptions);
+        // TODO: disable, while work-in-progress
+        DIDDocument targetDocument = this.resolveTargetDocument.resolveTargetDocument(initialDocument, resolutionOptions, /* TODO: extra, not in spec */ identifierComponents.network());
 
         if (log.isDebugEnabled()) log.debug("read: " + targetDocument);
         return targetDocument;

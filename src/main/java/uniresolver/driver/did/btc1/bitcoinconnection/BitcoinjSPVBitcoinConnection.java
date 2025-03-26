@@ -7,6 +7,7 @@ import org.bitcoinj.kits.WalletAppKit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btc1.Network;
+import uniresolver.driver.did.btc1.bitcoinconnection.records.Block;
 
 import java.io.File;
 import java.util.AbstractMap;
@@ -49,5 +50,10 @@ public class BitcoinjSPVBitcoinConnection extends AbstractBitcoinConnection impl
 
 	public WalletAppKit getWalletAppKit(Network network) {
 		return this.walletAppKits.get(network);
+	}
+
+	@Override
+	public Block getBlockByBlockHeight(Network network, Integer blockHeight) {
+		throw new RuntimeException("Not implemented yet");
 	}
 }
