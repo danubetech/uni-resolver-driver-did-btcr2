@@ -16,7 +16,8 @@ public class ParseDidBtc1IdentifierTest {
 	@Test
 	public void testParseDidBtc1Identifier() throws Exception {
 
-		IdentifierComponents identifierComponents = ParseDidBtc1Identifier.parseDidBtc1Identifier(DID.fromString("did:btc1:regtest:k1qvadgpl5qfuz6emq7c8sqw28z0r0gzvyra3je3pp2cuk83uqnnyvckvw8cf"));
+		DID identifier = DID.fromString(TestUtil.readResourceString("did.txt"));
+		IdentifierComponents identifierComponents = ParseDidBtc1Identifier.parseDidBtc1Identifier(identifier);
 
 		Map<String, Object> expectedIdentifierComponents = TestUtil.readResourceJson("identifierComponents.json");
 		Integer expectedVersion = (Integer) expectedIdentifierComponents.get("version");
