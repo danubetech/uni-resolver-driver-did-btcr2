@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.bitcoinconnection.records.Block;
+import uniresolver.driver.did.btc1.bitcoinconnection.records.Tx;
 
 import java.io.File;
 import java.util.AbstractMap;
@@ -54,6 +55,11 @@ public class BitcoinjSPVBitcoinConnection extends AbstractBitcoinConnection impl
 
 	@Override
 	public Block getBlockByBlockHeight(Network network, Integer blockHeight) {
+		throw new RuntimeException("Not implemented yet");
+	}
+
+	@Override
+	public Tx getTransactionById(Network network, String txid) {
 		throw new RuntimeException("Not implemented yet");
 	}
 }

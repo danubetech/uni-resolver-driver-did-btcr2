@@ -66,10 +66,10 @@ public class ResolveInitialDocument {
 
         byte[] keyBytes = identifierComponents.genesisBytes();
 
-        DIDDocument.Builder<? extends DIDDocument.Builder<?>> didDocumentBuilder = DIDDocument.builder();
-        didDocumentBuilder.id(identifier.toUri());
-        didDocumentBuilder.defaultContexts(true);
-        didDocumentBuilder.context(DataIntegrityContexts.JSONLD_CONTEXT_W3ID_DATAINTEGRITY_V2);
+        DIDDocument.Builder<? extends DIDDocument.Builder<?>> initialDocumentBuilder = DIDDocument.builder();
+        initialDocumentBuilder.id(identifier.toUri());
+        initialDocumentBuilder.defaultContexts(true);
+        initialDocumentBuilder.context(DataIntegrityContexts.JSONLD_CONTEXT_W3ID_DATAINTEGRITY_V2);
 
         VerificationMethod.Builder<? extends VerificationMethod.Builder<?>> verificationMethodBuilder = VerificationMethod.builder();
         verificationMethodBuilder.id(URI.create("#initialKey"));
@@ -79,19 +79,19 @@ public class ResolveInitialDocument {
 
         VerificationMethod verificationMethod = verificationMethodBuilder.build();
 
-        didDocumentBuilder.verificationMethod(verificationMethod);
-        didDocumentBuilder.authenticationVerificationMethodReference(verificationMethod.getId());
-        didDocumentBuilder.assertionMethodVerificationMethodReference(verificationMethod.getId());
-        didDocumentBuilder.capabilityInvocationVerificationMethodReference(verificationMethod.getId());
-        didDocumentBuilder.capabilityDelegationVerificationMethodReference(verificationMethod.getId());
+        initialDocumentBuilder.verificationMethod(verificationMethod);
+        initialDocumentBuilder.authenticationVerificationMethodReference(verificationMethod.getId());
+        initialDocumentBuilder.assertionMethodVerificationMethodReference(verificationMethod.getId());
+        initialDocumentBuilder.capabilityInvocationVerificationMethodReference(verificationMethod.getId());
+        initialDocumentBuilder.capabilityDelegationVerificationMethodReference(verificationMethod.getId());
 
         List<Service> services = deterministicallyGenerateBeaconServices(keyBytes, identifierComponents.network());
 
-        didDocumentBuilder.services(services);
+        initialDocumentBuilder.services(services);
 
-        DIDDocument didDocument = didDocumentBuilder.build();
-        if (log.isDebugEnabled()) log.debug("deterministicallyGenerateInitialDIDDocument: " + didDocument);
-        return didDocument;
+        DIDDocument initialDocument = initialDocumentBuilder.build();
+        if (log.isDebugEnabled()) log.debug("deterministicallyGenerateInitialDIDDocument: " + initialDocument);
+        return initialDocument;
     }
 
     // See https://dcdpr.github.io/did-btc1/#deterministically-generate-beacon-services
