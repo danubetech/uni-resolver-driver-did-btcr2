@@ -1,16 +1,16 @@
 package uniresolver.driver.did.btc1.config;
 
-import info.weboftrust.btctxlookup.Chain;
-import info.weboftrust.btctxlookup.bitcoinconnection.BTCDRPCBitcoinConnection;
-import info.weboftrust.btctxlookup.bitcoinconnection.BitcoindRPCBitcoinConnection;
-import info.weboftrust.btctxlookup.bitcoinconnection.BlockcypherAPIBitcoinConnection;
 import io.ipfs.api.IPFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btc1.DidBtc1Driver;
+import uniresolver.driver.did.btc1.Network;
+import uniresolver.driver.did.btc1.bitcoinconnection.BTCDRPCBitcoinConnection;
+import uniresolver.driver.did.btc1.bitcoinconnection.BitcoindRPCBitcoinConnection;
 import uniresolver.driver.did.btc1.crud.read.Read;
-import uniresolver.driver.did.btc1.tls.Tls;
 
+import java.net.URI;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -63,37 +63,36 @@ public class Configuration {
 
             String prop_rpcUrlMainnet = (String) properties.get("rpcUrlMainnet");
             String prop_rpcUrlTestnet = (String) properties.get("rpcUrlTestnet");
+            String prop_rpcUrlSignet = (String) properties.get("rpcUrlSignet");
+            String prop_rpcUrlRegtest = (String) properties.get("rpcUrlRegtest");
             String prop_rpcCertTestnet = (String) properties.get("rpcCertTestnet");
             String prop_rpcCertMainnet = (String) properties.get("rpcCertMainnet");
+            String prop_rpcCertSignet = (String) properties.get("rpcCertSignet");
+            String prop_rpcCertRegtest = (String) properties.get("rpcCertRegtest");
+
+            Map<Network, URL> rpcUrls = new HashMap<>();
+
+            if (prop_rpcUrlMainnet != null && ! prop_rpcUrlMainnet.isBlank()) {
+                rpcUrls.put(Network.mainnet, URI.create(prop_rpcUrlMainnet).toURL());
+            }
+            if (prop_rpcUrlTestnet != null && ! prop_rpcUrlTestnet.isBlank()) {
+                rpcUrls.put(Network.testnet, URI.create(prop_rpcUrlTestnet).toURL());
+            }
+            if (prop_rpcUrlSignet != null && ! prop_rpcUrlSignet.isBlank()) {
+                rpcUrls.put(Network.signet, URI.create(prop_rpcUrlSignet).toURL());
+            }
+            if (prop_rpcUrlRegtest != null && ! prop_rpcUrlRegtest.isBlank()) {
+                rpcUrls.put(Network.regtest, URI.create(prop_rpcUrlRegtest).toURL());
+            }
 
             if ("bitcoind".equalsIgnoreCase(prop_bitcoinConnection)) {
-                if (prop_rpcUrlMainnet != null && !prop_rpcUrlMainnet.isBlank()) {
-                    didBtc1Driver.setBitcoinConnectionMainnet(new BitcoindRPCBitcoinConnection(prop_rpcUrlMainnet, Chain.MAINNET));
-                }
-                if (prop_rpcUrlTestnet != null && !prop_rpcUrlTestnet.isBlank()) {
-                    didBtc1Driver.setBitcoinConnectionTestnet(new BitcoindRPCBitcoinConnection(prop_rpcUrlTestnet, Chain.TESTNET));
-                }
+                didBtc1Driver.setBitcoinConnection(BitcoindRPCBitcoinConnection.create(rpcUrls));
             } else if ("btcd".equalsIgnoreCase(prop_bitcoinConnection)) {
-
-                if (prop_rpcUrlMainnet != null && !prop_rpcUrlMainnet.isBlank()) {
-                    BTCDRPCBitcoinConnection btcdrpcBitcoinConnection = new BTCDRPCBitcoinConnection(prop_rpcUrlMainnet, Chain.MAINNET);
-                    if (prop_rpcCertMainnet != null && !prop_rpcCertMainnet.isBlank()) {
-                        btcdrpcBitcoinConnection.getBitcoindRpcClient().setSslSocketFactory(Tls.getSslSocketFactory(prop_rpcCertMainnet));
-                    }
-                    didBtc1Driver.setBitcoinConnectionMainnet(btcdrpcBitcoinConnection);
-                }
-                if (prop_rpcUrlTestnet != null && !prop_rpcUrlTestnet.isBlank()) {
-                    BTCDRPCBitcoinConnection btcdrpcBitcoinConnection = new BTCDRPCBitcoinConnection(prop_rpcUrlTestnet, Chain.TESTNET);
-                    if (prop_rpcCertTestnet != null && !prop_rpcCertTestnet.isBlank()) {
-                        btcdrpcBitcoinConnection.getBitcoindRpcClient().setSslSocketFactory(Tls.getSslSocketFactory(prop_rpcCertTestnet));
-                    }
-                    didBtc1Driver.setBitcoinConnectionTestnet(btcdrpcBitcoinConnection);
-                }
+                didBtc1Driver.setBitcoinConnection(BTCDRPCBitcoinConnection.create(rpcUrls));
             } else if ("bitcoinj".equalsIgnoreCase(prop_bitcoinConnection)) {
                 throw new RuntimeException("bitcoinj is not implemented yet");
             } else if ("blockcypherapi".equalsIgnoreCase(prop_bitcoinConnection)) {
-                didBtc1Driver.setBitcoinConnectionMainnet(new BlockcypherAPIBitcoinConnection());
-                didBtc1Driver.setBitcoinConnectionTestnet(new BlockcypherAPIBitcoinConnection());
+                throw new RuntimeException("h is not implemented yet");
             } else {
                 throw new IllegalArgumentException("Invalid bitcoinConnection: " + prop_bitcoinConnection);
             }

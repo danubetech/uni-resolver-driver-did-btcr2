@@ -5,7 +5,7 @@ import org.bitcoinj.base.Address;
 import java.net.URI;
 
 public record Beacon(
-        URI id,
+        String id,
         String type,
         String serviceEndpoint,
         Address address) {

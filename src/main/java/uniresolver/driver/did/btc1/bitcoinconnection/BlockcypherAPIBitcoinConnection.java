@@ -1,14 +1,17 @@
 package uniresolver.driver.did.btc1.bitcoinconnection;
 
-import com.google.gson.Gson;
 import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.bitcoinconnection.records.Block;
 import uniresolver.driver.did.btc1.bitcoinconnection.records.Tx;
 
 public class BlockcypherAPIBitcoinConnection extends AbstractBitcoinConnection implements BitcoinConnection {
 
-	public BlockcypherAPIBitcoinConnection() {
+	private BlockcypherAPIBitcoinConnection() {
 
+	}
+
+	public static BlockcypherAPIBitcoinConnection create() {
+		return new BlockcypherAPIBitcoinConnection();
 	}
 
 	@Override

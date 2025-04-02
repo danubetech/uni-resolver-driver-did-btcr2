@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
 import uniresolver.driver.did.btc1.Network;
+import uniresolver.driver.did.btc1.appendix.Bech32EncodingAndDecoding;
 import uniresolver.driver.did.btc1.crud.read.records.IdentifierComponents;
 
 import java.util.Arrays;
@@ -107,7 +108,7 @@ public class ParseDidBtc1Identifier {
 
         // 11. Decode idBech32 using the Bech32 algorithm to get decodeResult.
 
-        Bech32.Bech32Data bech32Data = Bech32.decode(idBech32);
+        Bech32.Bech32Data bech32Data = Bech32EncodingAndDecoding.bech32Decode(idBech32);
 
         // 12. Set identifierComponents.hrp to decodeResult.hrp.
 

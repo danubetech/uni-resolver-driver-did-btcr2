@@ -1,15 +1,21 @@
-package uniresolver.driver.did.btc1.util;
+package uniresolver.driver.did.btc1.appendix;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.jsonld.JsonLDObject;
+import org.apache.commons.codec.binary.Hex;
 import org.erdtman.jcs.JsonCanonicalizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import uniresolver.driver.did.btc1.util.SHA256Util;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-public class JsonCanonicalizationAndHashUtil {
+public class JsonCanonicalizationAndHash {
+
+    private static final Logger log = LoggerFactory.getLogger(JsonCanonicalizationAndHash.class);
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -20,26 +26,33 @@ public class JsonCanonicalizationAndHashUtil {
         } catch (IOException ex) {
             throw new IllegalArgumentException(ex.getMessage(), ex);
         }
-        return SHA256Util.sha256(encodedString.getBytes(StandardCharsets.UTF_8));
+        byte[] hash = SHA256Util.sha256(encodedString.getBytes(StandardCharsets.UTF_8));
+        if (log.isDebugEnabled()) log.debug("jsonCanonicalizationAndHash for " + json + ": " + Hex.encodeHexString(hash));
+        return hash;
     }
 
     public static byte[] jsonCanonicalizationAndHash(Record record) {
+        String json;
         try {
-            return jsonCanonicalizationAndHash(objectMapper.writeValueAsString(record));
+            json = objectMapper.writeValueAsString(record);
         } catch (JsonProcessingException ex) {
             throw new IllegalArgumentException(ex.getMessage(), ex);
         }
+        return jsonCanonicalizationAndHash(json);
     }
 
     public static byte[] jsonCanonicalizationAndHash(Map<String, Object> map) {
+        String json;
         try {
-            return jsonCanonicalizationAndHash(objectMapper.writeValueAsString(map));
+            json = objectMapper.writeValueAsString(map);
         } catch (JsonProcessingException ex) {
             throw new IllegalArgumentException(ex.getMessage(), ex);
         }
+        return jsonCanonicalizationAndHash(json);
     }
 
     public static byte[] jsonCanonicalizationAndHash(JsonLDObject jsonLDObject) {
-        return jsonCanonicalizationAndHash(jsonLDObject.toMap());
+        Map<String, Object> map = jsonLDObject.toMap();
+        return jsonCanonicalizationAndHash(map);
     }
 }

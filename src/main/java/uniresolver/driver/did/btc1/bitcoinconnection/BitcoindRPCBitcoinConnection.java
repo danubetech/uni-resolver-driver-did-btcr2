@@ -62,8 +62,8 @@ public class BitcoindRPCBitcoinConnection extends AbstractBitcoinConnection impl
 		List<BitcoindRpcClient.Transaction> bitcoinjTransactions = bitcoinjBlock.tx().stream().map(tx -> this.getBitcoinRpcClient(network).getTransaction(tx)).toList();
 		List<Tx> txs = bitcoinjTransactions.stream().map(bitcoinjTransaction -> {
 			BitcoindRpcClient.RawTransaction bitcoinjRawTransaction = bitcoinjTransaction.raw();
-			List<TxIn> txIns = bitcoinjRawTransaction.vIn().stream().map(x -> new TxIn(/* TODO */ x.scriptPubKey())).toList();
-			List<TxOut> txOuts = bitcoinjRawTransaction.vOut().stream().map(x -> new TxOut(/* TODO */ x.scriptPubKey().asm())).toList();
+			List<TxIn> txIns = bitcoinjRawTransaction.vIn().stream().map(in -> new TxIn(in.getTransaction().txId())).toList();
+			List<TxOut> txOuts = bitcoinjRawTransaction.vOut().stream().map(out -> new TxOut(out.transaction().txId(), out.scriptPubKey().addresses(), out.scriptPubKey().asm())).toList();
 			return new Tx(bitcoinjTransaction.txId(), txIns, txOuts);
 		}).toList();
 		return new Block(bitcoinjBlock.height(), bitcoinjBlock.hash(), txs);
@@ -73,8 +73,8 @@ public class BitcoindRPCBitcoinConnection extends AbstractBitcoinConnection impl
 	public Tx getTransactionById(Network network, String txid) {
 		wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Transaction bitcoinjTransaction = this.getBitcoinRpcClient(network).getTransaction(txid);
 		BitcoindRpcClient.RawTransaction bitcoinjRawTransaction = bitcoinjTransaction.raw();
-		List<TxIn> txIns = bitcoinjRawTransaction.vIn().stream().map(x -> new TxIn(/* TODO */ x.scriptPubKey())).toList();
-		List<TxOut> txOuts = bitcoinjRawTransaction.vOut().stream().map(x -> new TxOut(/* TODO */ x.scriptPubKey().asm())).toList();
+		List<TxIn> txIns = bitcoinjRawTransaction.vIn().stream().map(in -> new TxIn(in.getTransaction().txId())).toList();
+		List<TxOut> txOuts = bitcoinjRawTransaction.vOut().stream().map(out -> new TxOut(out.transaction().txId(), out.scriptPubKey().addresses(), out.scriptPubKey().asm())).toList();
 		return new Tx(bitcoinjTransaction.txId(), txIns, txOuts);
 	}
 }
