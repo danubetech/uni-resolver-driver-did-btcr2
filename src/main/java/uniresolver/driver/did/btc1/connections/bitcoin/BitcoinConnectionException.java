@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btc1.bitcoinconnection;
+package uniresolver.driver.did.btc1.connections.bitcoin;
 
 public class BitcoinConnectionException extends Exception {
 

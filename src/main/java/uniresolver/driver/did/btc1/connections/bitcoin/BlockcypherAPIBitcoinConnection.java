@@ -1,10 +1,10 @@
-package uniresolver.driver.did.btc1.bitcoinconnection;
+package uniresolver.driver.did.btc1.connections.bitcoin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btc1.Network;
-import uniresolver.driver.did.btc1.bitcoinconnection.records.Block;
-import uniresolver.driver.did.btc1.bitcoinconnection.records.Tx;
+import uniresolver.driver.did.btc1.connections.bitcoin.records.Block;
+import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
 
 public class BlockcypherAPIBitcoinConnection extends AbstractBitcoinConnection implements BitcoinConnection {
 

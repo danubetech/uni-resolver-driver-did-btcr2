@@ -12,4 +12,8 @@ public class RecordUtil {
         if (map == null) return null;
         return objectMapper.convertValue(map, clazz);
     }
+
+    public static Map<String, Object> toMap(Record record) {
+        return objectMapper.convertValue(record, Map.class);
+    }
 }

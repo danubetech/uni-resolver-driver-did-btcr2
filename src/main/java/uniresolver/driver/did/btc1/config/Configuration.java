@@ -5,9 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btc1.DidBtc1Driver;
 import uniresolver.driver.did.btc1.Network;
-import uniresolver.driver.did.btc1.bitcoinconnection.BTCDRPCBitcoinConnection;
-import uniresolver.driver.did.btc1.bitcoinconnection.BitcoinConnection;
-import uniresolver.driver.did.btc1.bitcoinconnection.BitcoindRPCBitcoinConnection;
+import uniresolver.driver.did.btc1.connections.bitcoin.BTCDRPCBitcoinConnection;
+import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnection;
+import uniresolver.driver.did.btc1.connections.bitcoin.BitcoindRPCBitcoinConnection;
+import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
 import uniresolver.driver.did.btc1.crud.read.Read;
 
 import java.net.URI;
@@ -63,8 +64,11 @@ public class Configuration {
 
             // parse ipfs
 
+            IPFSConnection ipfsConnection;
+
             String prop_ipfs = (String) properties.get("ipfs");
-            IPFS ipfs = new IPFS(prop_ipfs);
+
+            ipfsConnection = IPFSConnection.create(prop_ipfs);
 
             // parse bitcoinConnection
 
@@ -108,7 +112,9 @@ public class Configuration {
                 throw new IllegalArgumentException("Invalid bitcoinConnection: " + prop_bitcoinConnection);
             }
 
-            didBtc1Driver.setRead(new Read(bitcoinConnection, ipfs));
+            // configure
+
+            didBtc1Driver.setRead(new Read(bitcoinConnection, ipfsConnection));
         } catch (IllegalArgumentException ex) {
             throw ex;
         } catch (Exception ex) {

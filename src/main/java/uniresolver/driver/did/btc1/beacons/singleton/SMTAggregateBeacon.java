@@ -2,7 +2,7 @@ package uniresolver.driver.did.btc1.beacons.singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uniresolver.driver.did.btc1.bitcoinconnection.records.Tx;
+import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
 import uniresolver.driver.did.btc1.crud.update.records.DIDUpdatePayload;
 
 import java.util.Map;

@@ -10,6 +10,7 @@ import uniresolver.driver.did.btc1.appendix.Bech32EncodingAndDecoding;
 import uniresolver.driver.did.btc1.crud.read.records.IdentifierComponents;
 
 import java.util.Arrays;
+import java.util.Map;
 
 public class ParseDidBtc1Identifier {
 
@@ -20,7 +21,7 @@ public class ParseDidBtc1Identifier {
      */
 
     // See https://dcdpr.github.io/did-btc1/#parse-didbtc1-identifier
-    public static IdentifierComponents parseDidBtc1Identifier(DID identifier) throws ResolutionException {
+    public static IdentifierComponents parseDidBtc1Identifier(DID identifier, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
 
         if (identifier == null) throw new IllegalArgumentException("Identifier cannot be null");
 
@@ -121,6 +122,14 @@ public class ParseDidBtc1Identifier {
         // 14. Return identifierComponents.
 
         identifierComponents = new IdentifierComponents(identifierComponentsNetwork, identifierComponentsVersion, identifierComponentsHrp, identifierComponentsGenesisBytes);
+
+        // DID DOCUMENT METADATA
+
+        didDocumentMetadata.put("network", identifierComponents.network().name());
+        didDocumentMetadata.put("version", identifierComponents.version());
+        didDocumentMetadata.put("hrp", identifierComponents.hrp());
+
+        // done
 
         if (log.isDebugEnabled()) log.debug("parseDidBtc1Identifier: " + identifierComponents);
         return identifierComponents;

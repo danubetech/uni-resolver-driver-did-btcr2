@@ -1,8 +1,8 @@
-package uniresolver.driver.did.btc1.bitcoinconnection;
+package uniresolver.driver.did.btc1.connections.bitcoin;
 
 import uniresolver.driver.did.btc1.Network;
-import uniresolver.driver.did.btc1.bitcoinconnection.records.Block;
-import uniresolver.driver.did.btc1.bitcoinconnection.records.Tx;
+import uniresolver.driver.did.btc1.connections.bitcoin.records.Block;
+import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
 
 public interface BitcoinConnection {
 

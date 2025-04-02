@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btc1.bitcoinconnection;
+package uniresolver.driver.did.btc1.connections.bitcoin;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,8 +7,8 @@ import org.bitcoinj.kits.WalletAppKit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btc1.Network;
-import uniresolver.driver.did.btc1.bitcoinconnection.records.Block;
-import uniresolver.driver.did.btc1.bitcoinconnection.records.Tx;
+import uniresolver.driver.did.btc1.connections.bitcoin.records.Block;
+import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
 
 import java.io.File;
 import java.util.AbstractMap;

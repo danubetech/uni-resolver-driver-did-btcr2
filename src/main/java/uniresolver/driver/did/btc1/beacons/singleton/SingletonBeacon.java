@@ -1,7 +1,6 @@
 package uniresolver.driver.did.btc1.beacons.singleton;
 
 import foundation.identity.did.Service;
-import io.ipfs.api.IPFS;
 import org.bitcoinj.base.Address;
 import org.bitcoinj.uri.BitcoinURI;
 import org.slf4j.Logger;
@@ -10,14 +9,16 @@ import uniresolver.ResolutionException;
 import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.appendix.FetchContentFromAddressableStorage;
 import uniresolver.driver.did.btc1.appendix.JsonCanonicalizationAndHash;
-import uniresolver.driver.did.btc1.bitcoinconnection.records.Tx;
-import uniresolver.driver.did.btc1.bitcoinconnection.records.TxOut;
+import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
+import uniresolver.driver.did.btc1.connections.bitcoin.records.TxOut;
+import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
 import uniresolver.driver.did.btc1.crud.update.records.DIDUpdatePayload;
 import uniresolver.driver.did.btc1.util.HexUtil;
 import uniresolver.driver.did.btc1.util.RecordUtil;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,7 +56,7 @@ public class SingletonBeacon {
     private static final Pattern PATTERN_TXOUT = Pattern.compile("^OP_RETURN OP_PUSH32 ([0-9a-fA-F]{32})$");
 
     // See https://dcdpr.github.io/did-btc1/#process-singleton-beacon-signal
-    public static DIDUpdatePayload processSingletonBeaconSignal(Tx tx, Map<String, Object> signalSidecarData, IPFS ipfs) throws ResolutionException {
+    public static DIDUpdatePayload processSingletonBeaconSignal(Tx tx, Map<String, Object> signalSidecarData, IPFSConnection ipfsConnection, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
 
         TxOut txOut = tx.txOuts().get(0);
 
@@ -76,11 +77,18 @@ public class SingletonBeacon {
                 throw new ResolutionException("invalidSidecarData", "updateHashBytes " + HexUtil.hexEncode(updateHashBytes) + " does not match hashBytes: " + HexUtil.hexEncode(hashBytes));
             }
         } else {
-            didUpdatePayload = FetchContentFromAddressableStorage.fetchContentFromAddressableStorage(hashBytes, DIDUpdatePayload.class, ipfs);
+            didUpdatePayload = FetchContentFromAddressableStorage.fetchContentFromAddressableStorage(hashBytes, DIDUpdatePayload.class, ipfsConnection);
             if (didUpdatePayload == null) {
                 throw new ResolutionException("latePublishingError", "didUpdatePayload is null");
             }
         }
+
+        // DID DOCUMENT METADATA
+
+        Map<String, Map<String, Object>> didDocumentMetadataDidUpdatePayloads = (Map<String, Map<String, Object>>) didDocumentMetadata.computeIfAbsent("didUpdatePayloads", x -> new LinkedHashMap<>());
+        didDocumentMetadataDidUpdatePayloads.put(tx.txId(), RecordUtil.toMap(didUpdatePayload));
+
+        // done
 
         if (log.isDebugEnabled()) log.debug("processSingletonBeaconSignal: " + didUpdatePayload);
         return didUpdatePayload;

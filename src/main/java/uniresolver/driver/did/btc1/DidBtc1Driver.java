@@ -3,6 +3,7 @@ package uniresolver.driver.did.btc1;
 import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
 import foundation.identity.did.DIDURL;
+import foundation.identity.did.representations.Representations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.DereferencingException;
@@ -10,7 +11,6 @@ import uniresolver.ResolutionException;
 import uniresolver.driver.Driver;
 import uniresolver.driver.did.btc1.config.Configuration;
 import uniresolver.driver.did.btc1.crud.read.Read;
-import uniresolver.driver.did.btc1.crud.read.records.IdentifierComponents;
 import uniresolver.result.DereferenceResult;
 import uniresolver.result.ResolveResult;
 
@@ -36,23 +36,22 @@ public class DidBtc1Driver implements Driver {
 	@Override
 	public ResolveResult resolve(DID identifier, Map<String, Object> resolutionOptions) throws ResolutionException {
 
-		// TODO
-		IdentifierComponents identifierComponents = null;
+		// DID RESOLUTION METADATA
+
+		Map<String, Object> didResolutionMetadata = new LinkedHashMap<>();
+		didResolutionMetadata.put("contentType", Representations.DEFAULT_MEDIA_TYPE);
+
+		// DID DOCUMENT METADATA
+
+		Map<String, Object> didDocumentMetadata = new LinkedHashMap<>();
 
 		// resolve initial DID document
 
-		DIDDocument didDocument = this.getRead().read(identifier, resolutionOptions);
-
-		// create METHOD METADATA
-
-		Map<String, Object> didDocumentMetadata = new LinkedHashMap<>();
-		didDocumentMetadata.put("network", identifierComponents.network().name());
-		didDocumentMetadata.put("version", identifierComponents.version());
-		didDocumentMetadata.put("hrp", identifierComponents.hrp());
+		DIDDocument didDocument = this.getRead().read(identifier, resolutionOptions, didDocumentMetadata);
 
 		// done
 
-		return ResolveResult.build(null, didDocument, didDocumentMetadata);
+		return ResolveResult.build(didResolutionMetadata, didDocument, didDocumentMetadata);
 	}
 
 	@Override

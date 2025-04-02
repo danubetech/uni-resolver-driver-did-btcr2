@@ -6,7 +6,8 @@ import io.ipfs.api.IPFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
-import uniresolver.driver.did.btc1.bitcoinconnection.BitcoinConnection;
+import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnection;
+import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
 import uniresolver.driver.did.btc1.crud.read.records.IdentifierComponents;
 
 import java.util.Map;
@@ -18,24 +19,23 @@ public class Read {
     private ResolveInitialDocument resolveInitialDocument;
     private ResolveTargetDocument resolveTargetDocument;
 
-    public Read(BitcoinConnection bitcoinConnection, IPFS ipfs) {
-        this.resolveInitialDocument = new ResolveInitialDocument(bitcoinConnection, ipfs);
-        this.resolveTargetDocument = new ResolveTargetDocument(bitcoinConnection, ipfs);
+    public Read(BitcoinConnection bitcoinConnection, IPFSConnection ipfsConnection) {
+        this.resolveInitialDocument = new ResolveInitialDocument(bitcoinConnection, ipfsConnection);
+        this.resolveTargetDocument = new ResolveTargetDocument(bitcoinConnection, ipfsConnection);
     }
 
     /*
      * 4.2 Read
      */
 
-    public DIDDocument read(DID identifier, Map<String, Object> resolutionOptions) throws ResolutionException {
+    public DIDDocument read(DID identifier, Map<String, Object> resolutionOptions, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
 
-        IdentifierComponents identifierComponents = ParseDidBtc1Identifier.parseDidBtc1Identifier(identifier);
+        IdentifierComponents identifierComponents = ParseDidBtc1Identifier.parseDidBtc1Identifier(identifier, /* TODO: extra, not in spec */ didDocumentMetadata);
         if (log.isDebugEnabled()) log.debug("Parsed identifier: " + identifierComponents);
 
-        DIDDocument initialDocument = this.resolveInitialDocument.resolveInitialDIDDocument(identifier, identifierComponents, resolutionOptions);
+        DIDDocument initialDocument = this.resolveInitialDocument.resolveInitialDIDDocument(identifier, identifierComponents, resolutionOptions, /* TODO: extra, not in spec */ didDocumentMetadata);
 
-        // TODO: disable, while work-in-progress
-        DIDDocument targetDocument = this.resolveTargetDocument.resolveTargetDocument(initialDocument, resolutionOptions, /* TODO: extra, not in spec */ identifierComponents.network());
+        DIDDocument targetDocument = this.resolveTargetDocument.resolveTargetDocument(initialDocument, resolutionOptions, /* TODO: extra, not in spec */ identifierComponents.network(), didDocumentMetadata);
 
         if (log.isDebugEnabled()) log.debug("read: " + targetDocument);
         return targetDocument;

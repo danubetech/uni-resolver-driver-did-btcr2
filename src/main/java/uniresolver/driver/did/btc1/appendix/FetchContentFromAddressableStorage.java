@@ -1,12 +1,12 @@
 package uniresolver.driver.did.btc1.appendix;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.ipfs.api.IPFS;
 import io.ipfs.cid.Cid;
 import io.ipfs.multihash.Multihash;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
 
 import java.io.IOException;
 
@@ -16,11 +16,11 @@ public class FetchContentFromAddressableStorage {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static byte[] fetchContentFromAddressableStorage(byte[] hashBytes, IPFS ipfs) {
+    public static byte[] fetchContentFromAddressableStorage(byte[] hashBytes, IPFSConnection ipfsConnection) {
         Cid cid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.id, hashBytes);
         byte[] content;
         try {
-            content = ipfs.get(cid.bareMultihash());
+            content = ipfsConnection.getIpfs().get(cid.bareMultihash());
         } catch (IOException ex) {
             throw new RuntimeException(ex.getMessage(), ex);
         }
@@ -28,8 +28,8 @@ public class FetchContentFromAddressableStorage {
         return content;
     }
 
-    public static <T extends Record> T fetchContentFromAddressableStorage(byte[] hashBytes, Class<T> clazz, IPFS ipfs) {
-        byte[] content = fetchContentFromAddressableStorage(hashBytes, ipfs);
+    public static <T extends Record> T fetchContentFromAddressableStorage(byte[] hashBytes, Class<T> clazz, IPFSConnection ipfsConnection) {
+        byte[] content = fetchContentFromAddressableStorage(hashBytes, ipfsConnection);
         if (content == null) return null;
         T record;
         try {

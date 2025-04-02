@@ -21,13 +21,15 @@ public class ResolveInitialDocumentTest {
 	@Test
 	public void testResolve() throws Exception {
 
+		Map<String, Object> didDocumentMetadata = new HashMap<>();
+
 		ResolveInitialDocument resolveInitialDocument = new ResolveInitialDocument(null, null);
 
 		DID identifier = DID.fromString(TestUtil.readResourceString("did.txt"));
-		IdentifierComponents identifierComponents = ParseDidBtc1Identifier.parseDidBtc1Identifier(identifier);
+		IdentifierComponents identifierComponents = ParseDidBtc1Identifier.parseDidBtc1Identifier(identifier, didDocumentMetadata);
 		Map<String, Object> resolutionOptions = new HashMap<>();
 
-		DIDDocument initialDIDDocument = resolveInitialDocument.resolveInitialDIDDocument(identifier, identifierComponents, resolutionOptions);
+		DIDDocument initialDIDDocument = resolveInitialDocument.resolveInitialDIDDocument(identifier, identifierComponents, resolutionOptions, didDocumentMetadata);
 		String initialDIDDocumentCanonicalized = new JsonCanonicalizer(initialDIDDocument.toJson()).getEncodedString();
 		Map<String, Object> initialDIDDocumentMap = (Map<String, Object>) objectMapper.readValue(initialDIDDocumentCanonicalized, Map.class);
 

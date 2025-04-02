@@ -7,7 +7,6 @@ import foundation.identity.did.DIDDocument;
 import foundation.identity.did.Service;
 import foundation.identity.did.VerificationMethod;
 import foundation.identity.did.validation.Validation;
-import io.ipfs.api.IPFS;
 import io.ipfs.cid.Cid;
 import io.ipfs.multibase.Multibase;
 import io.ipfs.multihash.Multihash;
@@ -19,7 +18,8 @@ import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
 import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.beacons.singleton.SingletonBeacon;
-import uniresolver.driver.did.btc1.bitcoinconnection.BitcoinConnection;
+import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnection;
+import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
 import uniresolver.driver.did.btc1.crud.read.records.IdentifierComponents;
 import uniresolver.driver.did.btc1.util.SHA256Util;
 
@@ -36,11 +36,11 @@ public class ResolveInitialDocument {
     private static final Logger log = LoggerFactory.getLogger(ResolveInitialDocument.class);
 
     private BitcoinConnection bitcoinConnection;
-    private IPFS ipfs;
+    private IPFSConnection ipfsConnection;
 
-    public ResolveInitialDocument(BitcoinConnection bitcoinConnection, IPFS ipfs) {
+    public ResolveInitialDocument(BitcoinConnection bitcoinConnection, IPFSConnection ipfsConnection) {
         this.bitcoinConnection = bitcoinConnection;
-        this.ipfs = ipfs;
+        this.ipfsConnection = ipfsConnection;
     }
 
     /*
@@ -48,7 +48,7 @@ public class ResolveInitialDocument {
      */
 
     // See https://dcdpr.github.io/did-btc1/#resolve-initial-document
-    public DIDDocument resolveInitialDIDDocument(DID identifier, IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions) throws ResolutionException {
+    public DIDDocument resolveInitialDIDDocument(DID identifier, IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
         if (log.isDebugEnabled()) log.debug("resolveInitialDIDDocument ({}, {}, {})", identifier, identifierComponents, resolutionOptions);
 
         DIDDocument didDocument;
@@ -60,6 +60,12 @@ public class ResolveInitialDocument {
         } else {
             throw new ResolutionException("invalidHRPValue", "Invalid HRP value: " + identifierComponents.hrp());
         }
+
+        // DID DOCUMENT METADATA
+
+        didDocumentMetadata.put("initialDidDocument", didDocument);
+
+        // done
 
         if (log.isDebugEnabled()) log.debug("resolveInitialDIDDocument: " + didDocument);
         return didDocument;
@@ -169,7 +175,7 @@ public class ResolveInitialDocument {
         Cid cid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.id, hashBytes);
         String intermediateDocumentRepresentation;
         try {
-            byte[] intermediateDocumentRepresentationBytes = this.getIpfs().get(cid.bareMultihash());
+            byte[] intermediateDocumentRepresentationBytes = this.getIpfsConnection().getIpfs().get(cid.bareMultihash());
             if (intermediateDocumentRepresentationBytes == null) {
                 throw new ResolutionException("Cannot find intermediate document representation for " + cid + " in CAS");
             }
@@ -193,11 +199,11 @@ public class ResolveInitialDocument {
         this.bitcoinConnection = bitcoinConnection;
     }
 
-    public IPFS getIpfs() {
-        return this.ipfs;
+    public IPFSConnection getIpfsConnection() {
+        return this.ipfsConnection;
     }
 
-    public void setIpfs(IPFS ipfs) {
-        this.ipfs = ipfs;
+    public void setIpfsConnection(IPFSConnection ipfsConnection) {
+        this.ipfsConnection = ipfsConnection;
     }
 }
