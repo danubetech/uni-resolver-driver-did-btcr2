@@ -21,7 +21,7 @@ public class ResolveInitialDocumentTest {
 	@Test
 	public void testResolve() throws Exception {
 
-		ResolveInitialDocument resolveInitialDocument = new ResolveInitialDocument(null);
+		ResolveInitialDocument resolveInitialDocument = new ResolveInitialDocument(null, null);
 
 		DID identifier = DID.fromString(TestUtil.readResourceString("did.txt"));
 		IdentifierComponents identifierComponents = ParseDidBtc1Identifier.parseDidBtc1Identifier(identifier);

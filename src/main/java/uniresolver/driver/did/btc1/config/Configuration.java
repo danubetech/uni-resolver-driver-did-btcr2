@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btc1.DidBtc1Driver;
 import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.bitcoinconnection.BTCDRPCBitcoinConnection;
+import uniresolver.driver.did.btc1.bitcoinconnection.BitcoinConnection;
 import uniresolver.driver.did.btc1.bitcoinconnection.BitcoindRPCBitcoinConnection;
 import uniresolver.driver.did.btc1.crud.read.Read;
 
@@ -29,15 +30,23 @@ public class Configuration {
             String env_bitcoinConnection = System.getenv("uniresolver_driver_did_btc1_bitcoinConnection");
             String env_rpcUrlMainnet = System.getenv("uniresolver_driver_did_btc1_rpcUrlMainnet");
             String env_rpcUrlTestnet = System.getenv("uniresolver_driver_did_btc1_rpcUrlTestnet");
+            String env_rpcUrlSignet = System.getenv("uniresolver_driver_did_btc1_rpcUrlSignet");
+            String env_rpcUrlRegtest = System.getenv("uniresolver_driver_did_btc1_rpcUrlRegtest");
             String env_rpcCertMainnet = System.getenv("uniresolver_driver_did_btc1_rpcCertMainnet");
             String env_rpcCertTestnet = System.getenv("uniresolver_driver_did_btc1_rpcCertTestnet");
+            String env_rpcCertSignet = System.getenv("uniresolver_driver_did_btc1_rpcCertSignet");
+            String env_rpcCertRegtest = System.getenv("uniresolver_driver_did_btc1_rpcCertRegtest");
             String env_ipfs = System.getenv("uniresolver_driver_did_btc1_ipfs");
 
             if (env_bitcoinConnection != null) properties.put("bitcoinConnection", env_bitcoinConnection);
             if (env_rpcUrlMainnet != null) properties.put("rpcUrlMainnet", env_rpcUrlMainnet);
             if (env_rpcUrlTestnet != null) properties.put("rpcUrlTestnet", env_rpcUrlTestnet);
+            if (env_rpcUrlSignet != null) properties.put("rpcUrlSignet", env_rpcUrlSignet);
+            if (env_rpcUrlRegtest != null) properties.put("rpcUrlRegtest", env_rpcUrlRegtest);
             if (env_rpcCertMainnet != null) properties.put("rpcCertMainnet", env_rpcCertMainnet);
             if (env_rpcCertTestnet != null) properties.put("rpcCertTestnet", env_rpcCertTestnet);
+            if (env_rpcCertSignet != null) properties.put("rpcCertSignet", env_rpcCertSignet);
+            if (env_rpcCertRegtest != null) properties.put("rpcCertRegtest", env_rpcCertRegtest);
             if (env_ipfs != null) properties.put("ipfs", env_ipfs);
         } catch (Exception ex) {
             throw new IllegalArgumentException(ex.getMessage(), ex);
@@ -55,7 +64,7 @@ public class Configuration {
             // parse ipfs
 
             String prop_ipfs = (String) properties.get("ipfs");
-            didBtc1Driver.setRead(new Read(new IPFS(prop_ipfs)));
+            IPFS ipfs = new IPFS(prop_ipfs);
 
             // parse bitcoinConnection
 
@@ -85,10 +94,12 @@ public class Configuration {
                 rpcUrls.put(Network.regtest, URI.create(prop_rpcUrlRegtest).toURL());
             }
 
+            BitcoinConnection bitcoinConnection;
+
             if ("bitcoind".equalsIgnoreCase(prop_bitcoinConnection)) {
-                didBtc1Driver.setBitcoinConnection(BitcoindRPCBitcoinConnection.create(rpcUrls));
+                bitcoinConnection = BitcoindRPCBitcoinConnection.create(rpcUrls);
             } else if ("btcd".equalsIgnoreCase(prop_bitcoinConnection)) {
-                didBtc1Driver.setBitcoinConnection(BTCDRPCBitcoinConnection.create(rpcUrls));
+                bitcoinConnection = BTCDRPCBitcoinConnection.create(rpcUrls);
             } else if ("bitcoinj".equalsIgnoreCase(prop_bitcoinConnection)) {
                 throw new RuntimeException("bitcoinj is not implemented yet");
             } else if ("blockcypherapi".equalsIgnoreCase(prop_bitcoinConnection)) {
@@ -96,6 +107,8 @@ public class Configuration {
             } else {
                 throw new IllegalArgumentException("Invalid bitcoinConnection: " + prop_bitcoinConnection);
             }
+
+            didBtc1Driver.setRead(new Read(bitcoinConnection, ipfs));
         } catch (IllegalArgumentException ex) {
             throw ex;
         } catch (Exception ex) {

@@ -1,19 +1,33 @@
 version: "3.6"
 
+networks:
+  mynetwork:
+    external: true
+
 services:
   ipfs:
+    networks:
+      - mynetwork
     image: ipfs/kubo:release
+    container_name: ipfs
     ports:
       - "4001:4001"
       - "5001:5001"
   driver-did-btc1:
+    networks:
+      - mynetwork
     image: universalresolver/driver-did-btc1:latest
+    container_name: driver-did-btc1
     ports:
-      - "8081:8080"
+      - "10080:8080"
     environment:
-      uniresolver_driver_did_btc1_bitcoinConnection: btcd
-      uniresolver_driver_did_btc1_rpcUrlMainnet: http://user:pass@localhost:8332/
-      uniresolver_driver_did_btc1_rpcUrlTestnet: http://user:pass@localhost:18332/
+      uniresolver_driver_did_btc1_bitcoinConnection: bitcoind
+      uniresolver_driver_did_btc1_rpcUrlMainnet: http://user:pass@172.17.42.1:8332/
+      uniresolver_driver_did_btc1_rpcUrlTestnet: http://user:pass@172.17.42.1:18332/
+      uniresolver_driver_did_btc1_rpcUrlSignet: http://polaruser:polarpass@backend1.mynetwork:18443/
+      uniresolver_driver_did_btc1_rpcUrlRegtest: http://polaruser:polarpass@backend1.mynetwork:18443/
       uniresolver_driver_did_btc1_rpcCertMainnet:
       uniresolver_driver_did_btc1_rpcCertTestnet:
+      uniresolver_driver_did_btc1_rpcCertSignet:
+      uniresolver_driver_did_btc1_rpcCertRegtest:
       uniresolver_driver_did_btc1_ipfs: /dns4/ipfs/tcp/5001

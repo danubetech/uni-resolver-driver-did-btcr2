@@ -34,10 +34,12 @@ public class BitcoindRPCBitcoinConnection extends AbstractBitcoinConnection impl
 	}
 
 	private BitcoindRPCBitcoinConnection(Map<Network, BitcoinJSONRPCClient> bitcoindRpcClients) {
+		if (log.isDebugEnabled()) log.debug("Creating BitcoindRPCBitcoinConnection: " + bitcoindRpcClients);
 		this.bitcoindRpcClients = bitcoindRpcClients;
 	}
 
 	public static BitcoindRPCBitcoinConnection create(Map<Network, URL> rpcUrls) {
+		if (log.isDebugEnabled()) log.debug("Creating BitcoindRPCBitcoinConnection: " + rpcUrls);
 		return new BitcoindRPCBitcoinConnection(rpcUrls.entrySet()
 				.stream()
 				.map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), new BitcoinJSONRPCClient(e.getValue())))
@@ -45,6 +47,7 @@ public class BitcoindRPCBitcoinConnection extends AbstractBitcoinConnection impl
 	}
 
 	public static BitcoindRPCBitcoinConnection create() {
+		if (log.isDebugEnabled()) log.debug("Creating BitcoindRPCBitcoinConnection");
 		return create(Map.of(
 				Network.mainnet, BitcoinJSONRPCClient.DEFAULT_JSONRPC_URL,
 				Network.testnet, BitcoinJSONRPCClient.DEFAULT_JSONRPC_TESTNET_URL,
@@ -53,13 +56,16 @@ public class BitcoindRPCBitcoinConnection extends AbstractBitcoinConnection impl
 	}
 
 	public BitcoinJSONRPCClient getBitcoinRpcClient(Network network) {
-		return this.bitcoindRpcClients.get(network);
+		BitcoinJSONRPCClient bitcoinJSONRPCClient = this.bitcoindRpcClients.get(network);
+		if (log.isDebugEnabled()) log.debug("getBitcoinRpcClient for " + network + ": " + bitcoinJSONRPCClient.rpcURL);
+		return bitcoinJSONRPCClient;
 	}
 
 	@Override
 	public Block getBlockByBlockHeight(Network network, Integer blockHeight) {
-		wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Block bitcoinjBlock = this.getBitcoinRpcClient(network).getBlock(blockHeight);
-		List<BitcoindRpcClient.Transaction> bitcoinjTransactions = bitcoinjBlock.tx().stream().map(tx -> this.getBitcoinRpcClient(network).getTransaction(tx)).toList();
+		BitcoinJSONRPCClient bitcoinJSONRPCClient = this.getBitcoinRpcClient(network);
+		wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Block bitcoinjBlock = bitcoinJSONRPCClient.getBlock(blockHeight);
+		List<BitcoindRpcClient.Transaction> bitcoinjTransactions = bitcoinjBlock.tx().stream().map(tx -> bitcoinJSONRPCClient.getTransaction(tx)).toList();
 		List<Tx> txs = bitcoinjTransactions.stream().map(bitcoinjTransaction -> {
 			BitcoindRpcClient.RawTransaction bitcoinjRawTransaction = bitcoinjTransaction.raw();
 			List<TxIn> txIns = bitcoinjRawTransaction.vIn().stream().map(in -> new TxIn(in.getTransaction().txId())).toList();
@@ -71,10 +77,37 @@ public class BitcoindRPCBitcoinConnection extends AbstractBitcoinConnection impl
 
 	@Override
 	public Tx getTransactionById(Network network, String txid) {
-		wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Transaction bitcoinjTransaction = this.getBitcoinRpcClient(network).getTransaction(txid);
+		BitcoinJSONRPCClient bitcoinJSONRPCClient = this.getBitcoinRpcClient(network);
+		wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Transaction bitcoinjTransaction = bitcoinJSONRPCClient.getTransaction(txid);
 		BitcoindRpcClient.RawTransaction bitcoinjRawTransaction = bitcoinjTransaction.raw();
 		List<TxIn> txIns = bitcoinjRawTransaction.vIn().stream().map(in -> new TxIn(in.getTransaction().txId())).toList();
 		List<TxOut> txOuts = bitcoinjRawTransaction.vOut().stream().map(out -> new TxOut(out.transaction().txId(), out.scriptPubKey().addresses(), out.scriptPubKey().asm())).toList();
 		return new Tx(bitcoinjTransaction.txId(), txIns, txOuts);
+	}
+
+	@Override
+	public Block getBlockByTargetTime(Network network, Long targetTime) {
+		BitcoinJSONRPCClient bitcoinJSONRPCClient = this.getBitcoinRpcClient(network);
+		Integer blocks = bitcoinJSONRPCClient.getBlockChainInfo().blocks();
+		for (int blockHeight=blocks-1; blockHeight>=0; blockHeight--) {
+			wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Block bitcoinjBlock = bitcoinJSONRPCClient.getBlock(blockHeight);
+			if (bitcoinjBlock.time().getTime() < targetTime) {
+				return new Block(bitcoinjBlock.height(), bitcoinjBlock.hash(), null);
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public Block getBlockByMinConfirmations(Network network, Integer minConfirmations) {
+		BitcoinJSONRPCClient bitcoinJSONRPCClient = this.getBitcoinRpcClient(network);
+		Integer blocks = bitcoinJSONRPCClient.getBlockChainInfo().blocks();
+		for (int blockHeight=blocks-1; blockHeight>=0; blockHeight--) {
+			wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Block bitcoinjBlock = bitcoinJSONRPCClient.getBlock(blockHeight);
+			if (bitcoinjBlock.confirmations() >= minConfirmations) {
+				return new Block(bitcoinjBlock.height(), bitcoinjBlock.hash(), null);
+			}
+		}
+		return null;
 	}
 }

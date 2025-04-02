@@ -189,9 +189,9 @@
 			<version>1.4.4</version>
 		</dependency>
 		<dependency>
-			<groupId>info.weboftrust</groupId>
-			<artifactId>btc-tx-lookup-java</artifactId>
-			<version>1.0.0</version>
+			<groupId>wf.bitcoin</groupId>
+			<artifactId>bitcoin-rpc-client</artifactId>
+			<version>1.2.4</version>
 		</dependency>
 		<dependency>
 			<groupId>com.apicatalog</groupId>

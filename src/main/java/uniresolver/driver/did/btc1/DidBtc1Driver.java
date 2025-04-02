@@ -3,14 +3,11 @@ package uniresolver.driver.did.btc1;
 import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
 import foundation.identity.did.DIDURL;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.DereferencingException;
 import uniresolver.ResolutionException;
 import uniresolver.driver.Driver;
-import uniresolver.driver.did.btc1.bitcoinconnection.BitcoinConnection;
 import uniresolver.driver.did.btc1.config.Configuration;
 import uniresolver.driver.did.btc1.crud.read.Read;
 import uniresolver.driver.did.btc1.crud.read.records.IdentifierComponents;
@@ -27,8 +24,6 @@ public class DidBtc1Driver implements Driver {
 	private Map<String, Object> properties;
 
 	private Read read;
-	private BitcoinConnection bitcoinConnection;
-	private HttpClient httpClient = HttpClients.createDefault();
 
 	public DidBtc1Driver() {
 		this(Configuration.getPropertiesFromEnvironment());
@@ -89,21 +84,5 @@ public class DidBtc1Driver implements Driver {
 
 	public void setRead(Read read) {
 		this.read = read;
-	}
-
-	public BitcoinConnection getBitcoinConnection() {
-		return this.bitcoinConnection;
-	}
-
-	public void setBitcoinConnection(BitcoinConnection bitcoinConnection) {
-		this.bitcoinConnection = bitcoinConnection;
-	}
-
-	public HttpClient getHttpClient() {
-		return this.httpClient;
-	}
-
-	public void setHttpClient(HttpClient httpClient) {
-		this.httpClient = httpClient;
 	}
 }

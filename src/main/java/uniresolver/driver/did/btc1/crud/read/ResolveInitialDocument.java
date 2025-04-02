@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
 import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.beacons.singleton.SingletonBeacon;
+import uniresolver.driver.did.btc1.bitcoinconnection.BitcoinConnection;
 import uniresolver.driver.did.btc1.crud.read.records.IdentifierComponents;
 import uniresolver.driver.did.btc1.util.SHA256Util;
 
@@ -34,9 +35,11 @@ public class ResolveInitialDocument {
 
     private static final Logger log = LoggerFactory.getLogger(ResolveInitialDocument.class);
 
+    private BitcoinConnection bitcoinConnection;
     private IPFS ipfs;
 
-    public ResolveInitialDocument(IPFS ipfs) {
+    public ResolveInitialDocument(BitcoinConnection bitcoinConnection, IPFS ipfs) {
+        this.bitcoinConnection = bitcoinConnection;
         this.ipfs = ipfs;
     }
 
@@ -46,6 +49,7 @@ public class ResolveInitialDocument {
 
     // See https://dcdpr.github.io/did-btc1/#resolve-initial-document
     public DIDDocument resolveInitialDIDDocument(DID identifier, IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions) throws ResolutionException {
+        if (log.isDebugEnabled()) log.debug("resolveInitialDIDDocument ({}, {}, {})", identifier, identifierComponents, resolutionOptions);
 
         DIDDocument didDocument;
 
@@ -181,9 +185,13 @@ public class ResolveInitialDocument {
         return parsedInitialDocument;
     }
 
-    /*
-     * Getters and setters
-     */
+    public BitcoinConnection getBitcoinConnection() {
+        return this.bitcoinConnection;
+    }
+
+    public void setBitcoinConnection(BitcoinConnection bitcoinConnection) {
+        this.bitcoinConnection = bitcoinConnection;
+    }
 
     public IPFS getIpfs() {
         return this.ipfs;

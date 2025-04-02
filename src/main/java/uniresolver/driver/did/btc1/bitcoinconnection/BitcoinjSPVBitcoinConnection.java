@@ -31,10 +31,12 @@ public class BitcoinjSPVBitcoinConnection extends AbstractBitcoinConnection impl
 	}
 
 	private BitcoinjSPVBitcoinConnection(Map<Network, WalletAppKit> walletAppKits) {
+		if (log.isDebugEnabled()) log.debug("Creating BitcoindRPCBitcoinConnection: " + walletAppKits);
 		this.walletAppKits = walletAppKits;
 	}
 
 	public static BitcoinjSPVBitcoinConnection create(List<Network> networks) {
+		if (log.isDebugEnabled()) log.debug("Creating BitcoindRPCBitcoinConnection: " + networks);
 		return new BitcoinjSPVBitcoinConnection(networks
 				.stream()
 				.map(network -> new AbstractMap.SimpleEntry<>(network, WalletAppKit.launch(network.toBitcoinjNetwork(), new File("."), network.name())))
@@ -42,6 +44,7 @@ public class BitcoinjSPVBitcoinConnection extends AbstractBitcoinConnection impl
 	}
 
 	public static BitcoinjSPVBitcoinConnection create() {
+		if (log.isDebugEnabled()) log.debug("Creating BitcoindRPCBitcoinConnection");
 		return create(List.of(
 				Network.mainnet,
 				Network.testnet,
@@ -60,6 +63,16 @@ public class BitcoinjSPVBitcoinConnection extends AbstractBitcoinConnection impl
 
 	@Override
 	public Tx getTransactionById(Network network, String txid) {
+		throw new RuntimeException("Not implemented yet");
+	}
+
+	@Override
+	public Block getBlockByTargetTime(Network network, Long targetTime) {
+		throw new RuntimeException("Not implemented yet");
+	}
+
+	@Override
+	public Block getBlockByMinConfirmations(Network network, Integer confirmations) {
 		throw new RuntimeException("Not implemented yet");
 	}
 }
