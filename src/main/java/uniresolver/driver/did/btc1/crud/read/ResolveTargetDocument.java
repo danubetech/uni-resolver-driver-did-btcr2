@@ -210,20 +210,26 @@ public class ResolveTargetDocument {
             }
         });
 
+        boolean recursive;
         NextSignals nextSignals;
 
         if (Objects.equals(contemporaryBlockheight, targetBlockheight)) {
+            recursive = false;
             nextSignals = new NextSignals(contemporaryBlockheight, signals);
         } else if (signals.isEmpty()) {
+            recursive = true;
             nextSignals = this.findNextSignals(contemporaryBlockheight + 1, targetBlockheight, beacons, network, didDocumentMetadata);
         } else {
+            recursive = false;
             nextSignals = new NextSignals(contemporaryBlockheight, signals);
         }
 
         // DID DOCUMENT METADATA
 
-        Map<Integer, Map<String, Object>> didDocumentMetadataNextSignals = (Map<Integer, Map<String, Object>>) didDocumentMetadata.computeIfAbsent("nextSignals", x -> new LinkedHashMap<>());
-        if (! nextSignals.signals().isEmpty()) didDocumentMetadataNextSignals.put(contemporaryBlockheight, RecordUtil.toMap(nextSignals));
+        if (! recursive) {
+            Map<Integer, Map<String, Object>> didDocumentMetadataNextSignals = (Map<Integer, Map<String, Object>>) didDocumentMetadata.computeIfAbsent("nextSignals", x -> new LinkedHashMap<>());
+            if (! nextSignals.signals().isEmpty()) didDocumentMetadataNextSignals.put(contemporaryBlockheight, RecordUtil.toMap(nextSignals));
+        }
 
         // done
 
