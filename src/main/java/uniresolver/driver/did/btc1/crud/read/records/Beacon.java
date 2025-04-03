@@ -2,8 +2,6 @@ package uniresolver.driver.did.btc1.crud.read.records;
 
 import org.bitcoinj.base.Address;
 
-import java.net.URI;
-
 public record Beacon(
         String id,
         String type,

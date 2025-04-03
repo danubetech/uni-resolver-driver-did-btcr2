@@ -2,7 +2,6 @@ package uniresolver.driver.did.btc1.crud.read;
 
 import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
-import io.ipfs.api.IPFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;

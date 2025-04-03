@@ -1,6 +1,5 @@
 package uniresolver.driver.did.btc1.config;
 
-import io.ipfs.api.IPFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btc1.DidBtc1Driver;

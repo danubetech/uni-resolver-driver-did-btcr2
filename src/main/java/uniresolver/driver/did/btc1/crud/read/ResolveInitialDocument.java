@@ -1,7 +1,6 @@
 package uniresolver.driver.did.btc1.crud.read;
 
 import com.apicatalog.multicodec.codec.KeyCodec;
-import com.danubetech.dataintegrity.jsonld.DataIntegrityContexts;
 import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
 import foundation.identity.did.Service;
@@ -13,7 +12,6 @@ import io.ipfs.multihash.Multihash;
 import org.bitcoinj.base.Address;
 import org.bitcoinj.base.AddressParser;
 import org.bitcoinj.base.ScriptType;
-import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.crypto.ECKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
