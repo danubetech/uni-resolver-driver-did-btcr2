@@ -27,10 +27,12 @@ import uniresolver.driver.did.btc1.crud.read.records.Beacon;
 import uniresolver.driver.did.btc1.crud.read.records.NextSignals;
 import uniresolver.driver.did.btc1.crud.read.records.Signal;
 import uniresolver.driver.did.btc1.crud.update.records.DIDUpdatePayload;
-import uniresolver.driver.did.btc1.util.*;
+import uniresolver.driver.did.btc1.util.DIDDocumentUtil;
+import uniresolver.driver.did.btc1.util.HexUtil;
+import uniresolver.driver.did.btc1.util.JSONPatchUtil;
+import uniresolver.driver.did.btc1.util.RecordUtil;
 
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class ResolveTargetDocument {
@@ -125,7 +127,7 @@ public class ResolveTargetDocument {
             try {
                 beaconId = JsonLDUtils.uriToString(beaconService.getId());
                 beaconType = beaconService.getType();
-                beaconServiceEndpoint = JsonLDUtils.uriToString((URI) beaconService.getServiceEndpoint());
+                beaconServiceEndpoint = beaconService.getServiceEndpoint() instanceof URI ? JsonLDUtils.uriToString((URI) beaconService.getServiceEndpoint()) : (String) beaconService.getServiceEndpoint();
                 beaconAddress = BitcoinURI.of(beaconServiceEndpoint).getAddress();
             } catch (BitcoinURIParseException ex) {
                 throw new ResolutionException("invalidDidDocument", "Invalid DID document: " + ex.getMessage(), ex);
@@ -272,16 +274,16 @@ public class ResolveTargetDocument {
 
     // See https://dcdpr.github.io/did-btc1/#apply-did-update
     private static DIDDocument applyDIDUpdate(DIDDocument contemporaryDIDDocument, DIDUpdatePayload update) throws ResolutionException {
-        if (log.isDebugEnabled()) log.debug("applyDIDUpdate ({}, {}, {})", contemporaryDIDDocument, update);
+        if (log.isDebugEnabled()) log.debug("applyDIDUpdate ({}, {})", contemporaryDIDDocument, update);
 
-/*        DataIntegrityProof dataIntegrityProof = DataIntegrityProof.builder()
+/* TODO       DataIntegrityProof dataIntegrityProof = DataIntegrityProof.builder()
                 .type(DataIntegritySuites.DATA_INTEGRITY_SUITE_DATAINTEGRITYPROOF.getTerm())
                 .cryptosuite("bip340-rdfc-2025")*/
 
         DIDDocument targetDIDDocument = DIDDocumentUtil.copy(contemporaryDIDDocument);
         targetDIDDocument = JSONPatchUtil.apply(targetDIDDocument, update.patch());
         Validation.validate(targetDIDDocument);
-        byte[] targetHash = SHA256Util.sha256(targetDIDDocument.toJson().getBytes(StandardCharsets.UTF_8));
+        byte[] targetHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(targetDIDDocument);
         if (! Arrays.equals(targetHash, update.targetHash())) {
             throw new ResolutionException("invalidDidUpdate", "targetHash " + HexUtil.hexEncode(targetHash) + " does not match update.targetHash: " + HexUtil.hexEncode(update.targetHash()));
         }
