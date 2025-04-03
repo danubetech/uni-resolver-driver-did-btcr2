@@ -191,18 +191,17 @@ public class ResolveTargetDocument {
             if (COINBASE_TX_IDENTIFIER.equals(txId)) return;
             if (GENESIS_TX_IDENTIFIER.equals(txId)) return;
             Tx tx = this.getBitcoinConnection().getTransactionById(network, txId);
-            for (int txInPrevIndex=0; txInPrevIndex<tx.txIns().size(); txInPrevIndex++) {
-                TxIn txIn = tx.txIns().get(txInPrevIndex);
+            for (TxIn txIn : tx.txIns()) {
                 String prevTxId = txIn.txId();
                 if (prevTxId == null) continue;
                 if (COINBASE_TX_IDENTIFIER.equals(prevTxId)) continue;
                 if (GENESIS_TX_IDENTIFIER.equals(prevTxId)) continue;
                 Tx prevTx = this.getBitcoinConnection().getTransactionById(network, prevTxId);
-                TxOut spentTxOut = prevTx.txOuts().get(txInPrevIndex);
-                Address spentAddress = (spentTxOut.scriptPubKeyAddresses() == null || spentTxOut.scriptPubKeyAddresses().isEmpty()) ? null : AddressParser.getDefault(network.toBitcoinjNetwork()).parseAddress(spentTxOut.scriptPubKeyAddresses().getFirst());
-                Optional<Beacon> foundBeacon = beacons.stream().filter(beacon -> beacon.address().equals(spentAddress)).findAny();
-                if (foundBeacon.isPresent()) {
-                    Signal beaconSignal = new Signal(foundBeacon.get().id(), foundBeacon.get().type(), tx);
+                TxOut spentTxOut = prevTx.txOuts().get(txIn.transactionOutputN());
+                Address spentAddress = spentTxOut.scriptPubKeyAddress() == null ? null : AddressParser.getDefault(network.toBitcoinjNetwork()).parseAddress(spentTxOut.scriptPubKeyAddress());
+                Beacon foundBeacon = beacons.stream().filter(beacon -> beacon.address().equals(spentAddress)).findAny().orElse(null);
+                if (foundBeacon != null) {
+                    Signal beaconSignal = new Signal(foundBeacon.id(), foundBeacon.type(), tx);
                     signals.add(beaconSignal);
                     break;
                 }

@@ -53,12 +53,13 @@ public class SingletonBeacon {
      * 5.1.3 Process Singleton Beacon Signal
      */
 
-    private static final Pattern PATTERN_TXOUT = Pattern.compile("^OP_RETURN OP_PUSH32 ([0-9a-fA-F]{32})$");
+    //private static final Pattern PATTERN_TXOUT = Pattern.compile("^OP_RETURN OP_PUSH32 ([0-9a-fA-F]{32})$");
+    private static final Pattern PATTERN_TXOUT = Pattern.compile("^OP_RETURN ([0-9a-fA-F]{64})$");
 
     // See https://dcdpr.github.io/did-btc1/#process-singleton-beacon-signal
     public static DIDUpdatePayload processSingletonBeaconSignal(Tx tx, Map<String, Object> signalSidecarData, IPFSConnection ipfsConnection, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
 
-        TxOut txOut = tx.txOuts().get(0);
+        TxOut txOut = tx.txOuts().getFirst();
 
         DIDUpdatePayload didUpdatePayload = null;
 
@@ -71,11 +72,12 @@ public class SingletonBeacon {
         byte[] hashBytes = HexUtil.hexDecode(matcher.group(1));
 
         if (signalSidecarData != null) {
-            didUpdatePayload = RecordUtil.fromMap((Map<String, Object>) signalSidecarData.get("updatePayload"), DIDUpdatePayload.class);
-            byte[] updateHashBytes = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(didUpdatePayload);
+            Map<String, Object> didUpdatePayloadMap = (Map<String, Object>) signalSidecarData.get("updatePayload");
+            byte[] updateHashBytes = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(didUpdatePayloadMap);
             if (! Arrays.equals(updateHashBytes, hashBytes)) {
                 throw new ResolutionException("invalidSidecarData", "updateHashBytes " + HexUtil.hexEncode(updateHashBytes) + " does not match hashBytes: " + HexUtil.hexEncode(hashBytes));
             }
+            didUpdatePayload = DIDUpdatePayload.fromSignalSidecarDataUpdatePayload(didUpdatePayloadMap);
         } else {
             didUpdatePayload = FetchContentFromAddressableStorage.fetchContentFromAddressableStorage(hashBytes, DIDUpdatePayload.class, ipfsConnection);
             if (didUpdatePayload == null) {

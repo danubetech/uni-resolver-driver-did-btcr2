@@ -16,7 +16,6 @@ public class IPFSConnection {
 	private IPFSConnection(MultiAddress ipfsMultiaddr) {
 		if (log.isDebugEnabled()) log.debug("Creating IPFSConnection: " + ipfsMultiaddr);
 		this.ipfsMultiaddr = ipfsMultiaddr;
-		this.ipfs = new IPFS(ipfsMultiaddr);
 	}
 
 	public static IPFSConnection create(String ipfsMultiaddr) {
