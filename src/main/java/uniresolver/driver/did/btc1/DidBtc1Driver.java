@@ -95,7 +95,7 @@ public class DidBtc1Driver implements Driver {
 
 		Map<String, Object> didDocumentMetadata = new LinkedHashMap<>();
 
-		// resolve initial DID document
+		// execute read() operation
 
         try {
             resolutionOptions = new ObjectMapper().readValue(RESOLUTION_OPTIONS, Map.class);
