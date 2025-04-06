@@ -66,7 +66,10 @@ public class ResolveTargetDocument {
 
         Integer targetBlockheight = this.determineTargetBlockHeight(network, targetTime);
 
-        Map<String, Object> signalsMetadata = resolutionOptions.get("sidecarData") == null ? null : (Map<String, Object>) ((Map<String, Object>) resolutionOptions.get("sidecarData")).get("signalsMetadata");
+        Map<String, Object> sidecarData = resolutionOptions.get("sidecarData") == null ? null : (Map<String, Object>) resolutionOptions.get("sidecarData");
+        Map<String, Object> signalsMetadata = sidecarData == null ? null : (Map<String, Object>) sidecarData.get("signalsMetadata");
+        /* TODO: is this right? what if no sidecarData is given? */
+        if (signalsMetadata == null) throw new ResolutionException("invalidResolutionOptions", "No signalsMetadata found in the sidecarData: " + sidecarData);
 
         Integer currentVersionId = 1;
         if (currentVersionId.equals(targetVersionId)) return initialDocument;
