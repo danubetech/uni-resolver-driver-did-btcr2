@@ -20,7 +20,7 @@ import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.beacons.singleton.SingletonBeacon;
 import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnection;
 import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
-import uniresolver.driver.did.btc1.crud.read.records.IdentifierComponents;
+import uniresolver.driver.did.btc1.syntax.records.IdentifierComponents;
 import uniresolver.driver.did.btc1.util.SHA256Util;
 
 import java.io.IOException;
@@ -44,31 +44,32 @@ public class ResolveInitialDocument {
     }
 
     /*
-     * 4.2.2 Resolve Initial Document
+     * 4.2.1 Resolve Initial Document
      */
 
     // See https://dcdpr.github.io/did-btc1/#resolve-initial-document
     public DIDDocument resolveInitialDIDDocument(DID identifier, IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
-        if (log.isDebugEnabled()) log.debug("resolveInitialDIDDocument ({}, {}, {})", identifier, identifierComponents, resolutionOptions);
+        if (log.isDebugEnabled())
+            log.debug("resolveInitialDIDDocument ({}, {}, {})", identifier, identifierComponents, resolutionOptions);
 
-        DIDDocument didDocument;
+        DIDDocument initialDocument;
 
-        if ("k".equals(identifierComponents.hrp())) {
-            didDocument = this.deterministicallyGenerateInitialDIDDocument(identifier, identifierComponents);
-        } else if ("x".equals(identifierComponents.hrp())) {
-            didDocument = this.externalResolution(identifier, identifierComponents, resolutionOptions);
+        if ("key".equals(identifierComponents.idType())) {
+            initialDocument = this.deterministicallyGenerateInitialDIDDocument(identifier, identifierComponents);
+        } else if ("external".equals(identifierComponents.idType())) {
+            initialDocument = this.externalResolution(identifier, identifierComponents, resolutionOptions);
         } else {
-            throw new ResolutionException("invalidHRPValue", "Invalid HRP value: " + identifierComponents.hrp());
+            throw new ResolutionException("invalidHRPValue", "Invalid hrp/idType value: " + identifierComponents.idType());
         }
 
         // DID DOCUMENT METADATA
 
-        didDocumentMetadata.put("initialDidDocument", didDocument);
+        didDocumentMetadata.put("initialDidDocument", initialDocument);
 
-        // done
+        // Return initialDocument.
 
-        if (log.isDebugEnabled()) log.debug("resolveInitialDIDDocument: " + didDocument);
-        return didDocument;
+        if (log.isDebugEnabled()) log.debug("resolveInitialDIDDocument: " + initialDocument);
+        return initialDocument;
     }
 
     private static final URI CONTEXT = URI.create("https://did-btc1/TBD/context");
@@ -165,7 +166,7 @@ public class ResolveInitialDocument {
 
         String intermediateDocumentRepresentation = initialDocument.replace(identifier.toString(), "did:btc1:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
         byte[] hashBytes = SHA256Util.sha256(intermediateDocumentRepresentation.getBytes(StandardCharsets.UTF_8));
-        if (! Arrays.equals(hashBytes, identifierComponents.genesisBytes())) {
+        if (!Arrays.equals(hashBytes, identifierComponents.genesisBytes())) {
             throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Initial document cannot be validated");
         }
 

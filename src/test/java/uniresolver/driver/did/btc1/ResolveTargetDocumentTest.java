@@ -5,10 +5,10 @@ import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
 import org.erdtman.jcs.JsonCanonicalizer;
 import org.junit.jupiter.api.Test;
-import uniresolver.driver.did.btc1.crud.read.ParseDidBtc1Identifier;
 import uniresolver.driver.did.btc1.crud.read.ResolveInitialDocument;
 import uniresolver.driver.did.btc1.crud.read.ResolveTargetDocument;
-import uniresolver.driver.did.btc1.crud.read.records.IdentifierComponents;
+import uniresolver.driver.did.btc1.syntax.DidBtc1IdentifierDecoding;
+import uniresolver.driver.did.btc1.syntax.records.IdentifierComponents;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +30,7 @@ public class ResolveTargetDocumentTest {
 		DID identifier = DID.fromString(TestUtil.readResourceString("did.txt"));
 		Map<String, Object> resolutionOptions = TestUtil.readResourceJson("resolutionOptions.json");
 
-		IdentifierComponents identifierComponents = ParseDidBtc1Identifier.parseDidBtc1Identifier(identifier, didDocumentMetadata);
+		IdentifierComponents identifierComponents = DidBtc1IdentifierDecoding.didBtc1IdentifierDecoding(identifier);
 
 		DIDDocument initialDIDDocument = resolveInitialDocument.resolveInitialDIDDocument(identifier, identifierComponents, resolutionOptions, didDocumentMetadata);
 

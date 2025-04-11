@@ -46,9 +46,10 @@ public class BitcoinjSPVBitcoinConnection extends AbstractBitcoinConnection impl
 	public static BitcoinjSPVBitcoinConnection create() {
 		if (log.isDebugEnabled()) log.debug("Creating BitcoindRPCBitcoinConnection");
 		return create(List.of(
-				Network.mainnet,
-				Network.testnet,
-				Network.regtest)
+				Network.bitcoin,
+				Network.regtest,
+				Network.testnet3,
+				Network.testnet4)
 		);
 	}
 

@@ -1,10 +1,10 @@
-package uniresolver.driver.did.btc1.crud.read.records;
+package uniresolver.driver.did.btc1.syntax.records;
 
 import uniresolver.driver.did.btc1.Network;
 
 public record IdentifierComponents(
-        Network network,
+        String idType,
         Integer version,
-        String hrp,
+        Network network,
         byte[] genesisBytes) {
 }

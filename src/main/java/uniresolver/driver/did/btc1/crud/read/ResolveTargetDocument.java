@@ -48,21 +48,38 @@ public class ResolveTargetDocument {
     }
 
     /*
-     * 4.2.3 Resolve Target Document
+     * 4.2.2 Resolve Target Document
      */
 
     // See https://dcdpr.github.io/did-btc1/#resolve-target-document
     public DIDDocument resolveTargetDocument(DIDDocument initialDocument, Map<String, Object> resolutionOptions, Network network, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
         if (log.isDebugEnabled()) log.debug("resolveTargetDocument ({}, {}, {})", initialDocument, resolutionOptions, network);
 
-        Integer targetVersionId = null;
-        Long targetTime = null;
+        Integer targetVersionId;
+        Long targetTime;
 
         if (resolutionOptions.get("versionId") != null) {
+
+            // If resolutionOptions.versionId is not null, set targetVersionId to resolutionOptions.versionId.
+
             targetVersionId = (Integer) resolutionOptions.get("versionId");
+            targetTime = null;
         } else if (resolutionOptions.get("versionTime") != null) {
+
+            // Else if resolutionOptions.versionTime is not null, set targetTime to resolutionOptions.versionTime.
+
+            targetVersionId = null;
             targetTime = DateTime.parseRfc3339((String) resolutionOptions.get("versionTime")).getValue();
+        } else {
+
+            // Else set targetTime to null and targetVersionId to null.
+
+            targetVersionId = null;
+            targetTime = null;
         }
+
+        // Set targetBlockheight to the result of passing network and targetTime
+        // to the algorithm Determine Target Blockheight.
 
         Integer targetBlockheight = this.determineTargetBlockHeight(network, targetTime);
 

@@ -46,9 +46,10 @@ public class BitcoindRPCBitcoinConnection extends AbstractBitcoinConnection impl
 	public static BitcoindRPCBitcoinConnection create() {
 		if (log.isDebugEnabled()) log.debug("Creating BitcoindRPCBitcoinConnection");
 		return create(Map.of(
-				Network.mainnet, BitcoinJSONRPCClient.DEFAULT_JSONRPC_URL,
-				Network.testnet, BitcoinJSONRPCClient.DEFAULT_JSONRPC_TESTNET_URL,
-				Network.regtest, BitcoinJSONRPCClient.DEFAULT_JSONRPC_REGTEST_URL)
+				Network.bitcoin, BitcoinJSONRPCClient.DEFAULT_JSONRPC_URL,
+				Network.regtest, BitcoinJSONRPCClient.DEFAULT_JSONRPC_REGTEST_URL,
+				Network.testnet3, BitcoinJSONRPCClient.DEFAULT_JSONRPC_TESTNET_URL,
+				Network.testnet4, BitcoinJSONRPCClient.DEFAULT_JSONRPC_TESTNET_URL)
 		);
 	}
 

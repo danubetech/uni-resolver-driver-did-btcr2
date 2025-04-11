@@ -18,13 +18,13 @@ MAINTAINER Markus Sabadello <markus@danubetech.com>
 
 ENV uniresolver_driver_did_btc1_bitcoinConnection=bitcoind
 ENV uniresolver_driver_did_btc1_rpcUrlMainnet=http://user:pass@localhost:8332/
-ENV uniresolver_driver_did_btc1_rpcUrlTestnet=http://user:pass@localhost:18332/
 ENV uniresolver_driver_did_btc1_rpcUrlSignet=
 ENV uniresolver_driver_did_btc1_rpcUrlRegtest=
+ENV uniresolver_driver_did_btc1_rpcUrlTestnet=http://user:pass@localhost:18332/
 ENV uniresolver_driver_did_btc1_rpcCertMainnet=
-ENV uniresolver_driver_did_btc1_rpcCertTestnet=
 ENV uniresolver_driver_did_btc1_rpcCertSignet=
 ENV uniresolver_driver_did_btc1_rpcCertRegtest=
+ENV uniresolver_driver_did_btc1_rpcCertTestnet=
 ENV uniresolver_driver_did_btc1_ipfs=/ip4/127.0.0.1/tcp/5001
 
 # copy from build stage

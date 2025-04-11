@@ -29,24 +29,24 @@ public class Configuration {
 
             String env_bitcoinConnection = System.getenv("uniresolver_driver_did_btc1_bitcoinConnection");
             String env_rpcUrlMainnet = System.getenv("uniresolver_driver_did_btc1_rpcUrlMainnet");
-            String env_rpcUrlTestnet = System.getenv("uniresolver_driver_did_btc1_rpcUrlTestnet");
             String env_rpcUrlSignet = System.getenv("uniresolver_driver_did_btc1_rpcUrlSignet");
             String env_rpcUrlRegtest = System.getenv("uniresolver_driver_did_btc1_rpcUrlRegtest");
+            String env_rpcUrlTestnet = System.getenv("uniresolver_driver_did_btc1_rpcUrlTestnet");
             String env_rpcCertMainnet = System.getenv("uniresolver_driver_did_btc1_rpcCertMainnet");
-            String env_rpcCertTestnet = System.getenv("uniresolver_driver_did_btc1_rpcCertTestnet");
             String env_rpcCertSignet = System.getenv("uniresolver_driver_did_btc1_rpcCertSignet");
             String env_rpcCertRegtest = System.getenv("uniresolver_driver_did_btc1_rpcCertRegtest");
+            String env_rpcCertTestnet = System.getenv("uniresolver_driver_did_btc1_rpcCertTestnet");
             String env_ipfs = System.getenv("uniresolver_driver_did_btc1_ipfs");
 
             if (env_bitcoinConnection != null) properties.put("bitcoinConnection", env_bitcoinConnection);
             if (env_rpcUrlMainnet != null) properties.put("rpcUrlMainnet", env_rpcUrlMainnet);
-            if (env_rpcUrlTestnet != null) properties.put("rpcUrlTestnet", env_rpcUrlTestnet);
             if (env_rpcUrlSignet != null) properties.put("rpcUrlSignet", env_rpcUrlSignet);
             if (env_rpcUrlRegtest != null) properties.put("rpcUrlRegtest", env_rpcUrlRegtest);
+            if (env_rpcUrlTestnet != null) properties.put("rpcUrlTestnet", env_rpcUrlTestnet);
             if (env_rpcCertMainnet != null) properties.put("rpcCertMainnet", env_rpcCertMainnet);
-            if (env_rpcCertTestnet != null) properties.put("rpcCertTestnet", env_rpcCertTestnet);
             if (env_rpcCertSignet != null) properties.put("rpcCertSignet", env_rpcCertSignet);
             if (env_rpcCertRegtest != null) properties.put("rpcCertRegtest", env_rpcCertRegtest);
+            if (env_rpcCertTestnet != null) properties.put("rpcCertTestnet", env_rpcCertTestnet);
             if (env_ipfs != null) properties.put("ipfs", env_ipfs);
         } catch (Exception ex) {
             throw new IllegalArgumentException(ex.getMessage(), ex);
@@ -74,27 +74,28 @@ public class Configuration {
             String prop_bitcoinConnection = (String) properties.get("bitcoinConnection");
 
             String prop_rpcUrlMainnet = (String) properties.get("rpcUrlMainnet");
-            String prop_rpcUrlTestnet = (String) properties.get("rpcUrlTestnet");
             String prop_rpcUrlSignet = (String) properties.get("rpcUrlSignet");
             String prop_rpcUrlRegtest = (String) properties.get("rpcUrlRegtest");
-            String prop_rpcCertTestnet = (String) properties.get("rpcCertTestnet");
+            String prop_rpcUrlTestnet = (String) properties.get("rpcUrlTestnet");
             String prop_rpcCertMainnet = (String) properties.get("rpcCertMainnet");
             String prop_rpcCertSignet = (String) properties.get("rpcCertSignet");
             String prop_rpcCertRegtest = (String) properties.get("rpcCertRegtest");
+            String prop_rpcCertTestnet = (String) properties.get("rpcCertTestnet");
 
             Map<Network, URL> rpcUrls = new HashMap<>();
 
             if (prop_rpcUrlMainnet != null && ! prop_rpcUrlMainnet.isBlank()) {
-                rpcUrls.put(Network.mainnet, URI.create(prop_rpcUrlMainnet).toURL());
-            }
-            if (prop_rpcUrlTestnet != null && ! prop_rpcUrlTestnet.isBlank()) {
-                rpcUrls.put(Network.testnet, URI.create(prop_rpcUrlTestnet).toURL());
+                rpcUrls.put(Network.bitcoin, URI.create(prop_rpcUrlMainnet).toURL());
             }
             if (prop_rpcUrlSignet != null && ! prop_rpcUrlSignet.isBlank()) {
                 rpcUrls.put(Network.signet, URI.create(prop_rpcUrlSignet).toURL());
             }
             if (prop_rpcUrlRegtest != null && ! prop_rpcUrlRegtest.isBlank()) {
                 rpcUrls.put(Network.regtest, URI.create(prop_rpcUrlRegtest).toURL());
+            }
+            if (prop_rpcUrlTestnet != null && ! prop_rpcUrlTestnet.isBlank()) {
+                rpcUrls.put(Network.testnet3, URI.create(prop_rpcUrlTestnet).toURL());
+                rpcUrls.put(Network.testnet4, URI.create(prop_rpcUrlTestnet).toURL());
             }
 
             BitcoinConnection bitcoinConnection;

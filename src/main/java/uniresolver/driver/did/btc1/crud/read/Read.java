@@ -2,12 +2,14 @@ package uniresolver.driver.did.btc1.crud.read;
 
 import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
+import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
 import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnection;
 import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
-import uniresolver.driver.did.btc1.crud.read.records.IdentifierComponents;
+import uniresolver.driver.did.btc1.syntax.DidBtc1IdentifierDecoding;
+import uniresolver.driver.did.btc1.syntax.records.IdentifierComponents;
 
 import java.util.Map;
 
@@ -27,16 +29,35 @@ public class Read {
      * 4.2 Read
      */
 
+    // See https://dcdpr.github.io/did-btc1/#read
     public DIDDocument read(DID identifier, Map<String, Object> resolutionOptions, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
 
-        IdentifierComponents identifierComponents = ParseDidBtc1Identifier.parseDidBtc1Identifier(identifier, /* TODO: extra, not in spec */ didDocumentMetadata);
-        if (log.isDebugEnabled()) log.debug("Parsed identifier: " + identifierComponents);
+        // Pass identifier to the did:btc1 Identifier Decoding algorithm, retrieving idType, version, network, and genesisBytes.
+        // Set identifierComponents to a map of idType, version, network, and genesisBytes.
+
+        IdentifierComponents identifierComponents = DidBtc1IdentifierDecoding.didBtc1IdentifierDecoding(identifier);
+
+        // DID DOCUMENT METADATA
+
+        didDocumentMetadata.put("identifierComponents", Map.of(
+                "idType", identifierComponents.idType(),
+                "version", identifierComponents.version(),
+                "network", identifierComponents.network().toString(),
+                "genesisBytes", Hex.encodeHexString(identifierComponents.genesisBytes())));
+
+        // Set initialDocument to the result of running the algorithm in Resolve Initial Document passing in the identifier,
+        // identifierComponents and resolutionOptions.
 
         DIDDocument initialDocument = this.resolveInitialDocument.resolveInitialDIDDocument(identifier, identifierComponents, resolutionOptions, /* TODO: extra, not in spec */ didDocumentMetadata);
 
+        // Set targetDocument to the result of running the algorithm in Resolve Target Document passing in initialDocument
+        // and resolutionOptions.
+
         DIDDocument targetDocument = this.resolveTargetDocument.resolveTargetDocument(initialDocument, resolutionOptions, /* TODO: extra, not in spec */ identifierComponents.network(), didDocumentMetadata);
 
-        if (log.isDebugEnabled()) log.debug("read: " + targetDocument);
+        // Return targetDocument.
+
+        if (log.isDebugEnabled()) log.debug("Read: " + targetDocument);
         return targetDocument;
     }
 }
