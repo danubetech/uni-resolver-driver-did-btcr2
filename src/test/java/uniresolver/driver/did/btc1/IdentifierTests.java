@@ -59,7 +59,7 @@ public class IdentifierTests {
 			{
 				"did": "did:btc1:x1qzlqmvawa6ya5fx4qyf27a85p34z07z060h352qxgl65fr6d4ugmzm5tzxq",
 				"identifierComponents": {
-					"idType": "key",
+					"idType": "external",
 					"version": 1,
 					"network": "bitcoin",
 					"genesisBytes": "be0db3aeee89da24d50112af74f40c6a27f84fd3ef1a280647f5448f4daf11b1"
@@ -98,13 +98,13 @@ public class IdentifierTests {
 			Map<String, Object> identifierComponents = (Map<String, Object>) testIdentifier.get("identifierComponents");
 			String idType = (String) identifierComponents.get("idType");
 			Integer version = (Integer) identifierComponents.get("version");
-			Object network = identifierComponents.get("network");
+			Network network = Network.valueOf(identifierComponents.get("network"));
 			byte[] genesisBytes = Hex.decodeHex((String) identifierComponents.get("genesisBytes"));
 
 			IdentifierComponents actualIdentifierComponents = DidBtc1IdentifierDecoding.didBtc1IdentifierDecoding(did);
 			assertEquals(idType, actualIdentifierComponents.idType());
 			assertEquals(version, actualIdentifierComponents.version());
-			assertEquals(network.toString(), actualIdentifierComponents.network().toString());
+			assertEquals(network, actualIdentifierComponents.network());
 			assertArrayEquals(genesisBytes, actualIdentifierComponents.genesisBytes());
 
 			DID actualDid = DidBtc1IdentifierEncoding.didBtc1IdentifierEncoding(idType, version, network, genesisBytes);

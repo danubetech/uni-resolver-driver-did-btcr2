@@ -97,7 +97,6 @@ public class DidBtc1IdentifierDecoding {
 
         // Map networkValue to network from the following:
 
-        if (networkValue >= 0x08 && networkValue <= 0x0f) networkValue -= 0x07;
         Network network;
         try {
             network = Network.valueOf(networkValue);
