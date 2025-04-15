@@ -72,8 +72,6 @@ public class ResolveInitialDocument {
         return initialDocument;
     }
 
-    private static final URI CONTEXT = URI.create("https://did-btc1/TBD/context");
-
     // See https://dcdpr.github.io/did-btc1/#deterministically-generate-initial-did-document
     private DIDDocument deterministicallyGenerateInitialDIDDocument(DID identifier, IdentifierComponents identifierComponents) throws ResolutionException {
 
@@ -81,11 +79,12 @@ public class ResolveInitialDocument {
 
         DIDDocument.Builder<? extends DIDDocument.Builder<?>> initialDocumentBuilder = DIDDocument.builder();
         initialDocumentBuilder.id(identifier.toUri());
+        /* TODO is this in the spec? */ initialDocumentBuilder.controller(identifier.toUri());
         initialDocumentBuilder.defaultContexts(true);
-        initialDocumentBuilder.context(CONTEXT);
+        /* TODO is this in the spec? */ //initialDocumentBuilder.context(DataIntegrityContexts.JSONLD_CONTEXT_W3ID_SECURITY_DATAINTEGRITY_V2);
 
         VerificationMethod.Builder<? extends VerificationMethod.Builder<?>> verificationMethodBuilder = VerificationMethod.builder();
-        verificationMethodBuilder.id(URI.create("#initialKey"));
+        verificationMethodBuilder.id(URI.create(identifier + "#initialKey"));
         verificationMethodBuilder.type("Multikey");
         verificationMethodBuilder.controller(identifier.toUri());
         verificationMethodBuilder.publicKeyMultibase(Multibase.encode(Multibase.Base.Base58BTC, KeyCodec.SECP256K1_PUBLIC_KEY.encode(keyBytes)));
@@ -98,7 +97,7 @@ public class ResolveInitialDocument {
         initialDocumentBuilder.capabilityInvocationVerificationMethodReference(verificationMethod.getId());
         initialDocumentBuilder.capabilityDelegationVerificationMethodReference(verificationMethod.getId());
 
-        List<Service> services = deterministicallyGenerateBeaconServices(keyBytes, identifierComponents.network());
+        List<Service> services = deterministicallyGenerateBeaconServices(identifier, keyBytes, identifierComponents.network());
 
         initialDocumentBuilder.services(services);
 
@@ -108,30 +107,30 @@ public class ResolveInitialDocument {
     }
 
     // See https://dcdpr.github.io/did-btc1/#deterministically-generate-beacon-services
-    private static List<Service> deterministicallyGenerateBeaconServices(byte[] keyBytes, Network network) {
+    private static List<Service> deterministicallyGenerateBeaconServices(DID identifier, byte[] keyBytes, Network network) {
 
         ECKey ecKey = ECKey.fromPublicOnly(keyBytes);
 
         List<Service> services = new ArrayList<>();
 
-        URI initialP2PKHServiceId = URI.create("#initialP2PKH");
+        URI initialP2PKHServiceId = URI.create(identifier + "#initialP2PKH");
         Address initialP2PKHBeaconAddress = ecKey.toAddress(ScriptType.P2PKH, network.toBitcoinjNetwork());
         Service p2pkhBeacon = SingletonBeacon.establishSingletonBeacon(initialP2PKHServiceId, initialP2PKHBeaconAddress, network);
         services.add(p2pkhBeacon);
 
-        URI initialP2WPKHServiceId = URI.create("#initialP2WPKH");
+        URI initialP2WPKHServiceId = URI.create(identifier + "#initialP2WPKH");
         Address initialP2WPKHBeaconAddress = ecKey.toAddress(ScriptType.P2WPKH, network.toBitcoinjNetwork());
         Service p2wpkhBeacon = SingletonBeacon.establishSingletonBeacon(initialP2WPKHServiceId, initialP2WPKHBeaconAddress, network);
         services.add(p2wpkhBeacon);
 
 /*      TODO. P2TR not yet supported by bitcoinj
-        URI initialP2TRServiceId = URI.create("#initialP2TR");
+        URI initialP2TRServiceId = URI.create(identifier + "#initialP2TR");
         Address initialP2TRBeaconAddress = ecKey.toAddress(ScriptType.P2TR, network.toBitcoinjNetwork());
         Service p2trBeacon = SingletonBeacon.establishSingletonBeacon(initialP2TRServiceId, initialP2TRBeaconAddress, network);
         services.add(p2trBeacon);*/
 
-        URI initialP2TRServiceId = URI.create("#initialP2TR");
-        Address initialP2TRBeaconAddress = AddressParser.getDefault().parseAddress("bcrt1p6rs5tnq94rt4uu5edc9luahlkyphk30yk8smwfzurpc8ru06vcws8ylq7l");
+        URI initialP2TRServiceId = URI.create(identifier + "#initialP2TR");
+        Address initialP2TRBeaconAddress = AddressParser.getDefault().parseAddress("bcrt1pf9xt9jglj4ntxz7u4vgcnntgpearthfm789c6vnesewndqeh6myq8r4ktz");
         Service p2trBeacon = SingletonBeacon.establishSingletonBeacon(initialP2TRServiceId, initialP2TRBeaconAddress, network);
         services.add(p2trBeacon);
 

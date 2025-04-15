@@ -42,7 +42,7 @@ public class DidBtc1IdentifierEncoding {
 
         if (networkValue instanceof Network) networkValue = networkValue.toString();
 
-        if (! (networkValue instanceof String && Arrays.asList(Network.stringValues()).contains(networkValue)) && ! (networkValue instanceof Number)) {
+        if (! (networkValue instanceof String networkValueString && Arrays.asList(Network.values()).contains(Network.valueOf(networkValueString))) && ! (networkValue instanceof Number)) {
             throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Unsupported 'network' value: " + networkValue);
         }
 
@@ -90,16 +90,7 @@ public class DidBtc1IdentifierEncoding {
         // If network is a string, append the numeric value from the following map to nibbles:
 
         if (networkValue instanceof String networkValueString) {
-            nibbles.write(
-                    switch (networkValueString) {
-                        case "bitcoin" -> 0x00;
-                        case "signet" -> 0x01;
-                        case "regtest" -> 0x02;
-                        case "testnet3" -> 0x03;
-                        case "testnet4" -> 0x04;
-                        default -> throw new IllegalStateException("Unexpected value: " + networkValueString);
-                    }
-            );
+            nibbles.write(Network.valueOf(networkValueString).toInt());
         }
 
         // If network is a number, append network + 7 to nibbles.

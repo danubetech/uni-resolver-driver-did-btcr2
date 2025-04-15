@@ -1,10 +1,15 @@
 package uniresolver.driver.did.btc1.crud.read;
 
+import com.danubetech.dataintegrity.DataIntegrityProof;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.util.DateTime;
 import foundation.identity.did.DIDDocument;
 import foundation.identity.did.Service;
 import foundation.identity.did.validation.Validation;
+import foundation.identity.jsonld.JsonLDObject;
 import foundation.identity.jsonld.JsonLDUtils;
+import io.leonard.AddressFormatException;
+import io.leonard.Base58;
 import org.bitcoinj.base.Address;
 import org.bitcoinj.base.AddressParser;
 import org.bitcoinj.uri.BitcoinURI;
@@ -163,14 +168,18 @@ public class ResolveTargetDocument {
 
         List<DIDUpdatePayload> didUpdatePayloads = this.processBeaconSignals(signals, signalsMetadata, didDocumentMetadata);
 
-        List<DIDUpdatePayload> orderedDidUpdatePayloads = didUpdatePayloads.stream().sorted(Comparator.comparing(DIDUpdatePayload::targetVersionId)).toList();
+        List<DIDUpdatePayload> orderedDidUpdatePayloads = didUpdatePayloads.stream().sorted(Comparator.comparing(DIDUpdatePayload::getTargetVersionId)).toList();
 
         for (DIDUpdatePayload didUpdatePayload : orderedDidUpdatePayloads) {
-            if (didUpdatePayload.targetVersionId() <= currentVersionId) {
+            if (didUpdatePayload.getTargetVersionId() <= currentVersionId) {
                 confirmDuplicateUpdate(didUpdatePayload, updateHashHistory, contemporaryHash);
-            } else if (didUpdatePayload.targetVersionId() == currentVersionId + 1) {
-                if (! Arrays.equals(didUpdatePayload.sourceHash(), contemporaryHash)) {
-                    throw new ResolutionException("latePublishing", "update.sourceHash " + HexUtil.hexEncode(didUpdatePayload.sourceHash()) + " does not match contemporaryHash: " + HexUtil.hexEncode(contemporaryHash));
+            } else if (didUpdatePayload.getTargetVersionId() == currentVersionId + 1) {
+                try {
+                    if (! Arrays.equals(Base58.decode(didUpdatePayload.getSourceHash()), contemporaryHash)) {
+                        throw new ResolutionException("latePublishing", "update.sourceHash " + didUpdatePayload.getSourceHash() + " does not match contemporaryHash: " + Base58.encode(contemporaryHash));
+                    }
+                } catch (AddressFormatException ex) {
+                    throw new ResolutionException("invalidDidUpdate", "Update sourceHash " + didUpdatePayload.getSourceHash() + " cannot be decoded: " + ex.getMessage());
                 }
                 contemporaryDIDDocument = applyDIDUpdate(contemporaryDIDDocument, didUpdatePayload);
                 currentVersionId++;
@@ -180,8 +189,8 @@ public class ResolveTargetDocument {
                 byte[] updateHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(didUpdatePayload);
                 updateHashHistory.add(updateHash);
                 contemporaryHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(contemporaryDIDDocument);
-            } else if (didUpdatePayload.targetVersionId() > currentVersionId + 1) {
-                throw new ResolutionException("latePublishing", "update.targetVersionId " + didUpdatePayload.targetVersionId() + " is greater than currentVersionId + 1: " + (currentVersionId + 1));
+            } else if (didUpdatePayload.getTargetVersionId() > currentVersionId + 1) {
+                throw new ResolutionException("latePublishing", "update.targetVersionId " + didUpdatePayload.getTargetVersionId() + " is greater than currentVersionId + 1: " + (currentVersionId + 1));
             }
         }
 
@@ -291,12 +300,14 @@ public class ResolveTargetDocument {
         if (log.isDebugEnabled()) log.debug("confirmDuplicateUpdate ({}, {}, {})", update, updateHashHistory, contemporaryHash);
 
         byte[] updateHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(update);
-        Integer updateHashIndex = update.targetVersionId() - 2;
+        Integer updateHashIndex = update.getTargetVersionId() - 2;
         byte[] historicalUpdateHash = updateHashHistory.get(updateHashIndex);
         if (! Arrays.equals(historicalUpdateHash, updateHash)) {
             throw new ResolutionException("latePublishing", "historicalUpdateHash " + HexUtil.hexEncode(historicalUpdateHash) + " does not match updateHash: " + HexUtil.hexEncode(updateHash));
         }
     }
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     // See https://dcdpr.github.io/did-btc1/#apply-did-update
     private static DIDDocument applyDIDUpdate(DIDDocument contemporaryDIDDocument, DIDUpdatePayload update) throws ResolutionException {
@@ -306,12 +317,19 @@ public class ResolveTargetDocument {
                 .type(DataIntegritySuites.DATA_INTEGRITY_SUITE_DATAINTEGRITYPROOF.getTerm())
                 .cryptosuite("bip340-rdfc-2025")*/
 
+        JsonLDObject didUpdatePayloadJsonLdObject = JsonLDObject.fromMap(objectMapper.convertValue(update, Map.class));
+        DataIntegrityProof dataIntegrityProof = DataIntegrityProof.getFromJsonLDObject(didUpdatePayloadJsonLdObject);
+
         DIDDocument targetDIDDocument = DIDDocumentUtil.copy(contemporaryDIDDocument);
-        targetDIDDocument = JSONPatchUtil.apply(targetDIDDocument, update.patch());
+        targetDIDDocument = JSONPatchUtil.apply(targetDIDDocument, update.getPatch());
         Validation.validate(targetDIDDocument);
         byte[] targetHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(targetDIDDocument);
-        if (! Arrays.equals(targetHash, update.targetHash())) {
-            throw new ResolutionException("invalidDidUpdate", "targetHash " + HexUtil.hexEncode(targetHash) + " does not match update.targetHash: " + HexUtil.hexEncode(update.targetHash()));
+        try {
+            if (! Arrays.equals(targetHash, Base58.decode(update.getTargetHash()))) {
+                throw new ResolutionException("invalidDidUpdate", "targetHash " + Base58.encode(targetHash) + " does not match update.targetHash: " + update.getTargetHash());
+            }
+        } catch (AddressFormatException ex) {
+            throw new ResolutionException("invalidDidUpdate", "Update targetHash " + update.getTargetHash() + " cannot be decoded: " + ex.getMessage());
         }
 
         if (log.isDebugEnabled()) log.debug("applyDIDUpdate: " + targetDIDDocument);

@@ -98,14 +98,12 @@ public class DidBtc1IdentifierDecoding {
         // Map networkValue to network from the following:
 
         if (networkValue >= 0x08 && networkValue <= 0x0f) networkValue -= 0x07;
-        Network network = switch(networkValue) {
-            case 0 -> Network.bitcoin;
-            case 1 -> Network.signet;
-            case 2 -> Network.regtest;
-            case 3 -> Network.testnet3;
-            case 4 -> Network.testnet4;
-            default -> throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Unsupported 'network' value in " + encodedString + ": " + networkValue);
-        };
+        Network network;
+        try {
+            network = Network.valueOf(networkValue);
+        } catch (Exception ex) {
+            throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Unsupported 'network' value in " + encodedString + ": " + networkValue);
+        }
 
         // If the number of nibbles consumed is odd:
 

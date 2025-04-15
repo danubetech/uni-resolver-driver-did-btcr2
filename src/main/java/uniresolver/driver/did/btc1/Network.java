@@ -2,8 +2,6 @@ package uniresolver.driver.did.btc1;
 
 import org.bitcoinj.base.BitcoinNetwork;
 
-import java.util.Arrays;
-
 public enum Network {
 
     bitcoin,
@@ -12,8 +10,25 @@ public enum Network {
     testnet3,
     testnet4;
 
-    public static String[] stringValues() {
-        return Arrays.stream(Network.values()).map(Network::name).toArray(String[]::new);
+    public static Network valueOf(Byte byteValue) {
+        return switch(byteValue) {
+            case 0 -> Network.bitcoin;
+            case 1 -> Network.signet;
+            case 2 -> Network.regtest;
+            case 3 -> Network.testnet3;
+            case 4 -> Network.testnet4;
+            default -> throw new IllegalArgumentException("Unsupported 'network' value: " + byteValue);
+        };
+    }
+
+    public int toInt() {
+        return switch (this) {
+            case bitcoin -> 0x00;
+            case signet -> 0x01;
+            case regtest -> 0x02;
+            case testnet3 -> 0x03;
+            case testnet4 -> 0x04;
+        };
     }
 
     public org.bitcoinj.base.BitcoinNetwork toBitcoinjNetwork() {

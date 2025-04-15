@@ -14,7 +14,6 @@ import uniresolver.driver.did.btc1.connections.bitcoin.records.TxOut;
 import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
 import uniresolver.driver.did.btc1.crud.update.records.DIDUpdatePayload;
 import uniresolver.driver.did.btc1.util.HexUtil;
-import uniresolver.driver.did.btc1.util.RecordUtil;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -77,9 +76,9 @@ public class SingletonBeacon {
             if (! Arrays.equals(updateHashBytes, hashBytes)) {
                 throw new ResolutionException("invalidSidecarData", "updateHashBytes " + HexUtil.hexEncode(updateHashBytes) + " does not match hashBytes: " + HexUtil.hexEncode(hashBytes));
             }
-            didUpdatePayload = DIDUpdatePayload.fromSignalSidecarDataUpdatePayload(didUpdatePayloadMap);
+            didUpdatePayload = DIDUpdatePayload.fromMap(didUpdatePayloadMap);
         } else {
-            didUpdatePayload = FetchContentFromAddressableStorage.fetchContentFromAddressableStorage(hashBytes, DIDUpdatePayload.class, ipfsConnection);
+            didUpdatePayload = FetchContentFromAddressableStorage.fetchJsonLDObjectContentFromAddressableStorage(hashBytes, DIDUpdatePayload.class, ipfsConnection);
             if (didUpdatePayload == null) {
                 throw new ResolutionException("latePublishingError", "didUpdatePayload is null");
             }
@@ -88,7 +87,7 @@ public class SingletonBeacon {
         // DID DOCUMENT METADATA
 
         Map<String, Map<String, Object>> didDocumentMetadataDidUpdatePayloads = (Map<String, Map<String, Object>>) didDocumentMetadata.computeIfAbsent("didUpdatePayloads", x -> new LinkedHashMap<>());
-        didDocumentMetadataDidUpdatePayloads.put(tx.txId(), RecordUtil.toMap(didUpdatePayload));
+        didDocumentMetadataDidUpdatePayloads.put(tx.txId(), didUpdatePayload.toMap());
 
         // done
 

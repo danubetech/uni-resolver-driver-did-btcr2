@@ -2,5 +2,5 @@
   "version": 1,
   "network": "regtest",
   "idType": "key",
-  "hexGenesisBytes": "02fa75b67929b8712d42d4f3c8db773c87dbc19eb651a09114752ba042dc69da30"
+  "hexGenesisBytes": "0228697db119cbb22d21f21e82eece759eeccb584619d6d53a5753118ea4031db0"
 }
