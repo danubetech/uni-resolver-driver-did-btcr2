@@ -21,8 +21,8 @@ public class Read {
     private ResolveTargetDocument resolveTargetDocument;
 
     public Read(BitcoinConnection bitcoinConnection, IPFSConnection ipfsConnection) {
-        this.resolveInitialDocument = new ResolveInitialDocument(bitcoinConnection, ipfsConnection);
-        this.resolveTargetDocument = new ResolveTargetDocument(bitcoinConnection, ipfsConnection);
+        this.resolveInitialDocument = new ResolveInitialDocument(this, bitcoinConnection, ipfsConnection);
+        this.resolveTargetDocument = new ResolveTargetDocument(this, bitcoinConnection, ipfsConnection);
     }
 
     /*

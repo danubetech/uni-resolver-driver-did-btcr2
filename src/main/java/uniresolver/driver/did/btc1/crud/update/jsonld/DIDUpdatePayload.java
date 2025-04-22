@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btc1.crud.update.records;
+package uniresolver.driver.did.btc1.crud.update.jsonld;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import foundation.identity.jsonld.JsonLDObject;

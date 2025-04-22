@@ -1,14 +1,16 @@
-package uniresolver.driver.did.btc1;
+package uniresolver.driver.did.btc1.k1qgpzs6takyvuhv3dy8epaqhwee6eamxttprpn4k48ft4xyvw5sp3mvqqavunt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
 import org.erdtman.jcs.JsonCanonicalizer;
 import org.junit.jupiter.api.Test;
+import uniresolver.driver.did.btc1.crud.read.Read;
 import uniresolver.driver.did.btc1.crud.read.ResolveInitialDocument;
 import uniresolver.driver.did.btc1.crud.read.ResolveTargetDocument;
 import uniresolver.driver.did.btc1.syntax.DidBtc1IdentifierDecoding;
 import uniresolver.driver.did.btc1.syntax.records.IdentifierComponents;
+import uniresolver.driver.did.btc1.util.JSONUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,8 +26,9 @@ public class ResolveTargetDocumentTest {
 
 		Map<String, Object> didDocumentMetadata = new HashMap<>();
 
-		ResolveInitialDocument resolveInitialDocument = new ResolveInitialDocument(TestUtil.testBitcoinConnection(), TestUtil.testIpfsConnection());
-		ResolveTargetDocument resolveTargetDocument = new ResolveTargetDocument(TestUtil.testBitcoinConnection(), TestUtil.testIpfsConnection());
+		Read read = new Read(TestUtil.testBitcoinConnection(), TestUtil.testIpfsConnection());
+		ResolveInitialDocument resolveInitialDocument = new ResolveInitialDocument(read, TestUtil.testBitcoinConnection(), TestUtil.testIpfsConnection());
+		ResolveTargetDocument resolveTargetDocument = new ResolveTargetDocument(read, TestUtil.testBitcoinConnection(), TestUtil.testIpfsConnection());
 
 		DID identifier = DID.fromString(TestUtil.readResourceString("did.txt"));
 		Map<String, Object> resolutionOptions = TestUtil.readResourceJson("resolutionOptions.json");
@@ -44,5 +47,7 @@ public class ResolveTargetDocumentTest {
 
 		assertEquals(expectedTargetDIDDocumentCanonicalized, targetDIDDocumentCanonicalized);
 		assertEquals(expectedTargetDIDDocumentMap, targetDIDDocumentMap);
+
+		System.out.println(JSONUtil.mapToJson(didDocumentMetadata));
 	}
 }

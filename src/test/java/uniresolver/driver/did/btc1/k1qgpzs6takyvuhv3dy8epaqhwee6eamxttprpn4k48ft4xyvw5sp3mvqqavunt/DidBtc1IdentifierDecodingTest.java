@@ -1,8 +1,9 @@
-package uniresolver.driver.did.btc1;
+package uniresolver.driver.did.btc1.k1qgpzs6takyvuhv3dy8epaqhwee6eamxttprpn4k48ft4xyvw5sp3mvqqavunt;
 
 import foundation.identity.did.DID;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.jupiter.api.Test;
+import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.syntax.DidBtc1IdentifierDecoding;
 import uniresolver.driver.did.btc1.syntax.records.IdentifierComponents;
 

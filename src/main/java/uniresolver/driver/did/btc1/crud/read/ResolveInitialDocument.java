@@ -9,6 +9,7 @@ import foundation.identity.did.validation.Validation;
 import io.ipfs.cid.Cid;
 import io.ipfs.multibase.Multibase;
 import io.ipfs.multihash.Multihash;
+import org.apache.commons.codec.binary.Hex;
 import org.bitcoinj.base.Address;
 import org.bitcoinj.base.AddressParser;
 import org.bitcoinj.base.ScriptType;
@@ -17,11 +18,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
 import uniresolver.driver.did.btc1.Network;
+import uniresolver.driver.did.btc1.appendix.JsonCanonicalizationAndHash;
 import uniresolver.driver.did.btc1.beacons.singleton.SingletonBeacon;
 import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnection;
 import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
 import uniresolver.driver.did.btc1.syntax.records.IdentifierComponents;
-import uniresolver.driver.did.btc1.util.SHA256Util;
+import uniresolver.driver.did.btc1.util.JSONUtil;
 
 import java.io.IOException;
 import java.net.URI;
@@ -35,10 +37,12 @@ public class ResolveInitialDocument {
 
     private static final Logger log = LoggerFactory.getLogger(ResolveInitialDocument.class);
 
+    private Read read;
     private BitcoinConnection bitcoinConnection;
     private IPFSConnection ipfsConnection;
 
-    public ResolveInitialDocument(BitcoinConnection bitcoinConnection, IPFSConnection ipfsConnection) {
+    public ResolveInitialDocument(Read read, BitcoinConnection bitcoinConnection, IPFSConnection ipfsConnection) {
+        this.read = read;
         this.bitcoinConnection = bitcoinConnection;
         this.ipfsConnection = ipfsConnection;
     }
@@ -57,7 +61,7 @@ public class ResolveInitialDocument {
         if ("key".equals(identifierComponents.idType())) {
             initialDocument = this.deterministicallyGenerateInitialDIDDocument(identifier, identifierComponents);
         } else if ("external".equals(identifierComponents.idType())) {
-            initialDocument = this.externalResolution(identifier, identifierComponents, resolutionOptions);
+            initialDocument = this.externalResolution(identifier, identifierComponents, resolutionOptions, didDocumentMetadata);
         } else {
             throw new ResolutionException("invalidHRPValue", "Invalid hrp/idType value: " + identifierComponents.idType());
         }
@@ -139,13 +143,12 @@ public class ResolveInitialDocument {
     }
 
     // See https://dcdpr.github.io/did-btc1/#external-resolution
-    private DIDDocument externalResolution(DID identifier, IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions) throws ResolutionException {
+    private DIDDocument externalResolution(DID identifier, IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
 
         DIDDocument initialDocument;
 
-        if (resolutionOptions.containsKey("sidecarData") && resolutionOptions.get("sidecarData") instanceof Map && ((Map<String, Object>) resolutionOptions.get("sidecarData")).containsKey("initialDocument")) {
-            String sidecarInitialDocument = (String) ((Map<String, Object>) resolutionOptions.get("sidecarData")).get("initialDocument");
-            initialDocument = this.sidecarInitialDocumentValidation(identifier, identifierComponents, sidecarInitialDocument);
+        if (resolutionOptions.get("sidecarData") instanceof Map sidecarDataMap && sidecarDataMap.get("initialDocument") instanceof Map initialDocumentMap) {
+            initialDocument = this.sidecarInitialDocumentValidation(identifier, identifierComponents, initialDocumentMap, didDocumentMetadata);
         } else {
             initialDocument = this.casRetrieval(identifier, identifierComponents);
         }
@@ -161,18 +164,38 @@ public class ResolveInitialDocument {
     }
 
     // See https://dcdpr.github.io/did-btc1/#sidecar-initial-document-validation
-    private DIDDocument sidecarInitialDocumentValidation(DID identifier, IdentifierComponents identifierComponents, String initialDocument) throws ResolutionException {
+    private DIDDocument sidecarInitialDocumentValidation(DID identifier, IdentifierComponents identifierComponents, Map<String, Object> initialDocument, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
 
-        String intermediateDocumentRepresentation = initialDocument.replace(identifier.toString(), "did:btc1:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-        byte[] hashBytes = SHA256Util.sha256(intermediateDocumentRepresentation.getBytes(StandardCharsets.UTF_8));
-        if (!Arrays.equals(hashBytes, identifierComponents.genesisBytes())) {
+        // Set intermediateDocumentRepresentation to a copy of the initialDocument.
+
+        String intermediateDocumentRepresentation = JSONUtil.mapToJson(initialDocument);
+
+        // Find and replace all values of identifier contained within the intermediateDocumentRepresentation
+        // with the string (did:btc1:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx).
+
+        intermediateDocumentRepresentation = intermediateDocumentRepresentation.replace(identifier.toString(), "did:btc1:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+
+        // Set hashBytes to the SHA256 hash of the intermediateDocumentRepresentation.
+
+        byte[] hashBytes = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(JSONUtil.jsonToMap(intermediateDocumentRepresentation));
+
+        // If hashBytes does not equal identifierComponents.genesisBytes MUST throw an invalidDid error.
+
+        if (! Arrays.equals(hashBytes, identifierComponents.genesisBytes())) {
             throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Initial document cannot be validated");
         }
 
-        DIDDocument validatedInitialDocument = DIDDocument.fromJson(initialDocument);
+        // DID DOCUMENT METADATA
 
-        if (log.isDebugEnabled()) log.debug("sidecarInitialDocumentValidation: " + validatedInitialDocument);
-        return validatedInitialDocument;
+        didDocumentMetadata.put("intermediateDocumentRepresentation", intermediateDocumentRepresentation);
+        didDocumentMetadata.put("intermediateDocumentRepresentationHash", Hex.encodeHexString(hashBytes));
+
+        // Return initialDocument.
+
+        DIDDocument initialDidDocument = DIDDocument.fromMap(initialDocument);
+
+        if (log.isDebugEnabled()) log.debug("sidecarInitialDocumentValidation: " + initialDidDocument);
+        return initialDidDocument;
     }
 
     // https://dcdpr.github.io/did-btc1/#cas-retrieval
@@ -196,6 +219,18 @@ public class ResolveInitialDocument {
 
         if (log.isDebugEnabled()) log.debug("casRetrieval: " + parsedInitialDocument);
         return parsedInitialDocument;
+    }
+
+    /*
+     * Getters and setters
+     */
+
+    public Read getRead() {
+        return this.read;
+    }
+
+    public void setRead(Read read) {
+        this.read = read;
     }
 
     public BitcoinConnection getBitcoinConnection() {

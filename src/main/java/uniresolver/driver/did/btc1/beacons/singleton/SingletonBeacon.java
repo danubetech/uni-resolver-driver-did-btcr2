@@ -12,7 +12,7 @@ import uniresolver.driver.did.btc1.appendix.JsonCanonicalizationAndHash;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.TxOut;
 import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
-import uniresolver.driver.did.btc1.crud.update.records.DIDUpdatePayload;
+import uniresolver.driver.did.btc1.crud.update.jsonld.DIDUpdatePayload;
 import uniresolver.driver.did.btc1.util.HexUtil;
 
 import java.net.URI;

@@ -1,12 +1,12 @@
 package uniresolver.driver.did.btc1.crud.read;
 
 import com.danubetech.dataintegrity.DataIntegrityProof;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.danubetech.dataintegrity.suites.DataIntegritySuite;
+import com.danubetech.dataintegrity.suites.DataIntegritySuites;
 import com.google.api.client.util.DateTime;
 import foundation.identity.did.DIDDocument;
 import foundation.identity.did.Service;
 import foundation.identity.did.validation.Validation;
-import foundation.identity.jsonld.JsonLDObject;
 import foundation.identity.jsonld.JsonLDUtils;
 import io.leonard.AddressFormatException;
 import io.leonard.Base58;
@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
 import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.appendix.JsonCanonicalizationAndHash;
+import uniresolver.driver.did.btc1.appendix.RootDidBtc1UpdateCapabilities;
 import uniresolver.driver.did.btc1.beacons.singleton.CIDAggregateBeacon;
 import uniresolver.driver.did.btc1.beacons.singleton.SMTAggregateBeacon;
 import uniresolver.driver.did.btc1.beacons.singleton.SingletonBeacon;
@@ -31,23 +32,28 @@ import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
 import uniresolver.driver.did.btc1.crud.read.records.Beacon;
 import uniresolver.driver.did.btc1.crud.read.records.NextSignals;
 import uniresolver.driver.did.btc1.crud.read.records.Signal;
-import uniresolver.driver.did.btc1.crud.update.records.DIDUpdatePayload;
+import uniresolver.driver.did.btc1.crud.update.jsonld.DIDUpdatePayload;
+import uniresolver.driver.did.btc1.crud.update.jsonld.RootCapability;
+import uniresolver.driver.did.btc1.dataintegrity.DataIntegrity;
 import uniresolver.driver.did.btc1.util.DIDDocumentUtil;
 import uniresolver.driver.did.btc1.util.HexUtil;
 import uniresolver.driver.did.btc1.util.JSONPatchUtil;
 import uniresolver.driver.did.btc1.util.RecordUtil;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class ResolveTargetDocument {
 
     private static final Logger log = LoggerFactory.getLogger(ResolveTargetDocument.class);
 
+    private Read read;
     private BitcoinConnection bitcoinConnection;
     private IPFSConnection ipfsConnection;
 
-    public ResolveTargetDocument(BitcoinConnection bitcoinConnection, IPFSConnection ipfsConnection) {
+    public ResolveTargetDocument(Read read, BitcoinConnection bitcoinConnection, IPFSConnection ipfsConnection) {
+        this.read = read;
         this.bitcoinConnection = bitcoinConnection;
         this.ipfsConnection = ipfsConnection;
     }
@@ -90,8 +96,6 @@ public class ResolveTargetDocument {
 
         Map<String, Object> sidecarData = resolutionOptions.get("sidecarData") == null ? null : (Map<String, Object>) resolutionOptions.get("sidecarData");
         Map<String, Object> signalsMetadata = sidecarData == null ? null : (Map<String, Object>) sidecarData.get("signalsMetadata");
-        /* TODO: is this right? what if no sidecarData is given? */
-        if (signalsMetadata == null) throw new ResolutionException("invalidResolutionOptions", "No signalsMetadata found in the sidecarData: " + sidecarData);
 
         Integer currentVersionId = 1;
         if (currentVersionId.equals(targetVersionId)) return initialDocument;
@@ -201,7 +205,16 @@ public class ResolveTargetDocument {
 
         contemporaryBlockheight++;
 
-        DIDDocument targetDocument = this.traverseBlockchainHistory(contemporaryDIDDocument, contemporaryBlockheight, currentVersionId, targetVersionId, targetBlockheight, updateHashHistory, signalsMetadata, network, didDocumentMetadata);
+        DIDDocument targetDocument = this.traverseBlockchainHistory(
+                contemporaryDIDDocument,
+                contemporaryBlockheight,
+                currentVersionId,
+                targetVersionId,
+                targetBlockheight,
+                updateHashHistory,
+                signalsMetadata,
+                network,
+                didDocumentMetadata);
 
         if (log.isDebugEnabled()) log.debug("traverseBlockchainHistory: " + targetDocument);
         return targetDocument;
@@ -277,7 +290,7 @@ public class ResolveTargetDocument {
             String type = beaconSignal.beaconType();
             Tx signalTx = beaconSignal.tx();
             String signalId = signalTx.txId();
-            Map<String, Object> signalSidecarData = (Map<String, Object>) signalsMetadata.get(signalId);
+            Map<String, Object> signalSidecarData = signalsMetadata == null ? null : (Map<String, Object>) signalsMetadata.get(signalId);
 
             DIDUpdatePayload didUpdatePayload = switch(type) {
                 case SingletonBeacon.TYPE -> SingletonBeacon.processSingletonBeaconSignal(signalTx, signalSidecarData, this.getIpfsConnection(), didDocumentMetadata);
@@ -307,22 +320,41 @@ public class ResolveTargetDocument {
         }
     }
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-
     // See https://dcdpr.github.io/did-btc1/#apply-did-update
     private static DIDDocument applyDIDUpdate(DIDDocument contemporaryDIDDocument, DIDUpdatePayload update) throws ResolutionException {
         if (log.isDebugEnabled()) log.debug("applyDIDUpdate ({}, {})", contemporaryDIDDocument, update);
 
-/* TODO       DataIntegrityProof dataIntegrityProof = DataIntegrityProof.builder()
-                .type(DataIntegritySuites.DATA_INTEGRITY_SUITE_DATAINTEGRITYPROOF.getTerm())
-                .cryptosuite("bip340-rdfc-2025")*/
+        DataIntegrityProof dataIntegrityProof = DataIntegrityProof.getFromJsonLDObject(update);
+        String capabilityId = JsonLDUtils.jsonLdGetString(dataIntegrityProof.getJsonObject(), "capability");
+        if (capabilityId == null) throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "No 'capability' found in update proof: " + update);
 
-        JsonLDObject didUpdatePayloadJsonLdObject = JsonLDObject.fromMap(objectMapper.convertValue(update, Map.class));
-        DataIntegrityProof dataIntegrityProof = DataIntegrityProof.getFromJsonLDObject(didUpdatePayloadJsonLdObject);
+        RootCapability rootCapability = RootDidBtc1UpdateCapabilities.dereferenceRootCapabilityIdentifier(capabilityId);
+
+        if (! rootCapability.getInvocationTarget().equals(contemporaryDIDDocument.getId())) {
+            throw new ResolutionException("invalidDidUpdate", "Root capability 'invocationTarget' " + rootCapability.getInvocationTarget() + " does not match contemporary DID document 'id': " + contemporaryDIDDocument.getId());
+        }
+        if (! rootCapability.getController().equals(contemporaryDIDDocument.getId())) {
+            throw new ResolutionException("invalidDidUpdate", "Root capability 'controller' " + rootCapability.getInvocationTarget() + " does not match contemporary DID document 'id': " + contemporaryDIDDocument.getId());
+        }
+
+        DataIntegritySuite cryptosuite = DataIntegritySuites.DATA_INTEGRITY_SUITE_DATAINTEGRITYPROOF;
+
+        String expectedProofPurpose = "capabilityInvocation";
+
+        String mediaType = "application/json";
+
+        byte[] documentBytes = /* TODO */ update.toJson().getBytes(StandardCharsets.UTF_8);
+
+        boolean verificationResult = DataIntegrity.verifyProofAlgorithm(mediaType, documentBytes, cryptosuite, expectedProofPurpose, /* TODO: extra, not in spec */ update, dataIntegrityProof, contemporaryDIDDocument);
+
+        if (! verificationResult) {
+            throw new ResolutionException("invalidUpdateProof", "Update payload could not be verified: " + update);
+        }
 
         DIDDocument targetDIDDocument = DIDDocumentUtil.copy(contemporaryDIDDocument);
         targetDIDDocument = JSONPatchUtil.apply(targetDIDDocument, update.getPatch());
         Validation.validate(targetDIDDocument);
+
         byte[] targetHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(targetDIDDocument);
         try {
             if (! Arrays.equals(targetHash, Base58.decode(update.getTargetHash()))) {
@@ -339,6 +371,14 @@ public class ResolveTargetDocument {
     /*
      * Getters and setters
      */
+
+    public Read getRead() {
+        return this.read;
+    }
+
+    public void setRead(Read read) {
+        this.read = read;
+    }
 
     public BitcoinConnection getBitcoinConnection() {
         return this.bitcoinConnection;

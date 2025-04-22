@@ -18,7 +18,7 @@ public class FetchContentFromAddressableStorage {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public static byte[] fetchContentFromAddressableStorage(byte[] hashBytes, IPFSConnection ipfsConnection) {
-        Cid cid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.id, hashBytes);
+        Cid cid = Cid.buildV0(new Multihash(Multihash.Type.sha2_256, hashBytes));
         byte[] content;
         try {
             content = ipfsConnection.getIpfs().get(cid.bareMultihash());

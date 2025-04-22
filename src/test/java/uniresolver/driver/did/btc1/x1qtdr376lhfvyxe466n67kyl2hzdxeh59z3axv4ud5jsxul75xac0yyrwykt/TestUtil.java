@@ -1,6 +1,7 @@
-package uniresolver.driver.did.btc1;
+package uniresolver.driver.did.btc1.x1qtdr376lhfvyxe466n67kyl2hzdxeh59z3axv4ud5jsxul75xac0yyrwykt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnection;
 import uniresolver.driver.did.btc1.connections.bitcoin.BitcoindRPCBitcoinConnection;
 import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
