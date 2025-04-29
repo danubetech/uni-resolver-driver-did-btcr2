@@ -5,6 +5,7 @@ import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
 import foundation.identity.did.Service;
 import foundation.identity.did.VerificationMethod;
+import foundation.identity.did.jsonld.DIDContexts;
 import foundation.identity.did.validation.Validation;
 import io.ipfs.cid.Cid;
 import io.ipfs.multibase.Multibase;
@@ -83,9 +84,9 @@ public class ResolveInitialDocument {
 
         DIDDocument.Builder<? extends DIDDocument.Builder<?>> initialDocumentBuilder = DIDDocument.builder();
         initialDocumentBuilder.id(identifier.toUri());
-        /* TODO is this in the spec? */ initialDocumentBuilder.controller(identifier.toUri());
-        initialDocumentBuilder.defaultContexts(true);
-        /* TODO is this in the spec? */ //initialDocumentBuilder.context(DataIntegrityContexts.JSONLD_CONTEXT_W3ID_SECURITY_DATAINTEGRITY_V2);
+        initialDocumentBuilder.defaultContexts(false);
+        /* TODO is this in the spec? */ initialDocumentBuilder.contexts(List.of(URI.create("https://www.w3.org/TR/did-1.1"), URI.create("https://did-btc1/TBD/context")));
+        initialDocumentBuilder.controller(identifier.toUri());
 
         VerificationMethod.Builder<? extends VerificationMethod.Builder<?>> verificationMethodBuilder = VerificationMethod.builder();
         verificationMethodBuilder.id(URI.create(identifier + "#initialKey"));
@@ -134,7 +135,7 @@ public class ResolveInitialDocument {
         services.add(p2trBeacon);*/
 
         URI initialP2TRServiceId = URI.create(identifier + "#initialP2TR");
-        Address initialP2TRBeaconAddress = AddressParser.getDefault().parseAddress("bcrt1pf9xt9jglj4ntxz7u4vgcnntgpearthfm789c6vnesewndqeh6myq8r4ktz");
+        Address initialP2TRBeaconAddress = AddressParser.getDefault().parseAddress("bcrt1p8zpx9csfn7u9sxy04gp4s9s7hwql4wr50u0jkuc6spuhd7kf3snsggdrag");
         Service p2trBeacon = SingletonBeacon.establishSingletonBeacon(initialP2TRServiceId, initialP2TRBeaconAddress, network);
         services.add(p2trBeacon);
 
@@ -156,7 +157,7 @@ public class ResolveInitialDocument {
         try {
             Validation.validate(initialDocument);
         } catch (Exception ex) {
-            throw new ResolutionException("invalidDidDocument", "Invalid DID document: " + ex.getMessage(), ex);
+            throw new ResolutionException("invalidDidDocument", "Invalid initial DID document: " + ex.getMessage(), ex);
         }
 
         if (log.isDebugEnabled()) log.debug("externalResolution: " + initialDocument);

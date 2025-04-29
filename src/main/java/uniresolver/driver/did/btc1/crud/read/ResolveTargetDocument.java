@@ -353,7 +353,11 @@ public class ResolveTargetDocument {
 
         DIDDocument targetDIDDocument = DIDDocumentUtil.copy(contemporaryDIDDocument);
         targetDIDDocument = JSONPatchUtil.apply(targetDIDDocument, update.getPatch());
-        Validation.validate(targetDIDDocument);
+        try {
+            Validation.validate(targetDIDDocument);
+        } catch (Exception ex) {
+            throw new ResolutionException("invalidDidDocument", "Invalid target DID document: " + ex.getMessage(), ex);
+        }
 
         byte[] targetHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(targetDIDDocument);
         try {

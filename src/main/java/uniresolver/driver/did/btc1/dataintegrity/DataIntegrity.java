@@ -13,6 +13,7 @@ import foundation.identity.did.parser.ParserException;
 import foundation.identity.jsonld.JsonLDDereferencer;
 import foundation.identity.jsonld.JsonLDException;
 import io.ipfs.multibase.Multibase;
+import org.apache.commons.codec.binary.Hex;
 import org.bitcoinj.crypto.ECKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +34,11 @@ public class DataIntegrity {
     public static boolean verifyProofAlgorithm(String mediaType, byte[] documentBytes, DataIntegritySuite cryptosuite, String expectedProofPurpose, /* TODO: extra, not in spec */ DIDUpdatePayload update, DataIntegrityProof dataIntegrityProof, DIDDocument contemporaryDIDDocument) throws ResolutionException {
 
         VerificationMethod verificationMethod = VerificationMethod.fromJsonLDObject(JsonLDDereferencer.findByIdInJsonLdObject(contemporaryDIDDocument, dataIntegrityProof.getVerificationMethod(), null));
+        byte[] publicKeyBytes = MulticodecDecoder.getInstance().decode(Multibase.decode(verificationMethod.getPublicKeyMultibase()));
+        if (log.isDebugEnabled()) log.debug("Public key bytes: {}", Hex.encodeHexString(publicKeyBytes));
 
         DataIntegrityProofLdVerifier dataIntegrityProofLdVerifier = (DataIntegrityProofLdVerifier) LdVerifierRegistry.getLdVerifierByDataIntegritySuite(cryptosuite);
-        dataIntegrityProofLdVerifier.setVerifier(new secp256k1_ES256KS_PublicKeyVerifier(ECKey.fromPublicOnly(MulticodecDecoder.getInstance().decode(Multibase.decode(verificationMethod.getPublicKeyMultibase())))));
+        dataIntegrityProofLdVerifier.setVerifier(new secp256k1_ES256KS_PublicKeyVerifier(ECKey.fromPublicOnly(publicKeyBytes)));
 
         boolean verificationResult;
         try {
