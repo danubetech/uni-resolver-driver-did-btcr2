@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btc1.x1qtdr376lhfvyxe466n67kyl2hzdxeh59z3axv4ud5jsxul75xac0yyrwykt;
+package uniresolver.driver.did.btc1.x1qttdgkmat4vykwuurkcfagy5fk4eth2fe4tfgvp42nzudclzpzsxkunlyr5;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.did.DID;

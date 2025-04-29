@@ -1,7 +1,7 @@
-package uniresolver.driver.did.btc1.k1qgpzs6takyvuhv3dy8epaqhwee6eamxttprpn4k48ft4xyvw5sp3mvqqavunt;
+package uniresolver.driver.did.btc1.k1qgpswh5adnhrvk9vpppgcx08k4eek75c52dr9pcvu2zt5zgakartekc4uzg54;
 
 import foundation.identity.did.DID;
-import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.binary.Base64;
 import org.junit.jupiter.api.Test;
 import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.syntax.DidBtc1IdentifierDecoding;
@@ -24,7 +24,7 @@ public class DidBtc1IdentifierDecodingTest {
 		String expectedIdType = (String) expectedIdentifierComponents.get("idType");
 		Integer expectedVersion = (Integer) expectedIdentifierComponents.get("version");
 		Network expectedNetwork = Network.valueOf((String) expectedIdentifierComponents.get("network"));
-		byte[] expectedGenesisBytes = Hex.decodeHex((String) expectedIdentifierComponents.get("hexGenesisBytes"));
+		byte[] expectedGenesisBytes = Base64.decodeBase64((String) expectedIdentifierComponents.get("genesisBytes"));
 
 		assertEquals(expectedIdType, identifierComponents.idType());
 		assertEquals(expectedVersion, identifierComponents.version());
