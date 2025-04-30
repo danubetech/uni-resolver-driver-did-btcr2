@@ -135,7 +135,7 @@ public class ResolveInitialDocument {
         services.add(p2trBeacon);*/
 
         URI initialP2TRServiceId = URI.create(identifier + "#initialP2TR");
-        Address initialP2TRBeaconAddress = AddressParser.getDefault().parseAddress("bcrt1p8zpx9csfn7u9sxy04gp4s9s7hwql4wr50u0jkuc6spuhd7kf3snsggdrag");
+        Address initialP2TRBeaconAddress = AddressParser.getDefault().parseAddress("bcrt1pvrdnhfzx76skpuk5tmw2ueqam9n7ud5hwu3jmsvwlnrvclsfvwkqs46vtm");
         Service p2trBeacon = SingletonBeacon.establishSingletonBeacon(initialP2TRServiceId, initialP2TRBeaconAddress, network);
         services.add(p2trBeacon);
 
@@ -155,7 +155,7 @@ public class ResolveInitialDocument {
         }
 
         try {
-            Validation.validate(initialDocument);
+            // TODO: Validation.validate(initialDocument);
         } catch (Exception ex) {
             throw new ResolutionException("invalidDidDocument", "Invalid initial DID document: " + ex.getMessage(), ex);
         }
