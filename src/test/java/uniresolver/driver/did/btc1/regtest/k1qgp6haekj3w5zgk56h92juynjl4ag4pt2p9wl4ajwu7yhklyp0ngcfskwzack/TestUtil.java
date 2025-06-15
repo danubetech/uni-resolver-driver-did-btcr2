@@ -2,7 +2,7 @@ package uniresolver.driver.did.btc1.regtest.k1qgp6haekj3w5zgk56h92juynjl4ag4pt2p
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import uniresolver.driver.did.btc1.Network;
-import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnection;
+import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnections;
 import uniresolver.driver.did.btc1.connections.bitcoin.BitcoindRPCBitcoinConnection;
 import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
 
@@ -31,11 +31,11 @@ public class TestUtil {
         return (Map<String, Object>) objectMapper.readValue(readResourceString(resourceName), Map.class);
     }
 
-    static BitcoinConnection testBitcoinConnection() {
+    static BitcoinConnections testBitcoinConnections() {
         try {
-            return BitcoindRPCBitcoinConnection.create(
-                    Map.of(Network.regtest, URI.create("http://polaruser:polarpass@localhost:18443/").toURL())
-            );
+            return BitcoinConnections.create(Map.of(
+               Network.regtest, BitcoindRPCBitcoinConnection.create(URI.create("http://polaruser:polarpass@localhost:18443/").toURL())
+            ));
         } catch (MalformedURLException ex) {
             throw new RuntimeException(ex.getMessage(), ex);
         }

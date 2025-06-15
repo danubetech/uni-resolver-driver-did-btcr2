@@ -6,8 +6,6 @@ import foundation.identity.did.DIDDocument;
 import org.erdtman.jcs.JsonCanonicalizer;
 import org.junit.jupiter.api.Test;
 import uniresolver.driver.did.btc1.crud.read.Read;
-import uniresolver.driver.did.btc1.crud.read.ResolveInitialDocument;
-import uniresolver.driver.did.btc1.crud.read.ResolveTargetDocument;
 import uniresolver.driver.did.btc1.syntax.DidBtc1IdentifierDecoding;
 import uniresolver.driver.did.btc1.syntax.records.IdentifierComponents;
 import uniresolver.driver.did.btc1.util.JSONUtil;
@@ -26,18 +24,16 @@ public class ResolveTargetDocumentTest {
 
 		Map<String, Object> didDocumentMetadata = new HashMap<>();
 
-		Read read = new Read(TestUtil.testBitcoinConnection(), TestUtil.testIpfsConnection());
-		ResolveInitialDocument resolveInitialDocument = new ResolveInitialDocument(read, TestUtil.testBitcoinConnection(), TestUtil.testIpfsConnection());
-		ResolveTargetDocument resolveTargetDocument = new ResolveTargetDocument(read, TestUtil.testBitcoinConnection(), TestUtil.testIpfsConnection());
+		Read read = new Read(TestUtil.testBitcoinConnections(), TestUtil.testIpfsConnection());
 
 		DID identifier = DID.fromString(TestUtil.readResourceString("did.txt"));
 		Map<String, Object> resolutionOptions = TestUtil.readResourceJson("resolutionOptions.json");
 
 		IdentifierComponents identifierComponents = DidBtc1IdentifierDecoding.didBtc1IdentifierDecoding(identifier);
 
-		DIDDocument initialDIDDocument = resolveInitialDocument.resolveInitialDIDDocument(identifier, identifierComponents, resolutionOptions, didDocumentMetadata);
+		DIDDocument initialDIDDocument = read.getResolveInitialDocument().resolveInitialDIDDocument(identifier, identifierComponents, resolutionOptions, didDocumentMetadata);
 
-		DIDDocument targetDIDDocument = resolveTargetDocument.resolveTargetDocument(initialDIDDocument, resolutionOptions, identifierComponents.network(), didDocumentMetadata);
+		DIDDocument targetDIDDocument = read.getResolveTargetDocument().resolveTargetDocument(initialDIDDocument, resolutionOptions, identifierComponents.network(), didDocumentMetadata);
 		String targetDIDDocumentCanonicalized = new JsonCanonicalizer(targetDIDDocument.toJson()).getEncodedString();
 		Map<String, Object> targetDIDDocumentMap = (Map<String, Object>) objectMapper.readValue(targetDIDDocumentCanonicalized, Map.class);
 

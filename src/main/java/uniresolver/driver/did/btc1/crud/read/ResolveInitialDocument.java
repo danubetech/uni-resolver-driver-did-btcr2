@@ -5,8 +5,6 @@ import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
 import foundation.identity.did.Service;
 import foundation.identity.did.VerificationMethod;
-import foundation.identity.did.jsonld.DIDContexts;
-import foundation.identity.did.validation.Validation;
 import io.ipfs.cid.Cid;
 import io.ipfs.multibase.Multibase;
 import io.ipfs.multihash.Multihash;
@@ -21,7 +19,7 @@ import uniresolver.ResolutionException;
 import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.appendix.JsonCanonicalizationAndHash;
 import uniresolver.driver.did.btc1.beacons.singleton.SingletonBeacon;
-import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnection;
+import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnections;
 import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
 import uniresolver.driver.did.btc1.syntax.records.IdentifierComponents;
 import uniresolver.driver.did.btc1.util.JSONUtil;
@@ -39,12 +37,12 @@ public class ResolveInitialDocument {
     private static final Logger log = LoggerFactory.getLogger(ResolveInitialDocument.class);
 
     private Read read;
-    private BitcoinConnection bitcoinConnection;
+    private BitcoinConnections bitcoinConnections;
     private IPFSConnection ipfsConnection;
 
-    public ResolveInitialDocument(Read read, BitcoinConnection bitcoinConnection, IPFSConnection ipfsConnection) {
+    public ResolveInitialDocument(Read read, BitcoinConnections bitcoinConnections, IPFSConnection ipfsConnection) {
         this.read = read;
-        this.bitcoinConnection = bitcoinConnection;
+        this.bitcoinConnections = bitcoinConnections;
         this.ipfsConnection = ipfsConnection;
     }
 
@@ -227,23 +225,23 @@ public class ResolveInitialDocument {
      */
 
     public Read getRead() {
-        return this.read;
+        return read;
     }
 
     public void setRead(Read read) {
         this.read = read;
     }
 
-    public BitcoinConnection getBitcoinConnection() {
-        return this.bitcoinConnection;
+    public BitcoinConnections getBitcoinConnections() {
+        return bitcoinConnections;
     }
 
-    public void setBitcoinConnection(BitcoinConnection bitcoinConnection) {
-        this.bitcoinConnection = bitcoinConnection;
+    public void setBitcoinConnections(BitcoinConnections bitcoinConnections) {
+        this.bitcoinConnections = bitcoinConnections;
     }
 
     public IPFSConnection getIpfsConnection() {
-        return this.ipfsConnection;
+        return ipfsConnection;
     }
 
     public void setIpfsConnection(IPFSConnection ipfsConnection) {

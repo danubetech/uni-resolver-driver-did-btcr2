@@ -33,7 +33,7 @@ curl -X GET http://localhost:8080/1.0/identifiers/did:btc1:TODO
 
 The driver recognizes the following environment variables:
 
-### `uniresolver_driver_did_btc1_bitcoinConnection`
+### `uniresolver_driver_did_btc1_bitcoinConnections`
 
  * Specifies how the driver interacts with the Bitcoin blockchain.
  * Possible values: 
@@ -41,26 +41,16 @@ The driver recognizes the following environment variables:
    * `btcd`: Connects to a [btcd](https://github.com/btcsuite/btcd) instance via JSON-RPC
    * `bitcoinj`: Connects to Bitcoin using a local [bitcoinj](https://bitcoinj.github.io/) client
    * `blockcypherapi`: Connects to [BlockCypher's API](https://www.blockcypher.com/dev/bitcoin/)
- * Default value: `blockcypherapi`
+   * `esploraelectrsrest`: Connects to Esplora/Electrs REST API
+ * Default value: `bitcoind`
 
-### `uniresolver_driver_did_btc1_rpcUrlMainnet`
+### `uniresolver_driver_did_btc1_bitcoinConnectionsUrls`
 
- * Specifies the JSON-RPC URL of a bitcoind/btcd instance running on Mainnet.
- * Default value: `http://user:pass@localhost:8332/`
+ * Specifies the JSON-RPC URLs of the bitcoin connections.
 
-### `uniresolver_driver_did_btc1_rpcUrlTestnet`
+### `uniresolver_driver_did_btc1_bitcoinConnectionsCerts`
 
- * Specifies the JSON-RPC URL of a bitcoind/btcd instance running on Testnet.
- * Default value: `http://user:pass@localhost:18332/`
-
-### `uniresolver_driver_did_btc1_rpcCertMainnet`
-
- * Specifies the server TLS certificate of the bitcoind/btcd instance running on Mainnet.
- * Default value: ``
-
-### `uniresolver_driver_did_btc1_rpcCertTestnet`
-
- * Specifies the server TLS certificate of the bitcoind/btcd instance running on Testnet.
+ * Specifies the server TLS certificates of the bitcoin connections.
  * Default value: ``
 
 ## Driver Metadata

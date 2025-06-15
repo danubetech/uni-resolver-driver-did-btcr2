@@ -52,19 +52,22 @@ public class EsploraElectrsRESTBitcoinConnection extends AbstractBitcoinConnecti
 		List<Object> response2 = readArray(apiEndpoint2);
 		Integer responseBlockHeight = ((Number) response1.get("height")).intValue();
 		String responseHash = (String) response1.get("id");
-		List<Tx> txs = response2.stream().map()
-		Block block = new Block();
-		block.
+		throw new RuntimeException("test");
+		//List<Tx> txs = response2.stream().map()
+//		Block block = new Block();
+//		block.
 	}
 
 	@Override
 	public Tx getTransactionById(String txid) {
 		URI apiEndpoint = URI.create(this.apiEndpointBase + "/tx/" + txid);
+		throw new RuntimeException("test4");
 	}
 
 	@Override
 	public Block getBlockByTargetTime(Long targetTime) {
 		URI apiEndpoint = URI.create(this.apiEndpointBase + "/v1/mining/blocks/timestamp/" + targetTime);
+		throw new RuntimeException("test3");
 	}
 
 	@Override
@@ -83,10 +86,11 @@ public class EsploraElectrsRESTBitcoinConnection extends AbstractBitcoinConnecti
 		}
 		URI apiEndpoint = URI.create(this.apiEndpointBase + "/tx/" + txId + "/hex");
 		String txHex = readString(apiEndpoint);
-		List< >
+		throw new RuntimeException("test2");
+/*		List< >
 		List<TxIn> txIns = bitcoinjRawTransaction.vIn().stream().map(TxIn::fromBitcoinjIn).toList();
 		List<TxOut> txOuts = bitcoinjRawTransaction.vOut().stream().map(TxOut::fromBitcoinjOut).toList();
-		return new Tx(txId, txHex, txIns, txOuts);
+		return new Tx(txId, txHex, txIns, txOuts);*/
 	}
 
 	private static String readString(URI uri) {

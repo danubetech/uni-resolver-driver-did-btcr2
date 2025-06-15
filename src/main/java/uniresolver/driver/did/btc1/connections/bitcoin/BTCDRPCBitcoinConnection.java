@@ -5,15 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.Block;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
 import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
 
 import java.net.URL;
-import java.util.AbstractMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class BTCDRPCBitcoinConnection extends AbstractBitcoinConnection implements BitcoinConnection {
 
@@ -21,7 +17,7 @@ public class BTCDRPCBitcoinConnection extends AbstractBitcoinConnection implemen
 
 	private static final ObjectMapper mapper;
 
-	private final Map<Network, BitcoinJSONRPCClient> bitcoindRpcClients;
+	private final BitcoinJSONRPCClient bitcoindRpcClient;
 
 	static {
 		mapper = new ObjectMapper();
@@ -29,31 +25,14 @@ public class BTCDRPCBitcoinConnection extends AbstractBitcoinConnection implemen
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	}
 
-	private BTCDRPCBitcoinConnection(Map<Network, BitcoinJSONRPCClient> bitcoindRpcClients) {
-		if (log.isDebugEnabled()) log.debug("Creating BTCDRPCBitcoinConnection: " + bitcoindRpcClients);
-		this.bitcoindRpcClients = bitcoindRpcClients;
+	private BTCDRPCBitcoinConnection(BitcoinJSONRPCClient bitcoindRpcClient) {
+		if (log.isDebugEnabled()) log.debug("Creating BTCDRPCBitcoinConnection: " + bitcoindRpcClient);
+		this.bitcoindRpcClient = bitcoindRpcClient;
 	}
 
-	public static BTCDRPCBitcoinConnection create(Map<Network, URL> rpcUrls) {
-		if (log.isDebugEnabled()) log.debug("Creating BTCDRPCBitcoinConnection: " + rpcUrls);
-		return new BTCDRPCBitcoinConnection(rpcUrls.entrySet()
-				.stream()
-				.map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), new BitcoinJSONRPCClient(e.getValue())))
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-	}
-
-	public static BTCDRPCBitcoinConnection create() {
-		if (log.isDebugEnabled()) log.debug("Creating BTCDRPCBitcoinConnection");
-		return create(Map.of(
-				Network.bitcoin, BitcoinJSONRPCClient.DEFAULT_JSONRPC_URL,
-				Network.regtest, BitcoinJSONRPCClient.DEFAULT_JSONRPC_REGTEST_URL,
-				Network.testnet3, BitcoinJSONRPCClient.DEFAULT_JSONRPC_TESTNET_URL,
-				Network.testnet4, BitcoinJSONRPCClient.DEFAULT_JSONRPC_TESTNET_URL)
-		);
-	}
-
-	public BitcoinJSONRPCClient getBitcoinRpcClient(Network network) {
-		return this.bitcoindRpcClients.get(network);
+	public static BTCDRPCBitcoinConnection create(URL rpcUrl) {
+		if (log.isDebugEnabled()) log.debug("Creating BTCDRPCBitcoinConnection: " + rpcUrl);
+		return new BTCDRPCBitcoinConnection(new BitcoinJSONRPCClient(rpcUrl));
 	}
 
 	@Override
@@ -74,5 +53,13 @@ public class BTCDRPCBitcoinConnection extends AbstractBitcoinConnection implemen
 	@Override
 	public Block getBlockByMinConfirmations(Integer confirmations) {
 		throw new RuntimeException("Not implemented yet");
+	}
+
+	/*
+	 * Getters and setters
+	 */
+
+	public BitcoinJSONRPCClient getBitcoinJsonRpcClient() {
+		return bitcoindRpcClient;
 	}
 }

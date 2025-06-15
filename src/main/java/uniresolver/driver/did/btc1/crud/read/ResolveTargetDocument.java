@@ -22,7 +22,6 @@ import uniresolver.driver.did.btc1.appendix.RootDidBtc1UpdateCapabilities;
 import uniresolver.driver.did.btc1.beacons.singleton.CIDAggregateBeacon;
 import uniresolver.driver.did.btc1.beacons.singleton.SMTAggregateBeacon;
 import uniresolver.driver.did.btc1.beacons.singleton.SingletonBeacon;
-import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnection;
 import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnections;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.Block;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
@@ -377,7 +376,7 @@ public class ResolveTargetDocument {
      */
 
     public Read getRead() {
-        return this.read;
+        return read;
     }
 
     public void setRead(Read read) {
@@ -385,7 +384,7 @@ public class ResolveTargetDocument {
     }
 
     public BitcoinConnections getBitcoinConnections() {
-        return this.bitcoinConnections;
+        return bitcoinConnections;
     }
 
     public void setBitcoinConnections(BitcoinConnections bitcoinConnections) {
@@ -393,7 +392,7 @@ public class ResolveTargetDocument {
     }
 
     public IPFSConnection getIpfsConnection() {
-        return this.ipfsConnection;
+        return ipfsConnection;
     }
 
     public void setIpfsConnection(IPFSConnection ipfsConnection) {
