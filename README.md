@@ -12,8 +12,8 @@ This is a [Universal Resolver](https://github.com/decentralized-identity/univers
 ## Example DIDs
 
 ```
- did:btc1:regtest:k1qvadgpl5qfuz6emq7c8sqw28z0r0gzvyra3je3pp2cuk83uqnnyvckvw8cf
- did:btc1:TODO
+ did:btc1:k1qypcylxwhf8sykn2dztm6z8lxm43kwkyzf07qmp9jafv3zfntmpwtks9hmnrw
+ did:btc1:k1qypdnfyh7j8z87wk3vylqaz9t8psnkws8k5e2ccl9c0zqwwt5uyjeeg7f3knj
  did:btc1:TODO
 ```
 
@@ -21,8 +21,8 @@ This is a [Universal Resolver](https://github.com/decentralized-identity/univers
 
 ```
 docker build -f ./docker/Dockerfile . -t universalresolver/driver-did-btc1
-docker run -p 8080:8080 universalresolver/driver-did-btc1
-curl -X GET http://localhost:8080/1.0/identifiers/did:btc1:TODO
+docker run -it -p 8080:8080 universalresolver/driver-did-btc1
+curl -X GET http://localhost:8080/1.0/identifiers/did:btc1:k1qypcylxwhf8sykn2dztm6z8lxm43kwkyzf07qmp9jafv3zfntmpwtks9hmnrw
 ```
 
 ## Build (native Java)
