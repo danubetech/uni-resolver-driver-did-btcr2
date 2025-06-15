@@ -16,9 +16,10 @@ MAINTAINER Markus Sabadello <markus@danubetech.com>
 
 # variables
 
-ENV uniresolver_driver_did_btc1_bitcoinConnections=mainnet;bitcoind;testnet;bitcoind;signet;esploraelectrsrest
-ENV uniresolver_driver_did_btc1_bitcoinConnectionsUrls=mainnet;http://user:pass@localhost:8332/;testnet;http://user:pass@localhost:18332/;signet;https://mutinynet.com/api/
-ENV uniresolver_driver_did_btc1_bitcoinConnectionsCerts=mainnet;;testnet;;signet;
+ENV uniresolver_driver_did_btc1_bitcoinConnections=bitcoin;bitcoind;testnet3;bitcoind;signet;esploraelectrsrest
+ENV uniresolver_driver_did_btc1_bitcoinConnectionsUrls=bitcoin;http://user:pass@localhost:8332/;testnet3;http://user:pass@localhost:18332/;signet;https://mutinynet.com/api/
+ENV uniresolver_driver_did_btc1_bitcoinConnectionsCerts=bitcoin;;testnet3;;signet;
+ENV uniresolver_driver_did_btc1_genesisHashes=bitcoin;6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000;testnet3;43497fd7f826957108f4a30fd9cec3aeba79972084e90ead01ea330900000000;signet;f61eee3b63a380a477a063af32b2bbc97c9ff9f01f2c4225e973988108000000
 ENV uniresolver_driver_did_btc1_ipfs=/ip4/127.0.0.1/tcp/5001
 
 # copy from build stage

@@ -6,8 +6,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
-import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnection;
-import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnections;
+import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnector;
 import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
 import uniresolver.driver.did.btc1.syntax.DidBtc1IdentifierDecoding;
 import uniresolver.driver.did.btc1.syntax.records.IdentifierComponents;
@@ -21,9 +20,9 @@ public class Read {
     private ResolveInitialDocument resolveInitialDocument;
     private ResolveTargetDocument resolveTargetDocument;
 
-    public Read(BitcoinConnections bitcoinConnections, IPFSConnection ipfsConnection) {
-        this.resolveInitialDocument = new ResolveInitialDocument(this, bitcoinConnections, ipfsConnection);
-        this.resolveTargetDocument = new ResolveTargetDocument(this, bitcoinConnections, ipfsConnection);
+    public Read(BitcoinConnector bitcoinConnector, IPFSConnection ipfsConnection) {
+        this.resolveInitialDocument = new ResolveInitialDocument(this, bitcoinConnector, ipfsConnection);
+        this.resolveTargetDocument = new ResolveTargetDocument(this, bitcoinConnector, ipfsConnection);
     }
 
     /*

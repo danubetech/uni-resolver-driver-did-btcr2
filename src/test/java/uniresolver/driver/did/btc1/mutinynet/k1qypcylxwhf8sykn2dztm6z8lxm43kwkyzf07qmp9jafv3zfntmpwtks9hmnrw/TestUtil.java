@@ -2,7 +2,7 @@ package uniresolver.driver.did.btc1.mutinynet.k1qypcylxwhf8sykn2dztm6z8lxm43kwky
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import uniresolver.driver.did.btc1.Network;
-import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnections;
+import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnector;
 import uniresolver.driver.did.btc1.connections.bitcoin.EsploraElectrsRESTBitcoinConnection;
 import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
 
@@ -30,10 +30,13 @@ public class TestUtil {
         return (Map<String, Object>) objectMapper.readValue(readResourceString(resourceName), Map.class);
     }
 
-    static BitcoinConnections testBitcoinConnections() {
-        return BitcoinConnections.create(Map.of(
-                Network.signet, EsploraElectrsRESTBitcoinConnection.create(URI.create("https://mutinynet.com/api/"))
-        ));
+    static BitcoinConnector testBitcoinConnections() {
+        return BitcoinConnector.create(
+                Map.of(
+                        Network.signet, EsploraElectrsRESTBitcoinConnection.create(URI.create("https://mutinynet.com/api/"))),
+                Map.of(
+                        Network.signet, "f61eee3b63a380a477a063af32b2bbc97c9ff9f01f2c4225e973988108000000")
+            );
     }
 
     static IPFSConnection testIpfsConnection() {

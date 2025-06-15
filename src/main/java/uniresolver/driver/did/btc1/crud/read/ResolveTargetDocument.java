@@ -3,7 +3,6 @@ package uniresolver.driver.did.btc1.crud.read;
 import com.danubetech.dataintegrity.DataIntegrityProof;
 import com.danubetech.dataintegrity.suites.DataIntegritySuite;
 import com.danubetech.dataintegrity.suites.DataIntegritySuites;
-import com.google.api.client.util.DateTime;
 import foundation.identity.did.DIDDocument;
 import foundation.identity.did.Service;
 import foundation.identity.jsonld.JsonLDUtils;
@@ -21,7 +20,7 @@ import uniresolver.driver.did.btc1.appendix.RootDidBtc1UpdateCapabilities;
 import uniresolver.driver.did.btc1.beacons.singleton.CIDAggregateBeacon;
 import uniresolver.driver.did.btc1.beacons.singleton.SMTAggregateBeacon;
 import uniresolver.driver.did.btc1.beacons.singleton.SingletonBeacon;
-import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnections;
+import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnector;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.Block;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
 import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
@@ -45,12 +44,12 @@ public class ResolveTargetDocument {
     private static final Logger log = LoggerFactory.getLogger(ResolveTargetDocument.class);
 
     private Read read;
-    private BitcoinConnections bitcoinConnections;
+    private BitcoinConnector bitcoinConnector;
     private IPFSConnection ipfsConnection;
 
-    public ResolveTargetDocument(Read read, BitcoinConnections bitcoinConnections, IPFSConnection ipfsConnection) {
+    public ResolveTargetDocument(Read read, BitcoinConnector bitcoinConnector, IPFSConnection ipfsConnection) {
         this.read = read;
-        this.bitcoinConnections = bitcoinConnections;
+        this.bitcoinConnector = bitcoinConnector;
         this.ipfsConnection = ipfsConnection;
     }
 
@@ -297,10 +296,10 @@ public class ResolveTargetDocument {
             // Set beaconSpends to the set of all Bitcoin transactions on the specified network that spend
             // at least one transaction input controlled by the beacon.address with a blockheight greater than or equal to the contemporaryBlockheight.
 
-            List<Tx> beaconSpends = this.bitcoinConnections.getBitcoinConnection(network).getAddressTransactions(beacon.address());
+            List<Tx> beaconSpends = this.getBitcoinConnector().getBitcoinConnection(network).getAddressTransactions(beacon.address());
             Map<Tx, Block> beaconSpendsBlocks = new LinkedHashMap<>();
             beaconSpends.forEach(tx -> {
-                beaconSpendsBlocks.put(tx, bitcoinConnections.getBitcoinConnection(network).getBlockByTransaction(tx.txId()));
+                beaconSpendsBlocks.put(tx, bitcoinConnector.getBitcoinConnection(network).getBlockByTransaction(tx.txId()));
             });
             beaconSpends = beaconSpends.stream().filter(tx -> beaconSpendsBlocks.get(tx).blockHeight() >= contemporaryBlockheight).toList();
 
@@ -310,7 +309,7 @@ public class ResolveTargetDocument {
 
             beaconSpends = beaconSpends.stream().filter(tx -> PATTERN_TXOUT.matcher(tx.txOuts().getLast().asm()).matches()).toList();
 
-            List<Map<String, Object>> didDocumentMetadataBeaconSpends = (List<Map<String, Object>>) didDocumentMetadata.computeIfAbsent("beaconSpends", x -> new ArrayList<>());
+            List<Map<String, Object>> didDocumentMetadataBeaconSpends = (List<Map<String, Object>>) didDocumentMetadataNextSignalsContemporaryBlockHeight.computeIfAbsent("beaconSpends", x -> new ArrayList<>());
             didDocumentMetadataBeaconSpends.add(Map.of(
                     "beacon", RecordUtil.toMap(beacon),
                     "beaconSpends", beaconSpends.stream().map(RecordUtil::toMap).toList()));
@@ -496,12 +495,12 @@ public class ResolveTargetDocument {
         this.read = read;
     }
 
-    public BitcoinConnections getBitcoinConnections() {
-        return bitcoinConnections;
+    public BitcoinConnector getBitcoinConnector() {
+        return bitcoinConnector;
     }
 
-    public void setBitcoinConnections(BitcoinConnections bitcoinConnections) {
-        this.bitcoinConnections = bitcoinConnections;
+    public void setBitcoinConnector(BitcoinConnector bitcoinConnector) {
+        this.bitcoinConnector = bitcoinConnector;
     }
 
     public IPFSConnection getIpfsConnection() {

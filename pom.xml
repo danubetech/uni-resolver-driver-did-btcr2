@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>decentralized-identity</groupId>
 		<artifactId>uni-resolver</artifactId>
-		<version>0.30.0</version>
+		<version>0.34.0</version>
 	</parent>
 
 	<scm>
@@ -192,6 +192,16 @@
 			<groupId>wf.bitcoin</groupId>
 			<artifactId>bitcoin-rpc-client</artifactId>
 			<version>1.2.4</version>
+		</dependency>
+		<dependency>
+			<groupId>fr.acinq.bitcoin</groupId>
+			<artifactId>bitcoin-kmp-jvm</artifactId>
+			<version>0.24.0</version>
+		</dependency>
+		<dependency>
+			<groupId>fr.acinq.secp256k1</groupId>
+			<artifactId>secp256k1-kmp-jni-jvm</artifactId>
+			<version>0.17.3</version>
 		</dependency>
 		<dependency>
 			<groupId>com.apicatalog</groupId>

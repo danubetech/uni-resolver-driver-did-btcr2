@@ -5,21 +5,20 @@ import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
 import foundation.identity.did.Service;
 import foundation.identity.did.VerificationMethod;
+import fr.acinq.bitcoin.BlockHash;
 import io.ipfs.cid.Cid;
 import io.ipfs.multibase.Multibase;
 import io.ipfs.multihash.Multihash;
 import org.apache.commons.codec.binary.Hex;
 import org.bitcoinj.base.Address;
 import org.bitcoinj.base.AddressParser;
-import org.bitcoinj.base.ScriptType;
-import org.bitcoinj.crypto.ECKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
 import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.appendix.JsonCanonicalizationAndHash;
 import uniresolver.driver.did.btc1.beacons.singleton.SingletonBeacon;
-import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnections;
+import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnector;
 import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
 import uniresolver.driver.did.btc1.syntax.records.IdentifierComponents;
 import uniresolver.driver.did.btc1.util.JSONUtil;
@@ -27,21 +26,22 @@ import uniresolver.driver.did.btc1.util.JSONUtil;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 public class ResolveInitialDocument {
 
     private static final Logger log = LoggerFactory.getLogger(ResolveInitialDocument.class);
 
     private Read read;
-    private BitcoinConnections bitcoinConnections;
+    private BitcoinConnector bitcoinConnector;
     private IPFSConnection ipfsConnection;
 
-    private Map<String, Object> hints = new LinkedHashMap<>();
-
-    public ResolveInitialDocument(Read read, BitcoinConnections bitcoinConnections, IPFSConnection ipfsConnection) {
+    public ResolveInitialDocument(Read read, BitcoinConnector bitcoinConnector, IPFSConnection ipfsConnection) {
         this.read = read;
-        this.bitcoinConnections = bitcoinConnections;
+        this.bitcoinConnector = bitcoinConnector;
         this.ipfsConnection = ipfsConnection;
     }
 
@@ -111,32 +111,24 @@ public class ResolveInitialDocument {
     // See https://dcdpr.github.io/did-btc1/#deterministically-generate-beacon-services
     private List<Service> deterministicallyGenerateBeaconServices(DID identifier, byte[] keyBytes, Network network) {
 
-        ECKey ecKey = ECKey.fromPublicOnly(keyBytes);
+        fr.acinq.bitcoin.PublicKey initialPublicKey = fr.acinq.bitcoin.PublicKey.parse(keyBytes);
 
         List<Service> services = new ArrayList<>();
 
         URI initialP2PKHServiceId = URI.create(identifier + "#initialP2PKH");
-        Address initialP2PKHBeaconAddress = ecKey.toAddress(ScriptType.P2PKH, network.toBitcoinjNetwork());
+        Address initialP2PKHBeaconAddress = AddressParser.getDefault().parseAddress(initialPublicKey.p2pkhAddress(new BlockHash(this.getBitcoinConnector().getGensisHash(network))));
         Service p2pkhBeacon = SingletonBeacon.establishSingletonBeacon(initialP2PKHServiceId, initialP2PKHBeaconAddress, network);
         services.add(p2pkhBeacon);
 
         URI initialP2WPKHServiceId = URI.create(identifier + "#initialP2WPKH");
-        Address initialP2WPKHBeaconAddress = ecKey.toAddress(ScriptType.P2WPKH, network.toBitcoinjNetwork());
+        Address initialP2WPKHBeaconAddress = AddressParser.getDefault().parseAddress(initialPublicKey.p2wpkhAddress(new BlockHash(this.getBitcoinConnector().getGensisHash(network))));
         Service p2wpkhBeacon = SingletonBeacon.establishSingletonBeacon(initialP2WPKHServiceId, initialP2WPKHBeaconAddress, network);
         services.add(p2wpkhBeacon);
 
-/*      TODO. P2TR not yet supported by bitcoinj
         URI initialP2TRServiceId = URI.create(identifier + "#initialP2TR");
-        Address initialP2TRBeaconAddress = ecKey.toAddress(ScriptType.P2TR, network.toBitcoinjNetwork());
+        Address initialP2TRBeaconAddress = AddressParser.getDefault().parseAddress(initialPublicKey.p2trAddress(new BlockHash(this.getBitcoinConnector().getGensisHash(network))));
         Service p2trBeacon = SingletonBeacon.establishSingletonBeacon(initialP2TRServiceId, initialP2TRBeaconAddress, network);
-        services.add(p2trBeacon);*/
-
-        if (this.getHints().get("initialP2TR") instanceof String initialP2TRValue) {
-            URI initialP2TRServiceId = URI.create(identifier + "#initialP2TR");
-            Address initialP2TRBeaconAddress = AddressParser.getDefault().parseAddress(initialP2TRValue);
-            Service p2trBeacon = SingletonBeacon.establishSingletonBeacon(initialP2TRServiceId, initialP2TRBeaconAddress, network);
-            services.add(p2trBeacon);
-        }
+        services.add(p2trBeacon);
 
         if (log.isDebugEnabled()) log.debug("deterministicallyGenerateBeaconServices: " + services);
         return services;
@@ -233,12 +225,12 @@ public class ResolveInitialDocument {
         this.read = read;
     }
 
-    public BitcoinConnections getBitcoinConnections() {
-        return bitcoinConnections;
+    public BitcoinConnector getBitcoinConnector() {
+        return bitcoinConnector;
     }
 
-    public void setBitcoinConnections(BitcoinConnections bitcoinConnections) {
-        this.bitcoinConnections = bitcoinConnections;
+    public void setBitcoinConnector(BitcoinConnector bitcoinConnector) {
+        this.bitcoinConnector = bitcoinConnector;
     }
 
     public IPFSConnection getIpfsConnection() {
@@ -247,13 +239,5 @@ public class ResolveInitialDocument {
 
     public void setIpfsConnection(IPFSConnection ipfsConnection) {
         this.ipfsConnection = ipfsConnection;
-    }
-
-    public Map<String, Object> getHints() {
-        return hints;
-    }
-
-    public void setHints(Map<String, Object> hints) {
-        this.hints = hints;
     }
 }

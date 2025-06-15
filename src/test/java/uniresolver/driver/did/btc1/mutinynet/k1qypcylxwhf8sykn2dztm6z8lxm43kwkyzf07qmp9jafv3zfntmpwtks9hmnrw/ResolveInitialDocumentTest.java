@@ -24,7 +24,6 @@ public class ResolveInitialDocumentTest {
 		Map<String, Object> didDocumentMetadata = new HashMap<>();
 
 		Read read = new Read(TestUtil.testBitcoinConnections(), TestUtil.testIpfsConnection());
-		read.getResolveInitialDocument().setHints(Map.of("initialP2TR", "tb1p5ss9d8e4rtehk32ldjtdpm38vj29yx3gwuad94q6zpx3udk8nh0q58zeeq"));
 
 		DID identifier = DID.fromString(TestUtil.readResourceString("did.txt"));
 		Map<String, Object> resolutionOptions = TestUtil.readResourceJson("resolutionOptions.json");
