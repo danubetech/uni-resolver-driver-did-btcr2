@@ -27,10 +27,7 @@ import uniresolver.driver.did.btc1.util.JSONUtil;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ResolveInitialDocument {
 
@@ -39,6 +36,8 @@ public class ResolveInitialDocument {
     private Read read;
     private BitcoinConnections bitcoinConnections;
     private IPFSConnection ipfsConnection;
+
+    private Map<String, Object> hints = new LinkedHashMap<>();
 
     public ResolveInitialDocument(Read read, BitcoinConnections bitcoinConnections, IPFSConnection ipfsConnection) {
         this.read = read;
@@ -100,7 +99,7 @@ public class ResolveInitialDocument {
         initialDocumentBuilder.capabilityInvocationVerificationMethodReference(verificationMethod.getId());
         initialDocumentBuilder.capabilityDelegationVerificationMethodReference(verificationMethod.getId());
 
-        List<Service> services = deterministicallyGenerateBeaconServices(identifier, keyBytes, identifierComponents.network());
+        List<Service> services = this.deterministicallyGenerateBeaconServices(identifier, keyBytes, identifierComponents.network());
 
         initialDocumentBuilder.services(services);
 
@@ -110,7 +109,7 @@ public class ResolveInitialDocument {
     }
 
     // See https://dcdpr.github.io/did-btc1/#deterministically-generate-beacon-services
-    private static List<Service> deterministicallyGenerateBeaconServices(DID identifier, byte[] keyBytes, Network network) {
+    private List<Service> deterministicallyGenerateBeaconServices(DID identifier, byte[] keyBytes, Network network) {
 
         ECKey ecKey = ECKey.fromPublicOnly(keyBytes);
 
@@ -132,10 +131,12 @@ public class ResolveInitialDocument {
         Service p2trBeacon = SingletonBeacon.establishSingletonBeacon(initialP2TRServiceId, initialP2TRBeaconAddress, network);
         services.add(p2trBeacon);*/
 
-        URI initialP2TRServiceId = URI.create(identifier + "#initialP2TR");
-        Address initialP2TRBeaconAddress = AddressParser.getDefault().parseAddress("tb1p5ss9d8e4rtehk32ldjtdpm38vj29yx3gwuad94q6zpx3udk8nh0q58zeeq");
-        Service p2trBeacon = SingletonBeacon.establishSingletonBeacon(initialP2TRServiceId, initialP2TRBeaconAddress, network);
-        services.add(p2trBeacon);
+        if (this.getHints().get("initialP2TR") instanceof String initialP2TRValue) {
+            URI initialP2TRServiceId = URI.create(identifier + "#initialP2TR");
+            Address initialP2TRBeaconAddress = AddressParser.getDefault().parseAddress(initialP2TRValue);
+            Service p2trBeacon = SingletonBeacon.establishSingletonBeacon(initialP2TRServiceId, initialP2TRBeaconAddress, network);
+            services.add(p2trBeacon);
+        }
 
         if (log.isDebugEnabled()) log.debug("deterministicallyGenerateBeaconServices: " + services);
         return services;
@@ -246,5 +247,13 @@ public class ResolveInitialDocument {
 
     public void setIpfsConnection(IPFSConnection ipfsConnection) {
         this.ipfsConnection = ipfsConnection;
+    }
+
+    public Map<String, Object> getHints() {
+        return hints;
+    }
+
+    public void setHints(Map<String, Object> hints) {
+        this.hints = hints;
     }
 }

@@ -8,14 +8,14 @@ import java.io.Reader;
 import java.util.List;
 import java.util.Map;
 
-public class DIDUpdatePayload extends JsonLDObject {
+public class DIDUpdate extends JsonLDObject {
 
     @JsonCreator
-    public DIDUpdatePayload() {
+    public DIDUpdate() {
         super();
     }
 
-    protected DIDUpdatePayload(Map<String, Object> jsonObject) {
+    protected DIDUpdate(Map<String, Object> jsonObject) {
         super(jsonObject);
     }
 
@@ -23,22 +23,22 @@ public class DIDUpdatePayload extends JsonLDObject {
      * Factory methods
      */
 
-    public static DIDUpdatePayload fromJsonObject(Map<String, Object> jsonObject) {
-        return new DIDUpdatePayload(jsonObject);
+    public static DIDUpdate fromJsonObject(Map<String, Object> jsonObject) {
+        return new DIDUpdate(jsonObject);
     }
 
-    public static DIDUpdatePayload fromJsonLDObject(JsonLDObject jsonLDObject) { return fromJsonObject(jsonLDObject.getJsonObject()); }
+    public static DIDUpdate fromJsonLDObject(JsonLDObject jsonLDObject) { return fromJsonObject(jsonLDObject.getJsonObject()); }
 
-    public static DIDUpdatePayload fromJson(Reader reader) {
-        return new DIDUpdatePayload(readJson(reader));
+    public static DIDUpdate fromJson(Reader reader) {
+        return new DIDUpdate(readJson(reader));
     }
 
-    public static DIDUpdatePayload fromJson(String json) {
-        return new DIDUpdatePayload(readJson(json));
+    public static DIDUpdate fromJson(String json) {
+        return new DIDUpdate(readJson(json));
     }
 
-    public static DIDUpdatePayload fromMap(Map<String, Object> map) {
-        return new DIDUpdatePayload(map);
+    public static DIDUpdate fromMap(Map<String, Object> map) {
+        return new DIDUpdate(map);
     }
 
     /*

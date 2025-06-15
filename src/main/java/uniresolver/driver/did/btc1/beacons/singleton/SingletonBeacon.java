@@ -12,7 +12,7 @@ import uniresolver.driver.did.btc1.appendix.JsonCanonicalizationAndHash;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.TxOut;
 import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
-import uniresolver.driver.did.btc1.crud.update.jsonld.DIDUpdatePayload;
+import uniresolver.driver.did.btc1.crud.update.jsonld.DIDUpdate;
 import uniresolver.driver.did.btc1.util.HexUtil;
 
 import java.net.URI;
@@ -52,46 +52,73 @@ public class SingletonBeacon {
      * 5.1.3 Process Singleton Beacon Signal
      */
 
-    //private static final Pattern PATTERN_TXOUT = Pattern.compile("^OP_RETURN OP_PUSH32 ([0-9a-fA-F]{32})$");
-    private static final Pattern PATTERN_TXOUT = Pattern.compile("^OP_RETURN ([0-9a-fA-F]{64})$");
+    private static final Pattern PATTERN_TXOUT = Pattern.compile("^OP_RETURN OP_PUSHBYTES_32 ([0-9a-fA-F]{64})$");
 
     // See https://dcdpr.github.io/did-btc1/#process-singleton-beacon-signal
-    public static DIDUpdatePayload processSingletonBeaconSignal(Tx tx, Map<String, Object> signalSidecarData, IPFSConnection ipfsConnection, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
+    public static DIDUpdate processSingletonBeaconSignal(Tx tx, Map<String, Object> signalSidecarData, IPFSConnection ipfsConnection, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
 
-        TxOut txOut = tx.txOuts().getFirst();
+        // Initialize a txOut variable to the 0th transaction output of the tx.
+        // TODO: This is incorrect, should be last instead of 0th?
 
-        DIDUpdatePayload didUpdatePayload = null;
+        TxOut txOut = tx.txOuts().getLast();
+
+        // Set didUpdatePayload to null.
+
+        DIDUpdate didUpdate = null;
+
+        // Set hashBytes to the 32 bytes in the txOut.
 
         Matcher matcher = PATTERN_TXOUT.matcher(txOut.asm());
         if (! matcher.matches()) {
-            if (log.isInfoEnabled()) log.debug("processSingletonBeaconSignal: Not a beacon signal: " + didUpdatePayload);
-            return didUpdatePayload;
+            if (log.isInfoEnabled()) log.debug("processSingletonBeaconSignal: Not a beacon signal: " + didUpdate);
+            return didUpdate;
         }
-
         byte[] hashBytes = HexUtil.hexDecode(matcher.group(1));
 
+        // If signalSidecarData:
+
         if (signalSidecarData != null) {
+
+            // Set didUpdatePayload to signalSidecarData.updatePayload
+
             Map<String, Object> didUpdatePayloadMap = (Map<String, Object>) signalSidecarData.get("updatePayload");
+
+            // Set updateHashBytes to the result of passing didUpdatePayload to the JSON Canonicalization and Hash algorithm.
+
             byte[] updateHashBytes = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(didUpdatePayloadMap);
+
+            // If updateHashBytes does not equal hashBytes, MUST throw an invalidSidecarData error.
+
             if (! Arrays.equals(updateHashBytes, hashBytes)) {
                 throw new ResolutionException("invalidSidecarData", "updateHashBytes " + HexUtil.hexEncode(updateHashBytes) + " does not match hashBytes: " + HexUtil.hexEncode(hashBytes));
             }
-            didUpdatePayload = DIDUpdatePayload.fromMap(didUpdatePayloadMap);
+
+            // Return didUpdatePayload
+
+            didUpdate = DIDUpdate.fromMap(didUpdatePayloadMap);
+
+        // Else:
+
         } else {
-            didUpdatePayload = FetchContentFromAddressableStorage.fetchJsonLDObjectContentFromAddressableStorage(hashBytes, DIDUpdatePayload.class, ipfsConnection);
-            if (didUpdatePayload == null) {
-                throw new ResolutionException("latePublishingError", "didUpdatePayload is null");
+
+            // Set didUpdatePayload to the result of passing hashBytes into the Fetch Content from Addressable Storage algorithm.
+
+            didUpdate = FetchContentFromAddressableStorage.fetchJsonLDObjectContentFromAddressableStorage(hashBytes, DIDUpdate.class, ipfsConnection);
+
+            // If didUpdatePayload is null, MUST raise a latePublishingError. MAY identify Beacon Signal to resolver and request
+            // additional Sidecar data be provided.
+
+            if (didUpdate == null) {
+                throw new ResolutionException("latePublishingError", "didUpdatePayload is null for beacon signal");
             }
         }
 
-        // DID DOCUMENT METADATA
+        // Return didUpdatePayload.
 
         Map<String, Map<String, Object>> didDocumentMetadataDidUpdatePayloads = (Map<String, Map<String, Object>>) didDocumentMetadata.computeIfAbsent("didUpdatePayloads", x -> new LinkedHashMap<>());
-        didDocumentMetadataDidUpdatePayloads.put(tx.txId(), didUpdatePayload.toMap());
+        didDocumentMetadataDidUpdatePayloads.put(tx.txId(), didUpdate.toMap());
 
-        // done
-
-        if (log.isDebugEnabled()) log.debug("processSingletonBeaconSignal: " + didUpdatePayload);
-        return didUpdatePayload;
+        if (log.isDebugEnabled()) log.debug("processSingletonBeaconSignal: " + didUpdate);
+        return didUpdate;
     }
 }

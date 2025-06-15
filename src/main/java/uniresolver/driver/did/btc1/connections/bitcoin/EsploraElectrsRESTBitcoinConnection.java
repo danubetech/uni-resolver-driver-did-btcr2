@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.bitcoinj.base.Address;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.Block;
@@ -46,51 +47,61 @@ public class EsploraElectrsRESTBitcoinConnection extends AbstractBitcoinConnecti
 
 	@Override
 	public Block getBlockByBlockHeight(Integer blockHeight) {
-		URI apiEndpoint1 = URI.create(this.apiEndpointBase + "/block-height/" + blockHeight);
+		URI apiEndpoint1 = URI.create(this.apiEndpointBase + "block-height/" + blockHeight);
 		Map<String, Object> response1 = readObject(apiEndpoint1);
-		URI apiEndpoint2 = URI.create(this.apiEndpointBase + "/block/" + response1.get("height") + "/txs");
+		URI apiEndpoint2 = URI.create(this.apiEndpointBase + "block/" + response1.get("height") + "/txs");
 		List<Object> response2 = readArray(apiEndpoint2);
 		Integer responseBlockHeight = ((Number) response1.get("height")).intValue();
 		String responseHash = (String) response1.get("id");
-		throw new RuntimeException("test");
-		//List<Tx> txs = response2.stream().map()
-//		Block block = new Block();
-//		block.
+		throw new RuntimeException("Not implemented");
 	}
 
 	@Override
-	public Tx getTransactionById(String txid) {
-		URI apiEndpoint = URI.create(this.apiEndpointBase + "/tx/" + txid);
-		throw new RuntimeException("test4");
+	public List<Tx> getAddressTransactions(Address address) {
+		URI apiEndpoint = URI.create(this.apiEndpointBase + "address/" + address + "/txs");
+		List<Object> response = readArray(apiEndpoint);
+		List<Tx> txs = response.stream().map(Map.class::cast).map(EsploraElectrsRESTBitcoinConnection::txFromMap).toList();
+		if (log.isDebugEnabled()) log.debug("getAddressTransactions for {}: {}", address, txs);
+		return txs;
 	}
 
 	@Override
-	public Block getBlockByTargetTime(Long targetTime) {
-		URI apiEndpoint = URI.create(this.apiEndpointBase + "/v1/mining/blocks/timestamp/" + targetTime);
-		throw new RuntimeException("test3");
-	}
-
-	@Override
-	public Block getBlockByMinConfirmations(Integer confirmations) {
-		throw new RuntimeException("Not implemented yet");
+	public Block getBlockByTransaction(String txid) {
+		URI apiEndpoint = URI.create(this.apiEndpointBase + "tx/" + txid);
+		Map<String, Object> response = readObject(apiEndpoint);
+		Map<String, Object> status = (Map<String, Object>) response.get("status");
+		Integer blockHeight = status == null ? null : ((Number) status.get("block_height")).intValue();
+		String blockHash = status == null ? null : (String) status.get("block_hash");
+		Long blockTime = status == null ? null : ((Number) status.get("block_time")).longValue();
+		List<Tx> txs = null;
+		Block block = new Block(blockHeight, blockHash, blockTime, txs);
+		if (log.isDebugEnabled()) log.debug("getBlockByTransaction for {}: {}", txid, block);
+		return block;
 	}
 
 	/*
 	 * Helper methods
 	 */
 
-	public Tx txFromObject(Map<String, Object> object) {
-		String txId = (String) object.get("txid");
-		if (Tx.COINBASE_TX_IDENTIFIER.equals(txId) || Tx.GENESIS_TX_IDENTIFIER.equals(txId)) {
-			return new Tx(txId, null, null, null);
-		}
-		URI apiEndpoint = URI.create(this.apiEndpointBase + "/tx/" + txId + "/hex");
-		String txHex = readString(apiEndpoint);
-		throw new RuntimeException("test2");
-/*		List< >
-		List<TxIn> txIns = bitcoinjRawTransaction.vIn().stream().map(TxIn::fromBitcoinjIn).toList();
-		List<TxOut> txOuts = bitcoinjRawTransaction.vOut().stream().map(TxOut::fromBitcoinjOut).toList();
-		return new Tx(txId, txHex, txIns, txOuts);*/
+	private static Tx txFromMap(Map<String, Object> map) {
+		String txId = (String) map.get("txid");
+		String txHex = null;
+		List<TxIn> txIns = ((List<Map<String, Object>>) map.get("vin")).stream().map(EsploraElectrsRESTBitcoinConnection::txInFromMap).toList();
+		List<TxOut> txOuts = ((List<Map<String, Object>>) map.get("vout")).stream().map(EsploraElectrsRESTBitcoinConnection::txOutFromMap).toList();
+		return new Tx(txId, txHex, txIns, txOuts);
+	}
+
+	private static TxIn txInFromMap(Map<String, Object> map) {
+		String txId = (String) map.get("txid");
+		Integer vout = ((Number) map.get("vout")).intValue();
+		return new TxIn(txId, vout);
+	}
+
+	private static TxOut txOutFromMap(Map<String, Object> map) {
+		String txId = (String) map.get("txid");
+		String scriptPubKeyAddress = (String) map.get("scriptpubkey_address");
+		String asm = (String) map.get("scriptpubkey_asm");
+		return new TxOut(txId, scriptPubKeyAddress, asm);
 	}
 
 	private static String readString(URI uri) {
@@ -112,6 +123,7 @@ public class EsploraElectrsRESTBitcoinConnection extends AbstractBitcoinConnecti
 		} catch (IOException ex) {
 			throw new RuntimeException("Cannot read from " + uri + "; " + ex.getMessage(), ex);
 		}
+		if (log.isDebugEnabled()) log.debug("Read response from " + uri + ": " + buffer);
 		return buffer.toString();
     }
 
@@ -125,7 +137,7 @@ public class EsploraElectrsRESTBitcoinConnection extends AbstractBitcoinConnecti
 
 	private static List<Object> readArray(URI uri) {
 		try {
-			return (List<Object>) objectMapper.readValue(readString(uri), Map.class);
+			return (List<Object>) objectMapper.readValue(readString(uri), List.class);
 		} catch (JsonProcessingException ex) {
 			throw new RuntimeException("Cannot parse array response from " + uri + "; " + ex.getMessage(), ex);
 		}

@@ -3,7 +3,7 @@ package uniresolver.driver.did.btc1.beacons.singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
-import uniresolver.driver.did.btc1.crud.update.jsonld.DIDUpdatePayload;
+import uniresolver.driver.did.btc1.crud.update.jsonld.DIDUpdate;
 
 import java.util.Map;
 
@@ -18,7 +18,7 @@ public class SMTAggregateBeacon {
      */
 
     // See https://dcdpr.github.io/did-btc1/#process-smtaggregate-beacon-signal
-    public static DIDUpdatePayload processSMTAggregateBeaconSignal(Tx signalTx, Map<String, Object> signalSidecarData) {
+    public static DIDUpdate processSMTAggregateBeaconSignal(Tx signalTx, Map<String, Object> signalSidecarData) {
 
         // TODO
         return null;

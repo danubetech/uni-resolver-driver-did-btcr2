@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
 import org.erdtman.jcs.JsonCanonicalizer;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import uniresolver.driver.did.btc1.crud.read.Read;
 import uniresolver.driver.did.btc1.syntax.DidBtc1IdentifierDecoding;
@@ -20,11 +21,13 @@ public class ResolveInitialDocumentTest {
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 
 	@Test
+	@Disabled("Only works with configured IPFS connection")
 	public void testResolveInitialDIDDocument() throws Exception {
 
 		Map<String, Object> didDocumentMetadata = new HashMap<>();
 
 		Read read = new Read(TestUtil.testBitcoinConnections(), TestUtil.testIpfsConnection());
+		read.getResolveInitialDocument().setHints(Map.of("initialP2TR", "tb1p5ss9d8e4rtehk32ldjtdpm38vj29yx3gwuad94q6zpx3udk8nh0q58zeeq"));
 
 		DID identifier = DID.fromString(TestUtil.readResourceString("did.txt"));
 		Map<String, Object> resolutionOptions = TestUtil.readResourceJson("resolutionOptions.json");

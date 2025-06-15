@@ -10,7 +10,6 @@ import foundation.identity.jsonld.JsonLDUtils;
 import io.leonard.AddressFormatException;
 import io.leonard.Base58;
 import org.bitcoinj.base.Address;
-import org.bitcoinj.base.AddressParser;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 import org.slf4j.Logger;
@@ -25,13 +24,10 @@ import uniresolver.driver.did.btc1.beacons.singleton.SingletonBeacon;
 import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnections;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.Block;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
-import uniresolver.driver.did.btc1.connections.bitcoin.records.TxIn;
-import uniresolver.driver.did.btc1.connections.bitcoin.records.TxOut;
 import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
 import uniresolver.driver.did.btc1.crud.read.records.Beacon;
-import uniresolver.driver.did.btc1.crud.read.records.NextSignals;
-import uniresolver.driver.did.btc1.crud.read.records.Signal;
-import uniresolver.driver.did.btc1.crud.update.jsonld.DIDUpdatePayload;
+import uniresolver.driver.did.btc1.crud.read.records.BeaconSignal;
+import uniresolver.driver.did.btc1.crud.update.jsonld.DIDUpdate;
 import uniresolver.driver.did.btc1.crud.update.jsonld.RootCapability;
 import uniresolver.driver.did.btc1.dataintegrity.DataIntegrity;
 import uniresolver.driver.did.btc1.util.DIDDocumentUtil;
@@ -42,6 +38,7 @@ import uniresolver.driver.did.btc1.util.RecordUtil;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class ResolveTargetDocument {
 
@@ -79,38 +76,50 @@ public class ResolveTargetDocument {
             // Else if resolutionOptions.versionTime is not null, set targetTime to resolutionOptions.versionTime.
 
             targetVersionId = null;
-            targetTime = DateTime.parseRfc3339((String) resolutionOptions.get("versionTime")).getValue();
+            targetTime = ((Number) resolutionOptions.get("versionTime")).longValue();
         } else {
 
-            // Else set targetTime to null and targetVersionId to null.
+            // Else set targetTime to the UNIX timestamp for now at the moment of execution.
 
             targetVersionId = null;
-            targetTime = null;
+            targetTime = System.currentTimeMillis();
         }
 
-        // Set targetBlockheight to the result of passing network and targetTime
-        // to the algorithm Determine Target Blockheight.
-
-        Integer targetBlockheight = this.determineTargetBlockHeight(network, targetTime);
+        // Set signalsMetadata to resolutionOptions.sidecarData.signalsMetadata.
 
         Map<String, Object> sidecarData = resolutionOptions.get("sidecarData") == null ? null : (Map<String, Object>) resolutionOptions.get("sidecarData");
         Map<String, Object> signalsMetadata = sidecarData == null ? null : (Map<String, Object>) sidecarData.get("signalsMetadata");
 
+        // Set currentVersionId to 1.
+
         Integer currentVersionId = 1;
+
+        // If currentVersionId equals targetVersionId return initialDocument.
+
         if (currentVersionId.equals(targetVersionId)) return initialDocument;
+
+        // Set updateHashHistory to an empty array.
 
         List<byte[]> updateHashHistory = new ArrayList<>();
 
+        // Set contemporaryBlockheight to 0.
+
         Integer contemporaryBlockheight = 0;
 
+        // Set contemporaryDIDDocument to the initialDocument.
+
         DIDDocument contemporaryDIDDocument = initialDocument;
+
+        // Set targetDocument to the result of calling the Traverse Blockchain History algorithm passing in
+        // contemporaryDIDDocument, contemporaryBlockheight, currentVersionId, targetVersionId, targetTime,
+        // updateHashHistory, signalsMetadata, and network.
 
         DIDDocument targetDocument = this.traverseBlockchainHistory(
                 contemporaryDIDDocument,
                 contemporaryBlockheight,
                 currentVersionId,
                 targetVersionId,
-                targetBlockheight,
+                targetTime,
                 updateHashHistory,
                 signalsMetadata,
                 network,
@@ -122,193 +131,297 @@ public class ResolveTargetDocument {
 
     private static final Integer MIN_CONFIRMATIONS = 10; /* TODO: what is X. Is it variable? */
 
-    // See https://dcdpr.github.io/did-btc1/#determine-target-blockheight
-    private Integer determineTargetBlockHeight(Network network, Long targetTime) throws ResolutionException {
-        if (log.isDebugEnabled()) log.debug("determineTargetBlockHeight ({}, {})", network, targetTime);
-
-        Block block;
-
-        if (targetTime != null) {
-            block = this.getBitcoinConnections().getBitcoinConnection(network).getBlockByTargetTime(targetTime);
-        } else {
-            block = this.getBitcoinConnections().getBitcoinConnection(network).getBlockByMinConfirmations(MIN_CONFIRMATIONS);
-        }
-
-        Integer blockHeight = block.blockHeight();
-
-        if (log.isDebugEnabled()) log.debug("determineTargetBlockHeight: " + blockHeight);
-        return blockHeight;
-    }
-
     // See https://dcdpr.github.io/did-btc1/#traverse-blockchain-history
-    private DIDDocument traverseBlockchainHistory(DIDDocument contemporaryDIDDocument, Integer contemporaryBlockheight, Integer currentVersionId, Integer targetVersionId, Integer targetBlockheight, List<byte[]> updateHashHistory, Map<String, Object> signalsMetadata, Network network, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
-        if (log.isDebugEnabled()) log.debug("traverseBlockchainHistory ({}, {}, {}, {}, {}, {}, {}, {})", contemporaryDIDDocument, contemporaryBlockheight, currentVersionId, targetVersionId, targetBlockheight, updateHashHistory, signalsMetadata, network);
+    private DIDDocument traverseBlockchainHistory(DIDDocument contemporaryDIDDocument, Integer contemporaryBlockheight, Integer currentVersionId, Integer targetVersionId, Long targetTime, List<byte[]> updateHashHistory, Map<String, Object> signalsMetadata, Network network, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
+        if (log.isDebugEnabled()) log.debug("traverseBlockchainHistory ({}, {}, {}, {}, {}, {}, {}, {})", contemporaryDIDDocument, contemporaryBlockheight, currentVersionId, targetVersionId, targetTime, updateHashHistory, signalsMetadata, network);
+
+        // Set contemporaryHash to the result of passing contemporaryDIDDocument into the JSON Canonicalization and Hash algorithm.
 
         byte[] contemporaryHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(contemporaryDIDDocument);
 
+        // Find all beacons in contemporaryDIDDocument: All service in contemporaryDIDDocument.service where service.type equals
+        // one of SingletonBeacon, CIDAggregateBeacon and SMTAggregateBeacon Beacon.
+
+        List<Service> beaconServices = contemporaryDIDDocument.getServices().stream().filter(service -> Arrays.asList(SingletonBeacon.TYPE, CIDAggregateBeacon.TYPE, SMTAggregateBeacon.TYPE).contains(service.getType())).toList();
+
+        // For each beacon in beacons convert the beacon.serviceEndpoint to a Bitcoin address following BIP21.
+        // Set beacon.address to the Bitcoin address.
+
         List<Beacon> beacons = new ArrayList<>();
-        for (Service beaconService : contemporaryDIDDocument.getServices().stream().filter(service -> Arrays.asList(SingletonBeacon.TYPE, CIDAggregateBeacon.TYPE, SMTAggregateBeacon.TYPE).contains(service.getType())).toList()) {
-            String beaconId;
-            String beaconType;
-            String beaconServiceEndpoint;
-            Address beaconAddress;
+        for (Service beaconService : beaconServices) {
             try {
-                beaconId = JsonLDUtils.uriToString(beaconService.getId());
-                beaconType = beaconService.getType();
-                beaconServiceEndpoint = beaconService.getServiceEndpoint() instanceof URI ? JsonLDUtils.uriToString((URI) beaconService.getServiceEndpoint()) : (String) beaconService.getServiceEndpoint();
-                beaconAddress = BitcoinURI.of(beaconServiceEndpoint).getAddress();
+                String id = JsonLDUtils.uriToString(beaconService.getId());
+                String type = beaconService.getType();
+                String serviceEndpoint = beaconService.getServiceEndpoint() instanceof URI ? JsonLDUtils.uriToString((URI) beaconService.getServiceEndpoint()) : (String) beaconService.getServiceEndpoint();
+                Address address = BitcoinURI.of(serviceEndpoint).getAddress();
+                beacons.add(new Beacon(
+                        id,
+                        type,
+                        serviceEndpoint,
+                        address));
             } catch (BitcoinURIParseException ex) {
                 throw new ResolutionException("invalidDidDocument", "Invalid DID document: " + ex.getMessage(), ex);
             }
-            beacons.add(new Beacon(beaconId, beaconType, beaconServiceEndpoint, beaconAddress));
         }
 
-        NextSignals nextSignals = this.findNextSignals(contemporaryBlockheight, targetBlockheight, beacons, network, didDocumentMetadata);
+        // Set nextSignals to the result of calling algorithm Find Next Signals passing in
+        // contemporaryBlockheight, beacons and network.
 
-        contemporaryBlockheight = nextSignals.blockheight();
+        List<BeaconSignal> nextSignals = this.findNextSignals(contemporaryBlockheight, beacons, network, didDocumentMetadata);
 
-        List<Signal> signals = nextSignals.signals();
+        // If nextSignals is empty, return contemporaryDIDDocument.
 
-        List<DIDUpdatePayload> didUpdatePayloads = this.processBeaconSignals(signals, signalsMetadata, didDocumentMetadata);
+        if (nextSignals.isEmpty()) return contemporaryDIDDocument;
 
-        List<DIDUpdatePayload> orderedDidUpdatePayloads = didUpdatePayloads.stream().sorted(Comparator.comparing(DIDUpdatePayload::getTargetVersionId)).toList();
+        // If nextSignals[0].blocktime is greater than targetTime, return contemporaryDIDDocument.
 
-        for (DIDUpdatePayload didUpdatePayload : orderedDidUpdatePayloads) {
-            if (didUpdatePayload.getTargetVersionId() <= currentVersionId) {
-                confirmDuplicateUpdate(didUpdatePayload, updateHashHistory, contemporaryHash);
-            } else if (didUpdatePayload.getTargetVersionId() == currentVersionId + 1) {
+        if (nextSignals.get(0).blocktime() > targetTime) return contemporaryDIDDocument;
+
+        // Set contemporaryBlockheight to nextSignals[0].blockheight.
+
+        contemporaryBlockheight = nextSignals.get(0).blockheight();
+
+        // Set updates to the result of calling algorithm Process Beacon Signals passing in nextSignals and signalsMetadata.
+
+        List<DIDUpdate> updates = this.processBeaconSignals(nextSignals, signalsMetadata, didDocumentMetadata);
+
+        // Set orderedUpdates to the list of updates ordered by the targetVersionId property.
+
+        List<DIDUpdate> orderedUpdates = updates.stream().sorted(Comparator.comparing(DIDUpdate::getTargetVersionId)).toList();
+
+        // For update in orderedUpdates:
+
+        for (DIDUpdate update : orderedUpdates) {
+
+            // If update.targetVersionId is less than or equal to currentVersionId, run the
+            // Confirm Duplicate Update Algorithm passing in update, updateHashHistory, and contemporaryHash.
+
+            if (update.getTargetVersionId() <= currentVersionId) {
+                confirmDuplicateUpdate(update, updateHashHistory, contemporaryHash);
+            }
+
+            // If update.targetVersionId equals currentVersionId + 1:
+
+            if (update.getTargetVersionId() == currentVersionId + 1) {
+
+                // Check that update.sourceHash equals contemporaryHash, else MUST raise latePublishing error.
+
                 try {
-                    if (! Arrays.equals(Base58.decode(didUpdatePayload.getSourceHash()), contemporaryHash)) {
-                        throw new ResolutionException("latePublishing", "update.sourceHash " + didUpdatePayload.getSourceHash() + " does not match contemporaryHash: " + Base58.encode(contemporaryHash));
+                    if (!Arrays.equals(Base58.decode(update.getSourceHash()), contemporaryHash)) {
+                        throw new ResolutionException("latePublishing", "update.sourceHash " + update.getSourceHash() + " does not match contemporaryHash: " + Base58.encode(contemporaryHash));
                     }
                 } catch (AddressFormatException ex) {
-                    throw new ResolutionException("invalidDidUpdate", "Update sourceHash " + didUpdatePayload.getSourceHash() + " cannot be decoded: " + ex.getMessage());
+                    throw new ResolutionException("invalidDidUpdate", "Update sourceHash " + update.getSourceHash() + " cannot be decoded: " + ex.getMessage());
                 }
-                contemporaryDIDDocument = applyDIDUpdate(contemporaryDIDDocument, didUpdatePayload);
+
+                // Set contemporaryDIDDocument to the result of calling Apply DID Update algorithm passing
+                // in contemporaryDIDDocument, update.
+
+                contemporaryDIDDocument = applyDIDUpdate(contemporaryDIDDocument, update);
+
+                // Increment currentVersionId
+
                 currentVersionId++;
+
+                // If currentVersionId equals targetVersionId return contemporaryDIDDocument.
+
                 if (currentVersionId.equals(targetVersionId)) {
                     return contemporaryDIDDocument;
                 }
-                byte[] updateHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(didUpdatePayload);
+
+                // Set updateHash to the result of passing update into the JSON Canonicalization and Hash algorithm
+
+                byte[] updateHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(update);
+
+                // Push updateHash onto updateHashHistory.
+
                 updateHashHistory.add(updateHash);
+
+                // Set contemporaryHash to result of passing contemporaryDIDDocument into the
+                // JSON Canonicalization and Hash algorithm.
+
                 contemporaryHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(contemporaryDIDDocument);
-            } else if (didUpdatePayload.getTargetVersionId() > currentVersionId + 1) {
-                throw new ResolutionException("latePublishing", "update.targetVersionId " + didUpdatePayload.getTargetVersionId() + " is greater than currentVersionId + 1: " + (currentVersionId + 1));
+            }
+
+            // If update.targetVersionId is greater than currentVersionId + 1, MUST throw a LatePublishing error.
+
+            if (update.getTargetVersionId() > currentVersionId + 1) {
+                throw new ResolutionException("latePublishing", "update.targetVersionId " + update.getTargetVersionId() + " is greater than currentVersionId + 1: " + (currentVersionId + 1));
             }
         }
 
-        if (Objects.equals(contemporaryBlockheight, targetBlockheight)) {
-            if (log.isDebugEnabled()) log.debug("traverseBlockchainHistory: " + contemporaryDIDDocument);
-            return contemporaryDIDDocument;
-        }
+        // Increment contemporaryBlockheight.
 
         contemporaryBlockheight++;
+
+        // Set targetDocument to the result of calling the Traverse Blockchain History algorithm passing in
+        // contemporaryDIDDocument, contemporaryBlockheight, currentVersionId, targetVersionId, targetTime,
+        // updateHashHistory, signalsMetadata, and network.
 
         DIDDocument targetDocument = this.traverseBlockchainHistory(
                 contemporaryDIDDocument,
                 contemporaryBlockheight,
                 currentVersionId,
                 targetVersionId,
-                targetBlockheight,
+                targetTime,
                 updateHashHistory,
                 signalsMetadata,
                 network,
                 didDocumentMetadata);
 
+        // Return targetDocument.
+
         if (log.isDebugEnabled()) log.debug("traverseBlockchainHistory: " + targetDocument);
         return targetDocument;
     }
 
-    private static final String COINBASE_TX_IDENTIFIER = "0000000000000000000000000000000000000000000000000000000000000000";
-    private static final String GENESIS_TX_IDENTIFIER = "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b";
+    private static final Pattern PATTERN_TXOUT = Pattern.compile("^OP_RETURN OP_PUSHBYTES_32 ([0-9a-fA-F]{64})$");
 
     // See https://dcdpr.github.io/did-btc1/#find-next-signals
-    private NextSignals findNextSignals(Integer contemporaryBlockheight, Integer targetBlockheight, List<Beacon> beacons, Network network, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) {
-        if (log.isDebugEnabled()) log.debug("findNextSignals ({}, {}, {}, {})", contemporaryBlockheight, targetBlockheight, beacons, network);
+    private List<BeaconSignal> findNextSignals(Integer contemporaryBlockheight, List<Beacon> beacons, Network network, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) {
+        if (log.isDebugEnabled()) log.debug("findNextSignals ({}, {}, {})", contemporaryBlockheight, beacons, network);
 
-        List<Signal> signals = new ArrayList<>();
+        // Set signals to an empty array.
 
-        Block block = this.getBitcoinConnections().getBitcoinConnection(network).getBlockByBlockHeight(contemporaryBlockheight);
+        List<BeaconSignal> beaconSignals = new ArrayList<>();
 
-        block.txs().stream().map(Tx::txId).forEach(txId -> {
-            if (COINBASE_TX_IDENTIFIER.equals(txId)) return;
-            if (GENESIS_TX_IDENTIFIER.equals(txId)) return;
-            Tx tx = this.getBitcoinConnections().getBitcoinConnection(network).getTransactionById(txId);
-            for (TxIn txIn : tx.txIns()) {
-                String prevTxId = txIn.txId();
-                if (prevTxId == null) continue;
-                if (COINBASE_TX_IDENTIFIER.equals(prevTxId)) continue;
-                if (GENESIS_TX_IDENTIFIER.equals(prevTxId)) continue;
-                Tx prevTx = this.getBitcoinConnections().getBitcoinConnection(network).getTransactionById(prevTxId);
-                TxOut spentTxOut = prevTx.txOuts().get(txIn.transactionOutputN());
-                Address spentAddress = spentTxOut.scriptPubKeyAddress() == null ? null : AddressParser.getDefault(network.toBitcoinjNetwork()).parseAddress(spentTxOut.scriptPubKeyAddress());
-                Beacon foundBeacon = beacons.stream().filter(beacon -> beacon.address().equals(spentAddress)).findAny().orElse(null);
-                if (foundBeacon != null) {
-                    Signal beaconSignal = new Signal(foundBeacon.id(), foundBeacon.type(), tx);
-                    signals.add(beaconSignal);
-                    break;
-                }
+        // For each beacon in beacons:
+
+        Map<Integer, Object> didDocumentMetadataNextSignals = (Map<Integer, Object>) didDocumentMetadata.computeIfAbsent("nextSignals", x -> new LinkedHashMap<>());
+        Map<String, Object> didDocumentMetadataNextSignalsContemporaryBlockHeight = (Map<String, Object>) didDocumentMetadataNextSignals.computeIfAbsent(contemporaryBlockheight, x -> new LinkedHashMap<>());
+
+        for (Beacon beacon : beacons) {
+
+            if (log.isDebugEnabled()) log.debug("Processing beacon: " + beacon);
+
+            // Set beaconSpends to the set of all Bitcoin transactions on the specified network that spend
+            // at least one transaction input controlled by the beacon.address with a blockheight greater than or equal to the contemporaryBlockheight.
+
+            List<Tx> beaconSpends = this.bitcoinConnections.getBitcoinConnection(network).getAddressTransactions(beacon.address());
+            Map<Tx, Block> beaconSpendsBlocks = new LinkedHashMap<>();
+            beaconSpends.forEach(tx -> {
+                beaconSpendsBlocks.put(tx, bitcoinConnections.getBitcoinConnection(network).getBlockByTransaction(tx.txId()));
+            });
+            beaconSpends = beaconSpends.stream().filter(tx -> beaconSpendsBlocks.get(tx).blockHeight() >= contemporaryBlockheight).toList();
+
+            // Filter the beaconSpends, identifying all transactions whose 0th transaction output
+            // is of the format [OP_RETURN, OP_PUSH32, <32bytes>].
+            // TODO: This is incorrect, should be last instead of 0th?
+
+            beaconSpends = beaconSpends.stream().filter(tx -> PATTERN_TXOUT.matcher(tx.txOuts().getLast().asm()).matches()).toList();
+
+            List<Map<String, Object>> didDocumentMetadataBeaconSpends = (List<Map<String, Object>>) didDocumentMetadata.computeIfAbsent("beaconSpends", x -> new ArrayList<>());
+            didDocumentMetadataBeaconSpends.add(Map.of(
+                    "beacon", RecordUtil.toMap(beacon),
+                    "beaconSpends", beaconSpends.stream().map(RecordUtil::toMap).toList()));
+
+            // For each of the filtered beaconSpends push the following beaconSignal object onto the signals array.
+
+            for (Tx beaconSpend : beaconSpends) {
+
+                if (log.isDebugEnabled()) log.debug("Processing beaconSpend: " + beaconSpend);
+
+                BeaconSignal beaconSignal = new BeaconSignal(
+                        beacon.id(),
+                        beacon.type(),
+                        beaconSpend,
+                        beaconSpendsBlocks.get(beaconSpend).blockHeight(),
+                        beaconSpendsBlocks.get(beaconSpend).blockTime());
+
+                beaconSignals.add(beaconSignal);
             }
-        });
-
-        boolean recursive;
-        NextSignals nextSignals;
-
-        if (Objects.equals(contemporaryBlockheight, targetBlockheight)) {
-            recursive = false;
-            nextSignals = new NextSignals(contemporaryBlockheight, signals);
-        } else if (signals.isEmpty()) {
-            recursive = true;
-            nextSignals = this.findNextSignals(contemporaryBlockheight + 1, targetBlockheight, beacons, network, didDocumentMetadata);
-        } else {
-            recursive = false;
-            nextSignals = new NextSignals(contemporaryBlockheight, signals);
         }
 
-        // DID DOCUMENT METADATA
+        didDocumentMetadataNextSignalsContemporaryBlockHeight.put("beaconSignals", beaconSignals.stream().map(RecordUtil::toMap).toList());
 
-        if (! recursive) {
-            Map<Integer, Map<String, Object>> didDocumentMetadataNextSignals = (Map<Integer, Map<String, Object>>) didDocumentMetadata.computeIfAbsent("nextSignals", x -> new LinkedHashMap<>());
-            if (! nextSignals.signals().isEmpty()) didDocumentMetadataNextSignals.put(contemporaryBlockheight, RecordUtil.toMap(nextSignals));
-        }
+        // If signals is empty, return signals.
 
-        // done
+        if (beaconSignals.isEmpty()) return beaconSignals;
+
+        // Sort signals by blockheight from lowest to highest.
+
+        List<BeaconSignal> orderedBeaconSignals = beaconSignals.stream().sorted(Comparator.comparing(BeaconSignal::blockheight)).toList();
+
+        // Set nextSignals to all signals with the lowest blockheight.
+
+        Integer lowestBlockHeight = orderedBeaconSignals.getFirst().blockheight();
+        List<BeaconSignal> nextSignals = orderedBeaconSignals.stream().filter(x -> Objects.equals(x.blockheight(), lowestBlockHeight)).toList();
+
+        didDocumentMetadataNextSignalsContemporaryBlockHeight.put("lowestBlockHeight", lowestBlockHeight);
+        didDocumentMetadataNextSignalsContemporaryBlockHeight.put("nextSignals", nextSignals.stream().map(RecordUtil::toMap).toList());
+
+        // Return nextSignals.
 
         if (log.isDebugEnabled()) log.debug("findNextSignals: " + nextSignals);
         return nextSignals;
     }
 
     // See https://dcdpr.github.io/did-btc1/#process-beacon-signals
-    private List<DIDUpdatePayload> processBeaconSignals(List<Signal> beaconSignals, Map<String, Object> signalsMetadata, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
+    private List<DIDUpdate> processBeaconSignals(List<BeaconSignal> beaconSignals, Map<String, Object> signalsMetadata, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
         if (log.isDebugEnabled()) log.debug("processBeaconSignals ({}, {})", beaconSignals, signalsMetadata);
 
-        List<DIDUpdatePayload> updates = new ArrayList<>();
+        // Set updates to an empty array.
 
-        for (Signal beaconSignal : beaconSignals) {
+        List<DIDUpdate> updates = new ArrayList<>();
+
+        // For beaconSignal in beaconSignals:
+
+        for (BeaconSignal beaconSignal : beaconSignals) {
+
+            // Set type to beaconSignal.beaconType.
 
             String type = beaconSignal.beaconType();
+
+            // Set signalTx to beaconSignal.tx.
+
             Tx signalTx = beaconSignal.tx();
+
+            // Set signalId to signalTx.id.
+
             String signalId = signalTx.txId();
+
+            // Set signalSidecarData to signalsMetadata[signalId]. TODO: formalize structure of sidecarData
+
             Map<String, Object> signalSidecarData = signalsMetadata == null ? null : (Map<String, Object>) signalsMetadata.get(signalId);
 
-            DIDUpdatePayload didUpdatePayload = switch(type) {
+            // Set didUpdatePayload to null.
+
+            DIDUpdate didUpdate = switch(type) {
+
+                // If type == SingletonBeacon:
+                //    Set didUpdatePayload to the result of passing signalTx and
+                //    signalSidecarData to the Process Singleton Beacon Signal algorithm.
+
                 case SingletonBeacon.TYPE -> SingletonBeacon.processSingletonBeaconSignal(signalTx, signalSidecarData, this.getIpfsConnection(), didDocumentMetadata);
+
+                // If type == CIDAggregateBeacon:
+                //    Set didUpdatePayload to the result of passing signalTx and
+                //    signalSidecarData to the Process CIDAggregate Beacon Signal algorithm.
+
                 case CIDAggregateBeacon.TYPE -> CIDAggregateBeacon.processCIDAggregateBeaconSignal(signalTx, signalSidecarData);
+
+                // If type == SMTAggregateBeacon:
+                //    Set didUpdatePayload to the result of passing signalTx and
+                //    signalSidecarData to the Process SMTAggregate Beacon Signal algorithm.
+
                 case SMTAggregateBeacon.TYPE -> SMTAggregateBeacon.processSMTAggregateBeaconSignal(signalTx, signalSidecarData);
+
                 default -> null;
             };
 
-            if (didUpdatePayload != null) {
-                updates.add(didUpdatePayload);
-            }
+            // If didUpdatePayload is not null, push didUpdatePayload to updates.
+
+            if (didUpdate != null) updates.add(didUpdate);
         }
+
+        // Return updates.
 
         if (log.isDebugEnabled()) log.debug("processBeaconSignals: " + updates);
         return updates;
     }
 
     // See https://dcdpr.github.io/did-btc1/#confirm-duplicate-update
-    private static void confirmDuplicateUpdate(DIDUpdatePayload update, List<byte[]> updateHashHistory, byte[] contemporaryHash) throws ResolutionException {
+    private static void confirmDuplicateUpdate(DIDUpdate update, List<byte[]> updateHashHistory, byte[] contemporaryHash) throws ResolutionException {
         if (log.isDebugEnabled()) log.debug("confirmDuplicateUpdate ({}, {}, {})", update, updateHashHistory, contemporaryHash);
 
         byte[] updateHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(update);
@@ -320,7 +433,7 @@ public class ResolveTargetDocument {
     }
 
     // See https://dcdpr.github.io/did-btc1/#apply-did-update
-    private static DIDDocument applyDIDUpdate(DIDDocument contemporaryDIDDocument, DIDUpdatePayload update) throws ResolutionException {
+    private static DIDDocument applyDIDUpdate(DIDDocument contemporaryDIDDocument, DIDUpdate update) throws ResolutionException {
         if (log.isDebugEnabled()) log.debug("applyDIDUpdate ({}, {})", contemporaryDIDDocument, update);
 
         DataIntegrityProof dataIntegrityProof = DataIntegrityProof.getFromJsonLDObject(update);

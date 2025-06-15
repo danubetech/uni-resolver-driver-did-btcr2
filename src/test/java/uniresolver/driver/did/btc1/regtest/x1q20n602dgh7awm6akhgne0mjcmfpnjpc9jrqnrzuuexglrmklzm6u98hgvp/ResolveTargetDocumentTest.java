@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
 import org.erdtman.jcs.JsonCanonicalizer;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import uniresolver.driver.did.btc1.crud.read.Read;
 import uniresolver.driver.did.btc1.crud.read.ResolveInitialDocument;
@@ -21,6 +22,7 @@ public class ResolveTargetDocumentTest {
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 
 	@Test
+	@Disabled("Only works with configured Explora/Electrs REST API")
 	public void testResolveTargetDIDDocument() throws Exception {
 
 		Map<String, Object> didDocumentMetadata = new HashMap<>();

@@ -24,6 +24,7 @@ public class ResolveTargetDocumentTest {
 		Map<String, Object> didDocumentMetadata = new HashMap<>();
 
 		Read read = new Read(TestUtil.testBitcoinConnections(), TestUtil.testIpfsConnection());
+		read.getResolveInitialDocument().setHints(Map.of("initialP2TR", "tb1plye7y37sl7yj6xzhgs4zysr5dp9hpkj2u4g3c7gm7ztvusn36v7qxpp2ft"));
 
 		DID identifier = DID.fromString(TestUtil.readResourceString("did.txt"));
 		Map<String, Object> resolutionOptions = TestUtil.readResourceJson("resolutionOptions.json");
@@ -36,7 +37,7 @@ public class ResolveTargetDocumentTest {
 		String targetDIDDocumentCanonicalized = new JsonCanonicalizer(targetDIDDocument.toJson()).getEncodedString();
 		Map<String, Object> targetDIDDocumentMap = (Map<String, Object>) objectMapper.readValue(targetDIDDocumentCanonicalized, Map.class);
 
-		DIDDocument expectedTargetDIDDocument = DIDDocument.fromMap(TestUtil.readResourceJson("targetDidDocument.json"));
+		DIDDocument expectedTargetDIDDocument = DIDDocument.fromMap(TestUtil.readResourceJson("targetDocument.json"));
 		String expectedTargetDIDDocumentCanonicalized = new JsonCanonicalizer(expectedTargetDIDDocument.toJson()).getEncodedString();
 		Map<String, Object> expectedTargetDIDDocumentMap = (Map<String, Object>) objectMapper.readValue(expectedTargetDIDDocumentCanonicalized, Map.class);
 

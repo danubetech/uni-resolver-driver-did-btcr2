@@ -2,9 +2,6 @@ package uniresolver.driver.did.btc1.connections.bitcoin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uniresolver.driver.did.btc1.Network;
-import uniresolver.driver.did.btc1.connections.bitcoin.records.Block;
-import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
 
 public class BlockcypherAPIBitcoinConnection extends AbstractBitcoinConnection implements BitcoinConnection {
 
@@ -16,25 +13,5 @@ public class BlockcypherAPIBitcoinConnection extends AbstractBitcoinConnection i
 
 	public static BlockcypherAPIBitcoinConnection create() {
 		return new BlockcypherAPIBitcoinConnection();
-	}
-
-	@Override
-	public Block getBlockByBlockHeight(Integer blockHeight) {
-		throw new RuntimeException("Not implemented yet");
-	}
-
-	@Override
-	public Tx getTransactionById(String txid) {
-		throw new RuntimeException("Not implemented yet");
-	}
-
-	@Override
-	public Block getBlockByTargetTime(Long targetTime) {
-		throw new RuntimeException("Not implemented yet");
-	}
-
-	@Override
-	public Block getBlockByMinConfirmations(Integer confirmations) {
-		throw new RuntimeException("Not implemented yet");
 	}
 }

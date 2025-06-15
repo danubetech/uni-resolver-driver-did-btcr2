@@ -1,6 +1,5 @@
 package uniresolver.driver.did.btc1.connections.bitcoin.records;
 
-public record TxIn(
-        String txId,
-        Integer vout) {
+public record BeaconSpends(
+        String txId) {
 }

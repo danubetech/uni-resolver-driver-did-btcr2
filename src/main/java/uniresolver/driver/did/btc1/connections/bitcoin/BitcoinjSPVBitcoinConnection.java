@@ -7,8 +7,6 @@ import org.bitcoinj.kits.WalletAppKit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btc1.Network;
-import uniresolver.driver.did.btc1.connections.bitcoin.records.Block;
-import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
 
 import java.io.File;
 
@@ -34,26 +32,6 @@ public class BitcoinjSPVBitcoinConnection extends AbstractBitcoinConnection impl
 	public static BitcoinjSPVBitcoinConnection create(Network network) {
 		if (log.isDebugEnabled()) log.debug("Creating BitcoindRPCBitcoinConnection: " + network);
 		return new BitcoinjSPVBitcoinConnection(WalletAppKit.launch(network.toBitcoinjNetwork(), new File("."), network.name()));
-	}
-
-	@Override
-	public Block getBlockByBlockHeight(Integer blockHeight) {
-		throw new RuntimeException("Not implemented yet");
-	}
-
-	@Override
-	public Tx getTransactionById(String txid) {
-		throw new RuntimeException("Not implemented yet");
-	}
-
-	@Override
-	public Block getBlockByTargetTime(Long targetTime) {
-		throw new RuntimeException("Not implemented yet");
-	}
-
-	@Override
-	public Block getBlockByMinConfirmations(Integer confirmations) {
-		throw new RuntimeException("Not implemented yet");
 	}
 
 	/*

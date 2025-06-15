@@ -44,7 +44,7 @@ public class BitcoindRPCBitcoinConnection extends AbstractBitcoinConnection impl
 		BitcoinJSONRPCClient bitcoinJSONRPCClient = this.getBitcoinJsonRpcClient();
 		wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Block bitcoinjBlock = bitcoinJSONRPCClient.getBlock(blockHeight);
 		List<Tx> txs = bitcoinjBlock.tx().stream().map(tx -> txFromBitcoinjRawTransaction(bitcoinJSONRPCClient, tx)).collect(Collectors.toList());
-		Block block = new Block(bitcoinjBlock.height(), bitcoinjBlock.hash(), txs);
+		Block block = new Block(bitcoinjBlock.height(), bitcoinjBlock.hash(), bitcoinjBlock.time().getTime(), txs);
 		if (log.isDebugEnabled()) log.debug("getBlockByBlockHeight for {}: {}", blockHeight, block);
 		return block;
 	}
@@ -65,7 +65,7 @@ public class BitcoindRPCBitcoinConnection extends AbstractBitcoinConnection impl
 		for (int blockHeight=blocks-1; blockHeight>=0; blockHeight--) {
 			wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Block bitcoinjBlock = bitcoinJSONRPCClient.getBlock(blockHeight);
 			if (bitcoinjBlock.time().getTime() < targetTime) {
-				block = new Block(bitcoinjBlock.height(), bitcoinjBlock.hash(), null);
+				block = new Block(bitcoinjBlock.height(), bitcoinjBlock.hash(), bitcoinjBlock.time().getTime(), null);
 				break;
 			}
 		}
@@ -81,7 +81,7 @@ public class BitcoindRPCBitcoinConnection extends AbstractBitcoinConnection impl
 		for (int blockHeight=blocks-1; blockHeight>=0; blockHeight--) {
 			wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.Block bitcoinjBlock = bitcoinJSONRPCClient.getBlock(blockHeight);
 			if (bitcoinjBlock.confirmations() >= minConfirmations) {
-				block = new Block(bitcoinjBlock.height(), bitcoinjBlock.hash(), null);
+				block = new Block(bitcoinjBlock.height(), bitcoinjBlock.hash(), bitcoinjBlock.time().getTime(), null);
 				break;
 			}
 		}
@@ -93,15 +93,28 @@ public class BitcoindRPCBitcoinConnection extends AbstractBitcoinConnection impl
 	 * Helper methods
 	 */
 
-	public static Tx txFromBitcoinjRawTransaction(BitcoinJSONRPCClient bitcoinJSONRPCClient, String txId) {
+	private static Tx txFromBitcoinjRawTransaction(BitcoinJSONRPCClient bitcoinJSONRPCClient, String txId) {
 		if (Tx.COINBASE_TX_IDENTIFIER.equals(txId) || Tx.GENESIS_TX_IDENTIFIER.equals(txId)) {
 			return new Tx(txId, null, null, null);
 		}
 		wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.RawTransaction bitcoinjRawTransaction = bitcoinJSONRPCClient.getRawTransaction(txId);
 		String txHex = bitcoinjRawTransaction.hex();
-		List<TxIn> txIns = bitcoinjRawTransaction.vIn().stream().map(TxIn::fromBitcoinjIn).toList();
-		List<TxOut> txOuts = bitcoinjRawTransaction.vOut().stream().map(TxOut::fromBitcoinjOut).toList();
+		List<TxIn> txIns = bitcoinjRawTransaction.vIn().stream().map(BitcoindRPCBitcoinConnection::txInFromBitcoinjIn).toList();
+		List<TxOut> txOuts = bitcoinjRawTransaction.vOut().stream().map(BitcoindRPCBitcoinConnection::txOutFromBitcoinjOut).toList();
 		return new Tx(txId, txHex, txIns, txOuts);
+	}
+
+	private static TxIn txInFromBitcoinjIn(wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.RawTransaction.In in) {
+		String txId = in.txid();
+		Integer vout = txId == null ? null : in.getTransactionOutput().n();
+		return new TxIn(txId, vout);
+	}
+
+	private static TxOut txOutFromBitcoinjOut(wf.bitcoin.javabitcoindrpcclient.BitcoindRpcClient.RawTransaction.Out out) {
+		String txId = out.transaction().txId();
+		String scriptPubKeyAddress = out.scriptPubKey().mapStr("address");
+		String asm = out.scriptPubKey().asm();
+		return new TxOut(txId, scriptPubKeyAddress, asm);
 	}
 
 	/*

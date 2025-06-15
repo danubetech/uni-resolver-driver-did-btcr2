@@ -3,11 +3,10 @@ package uniresolver.driver.did.btc1.mutinynet.k1qypcylxwhf8sykn2dztm6z8lxm43kwky
 import com.fasterxml.jackson.databind.ObjectMapper;
 import uniresolver.driver.did.btc1.Network;
 import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnections;
-import uniresolver.driver.did.btc1.connections.bitcoin.BitcoindRPCBitcoinConnection;
+import uniresolver.driver.did.btc1.connections.bitcoin.EsploraElectrsRESTBitcoinConnection;
 import uniresolver.driver.did.btc1.connections.ipfs.IPFSConnection;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -32,14 +31,9 @@ public class TestUtil {
     }
 
     static BitcoinConnections testBitcoinConnections() {
-        try {
-            return BitcoinConnections.create(Map.of(
-                    Network.signet, BitcoindRPCBitcoinConnection.create(URI.create("http://mbjcimllwl.b.voltageapp.io:38332/").toURL()),
-                    Network.regtest, BitcoindRPCBitcoinConnection.create(URI.create("http://polaruser:polarpass@localhost:18443/").toURL())
-            ));
-        } catch (MalformedURLException ex) {
-            throw new RuntimeException(ex.getMessage(), ex);
-        }
+        return BitcoinConnections.create(Map.of(
+                Network.signet, EsploraElectrsRESTBitcoinConnection.create(URI.create("https://mutinynet.com/api/"))
+        ));
     }
 
     static IPFSConnection testIpfsConnection() {

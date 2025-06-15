@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uniresolver.driver.did.btc1.connections.bitcoin.records.Block;
-import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
 import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
 
 import java.net.URL;
@@ -33,26 +31,6 @@ public class BTCDRPCBitcoinConnection extends AbstractBitcoinConnection implemen
 	public static BTCDRPCBitcoinConnection create(URL rpcUrl) {
 		if (log.isDebugEnabled()) log.debug("Creating BTCDRPCBitcoinConnection: " + rpcUrl);
 		return new BTCDRPCBitcoinConnection(new BitcoinJSONRPCClient(rpcUrl));
-	}
-
-	@Override
-	public Block getBlockByBlockHeight(Integer blockHeight) {
-		throw new RuntimeException("Not implemented yet");
-	}
-
-	@Override
-	public Tx getTransactionById(String txid) {
-		throw new RuntimeException("Not implemented yet");
-	}
-
-	@Override
-	public Block getBlockByTargetTime(Long targetTime) {
-		throw new RuntimeException("Not implemented yet");
-	}
-
-	@Override
-	public Block getBlockByMinConfirmations(Integer confirmations) {
-		throw new RuntimeException("Not implemented yet");
 	}
 
 	/*
