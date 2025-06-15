@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btc1.k1qgp6haekj3w5zgk56h92juynjl4ag4pt2p9wl4ajwu7yhklyp0ngcfskwzack;
+package uniresolver.driver.did.btc1.mutinynet.k1qypcylxwhf8sykn2dztm6z8lxm43kwkyzf07qmp9jafv3zfntmpwtks9hmnrw;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import uniresolver.driver.did.btc1.Network;
@@ -33,8 +33,9 @@ public class TestUtil {
 
     static BitcoinConnection testBitcoinConnection() {
         try {
-            return BitcoindRPCBitcoinConnection.create(
-                    Map.of(Network.regtest, URI.create("http://polaruser:polarpass@localhost:18443/").toURL())
+            return BitcoindRPCBitcoinConnection.create(Map.of(
+                    Network.signet, URI.create("http://mbjcimllwl.b.voltageapp.io:38332/").toURL(),
+                    Network.regtest, URI.create("http://polaruser:polarpass@localhost:18443/").toURL())
             );
         } catch (MalformedURLException ex) {
             throw new RuntimeException(ex.getMessage(), ex);

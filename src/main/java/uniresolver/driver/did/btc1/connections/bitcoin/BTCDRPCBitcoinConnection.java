@@ -57,22 +57,22 @@ public class BTCDRPCBitcoinConnection extends AbstractBitcoinConnection implemen
 	}
 
 	@Override
-	public Block getBlockByBlockHeight(Network network, Integer blockHeight) {
+	public Block getBlockByBlockHeight(Integer blockHeight) {
 		throw new RuntimeException("Not implemented yet");
 	}
 
 	@Override
-	public Tx getTransactionById(Network network, String txid) {
+	public Tx getTransactionById(String txid) {
 		throw new RuntimeException("Not implemented yet");
 	}
 
 	@Override
-	public Block getBlockByTargetTime(Network network, Long targetTime) {
+	public Block getBlockByTargetTime(Long targetTime) {
 		throw new RuntimeException("Not implemented yet");
 	}
 
 	@Override
-	public Block getBlockByMinConfirmations(Network network, Integer confirmations) {
+	public Block getBlockByMinConfirmations(Integer confirmations) {
 		throw new RuntimeException("Not implemented yet");
 	}
 }

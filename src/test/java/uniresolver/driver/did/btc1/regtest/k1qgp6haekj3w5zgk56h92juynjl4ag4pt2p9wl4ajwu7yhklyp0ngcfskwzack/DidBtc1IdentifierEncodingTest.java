@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btc1.k1qgp6haekj3w5zgk56h92juynjl4ag4pt2p9wl4ajwu7yhklyp0ngcfskwzack;
+package uniresolver.driver.did.btc1.regtest.k1qgp6haekj3w5zgk56h92juynjl4ag4pt2p9wl4ajwu7yhklyp0ngcfskwzack;
 
 import foundation.identity.did.DID;
 import org.apache.commons.codec.binary.Base64;

@@ -6,8 +6,8 @@ import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
 
 public interface BitcoinConnection {
 
-    Block getBlockByBlockHeight(Network network, Integer blockHeight);
-    Tx getTransactionById(Network network, String txid);
-    Block getBlockByTargetTime(Network network, Long targetTime);
-    Block getBlockByMinConfirmations(Network network, Integer confirmations);
+    Block getBlockByBlockHeight(Integer blockHeight);
+    Tx getTransactionById(String txid);
+    Block getBlockByTargetTime(Long targetTime);
+    Block getBlockByMinConfirmations(Integer confirmations);
 }

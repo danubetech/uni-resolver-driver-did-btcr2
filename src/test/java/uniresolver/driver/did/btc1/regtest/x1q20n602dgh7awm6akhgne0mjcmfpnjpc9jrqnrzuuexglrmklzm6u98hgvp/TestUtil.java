@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btc1.x1q20n602dgh7awm6akhgne0mjcmfpnjpc9jrqnrzuuexglrmklzm6u98hgvp;
+package uniresolver.driver.did.btc1.regtest.x1q20n602dgh7awm6akhgne0mjcmfpnjpc9jrqnrzuuexglrmklzm6u98hgvp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import uniresolver.driver.did.btc1.Network;

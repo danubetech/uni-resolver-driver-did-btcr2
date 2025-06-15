@@ -6,7 +6,6 @@ import com.danubetech.dataintegrity.suites.DataIntegritySuites;
 import com.google.api.client.util.DateTime;
 import foundation.identity.did.DIDDocument;
 import foundation.identity.did.Service;
-import foundation.identity.did.validation.Validation;
 import foundation.identity.jsonld.JsonLDUtils;
 import io.leonard.AddressFormatException;
 import io.leonard.Base58;
@@ -24,6 +23,7 @@ import uniresolver.driver.did.btc1.beacons.singleton.CIDAggregateBeacon;
 import uniresolver.driver.did.btc1.beacons.singleton.SMTAggregateBeacon;
 import uniresolver.driver.did.btc1.beacons.singleton.SingletonBeacon;
 import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnection;
+import uniresolver.driver.did.btc1.connections.bitcoin.BitcoinConnections;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.Block;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.Tx;
 import uniresolver.driver.did.btc1.connections.bitcoin.records.TxIn;
@@ -49,12 +49,12 @@ public class ResolveTargetDocument {
     private static final Logger log = LoggerFactory.getLogger(ResolveTargetDocument.class);
 
     private Read read;
-    private BitcoinConnection bitcoinConnection;
+    private BitcoinConnections bitcoinConnections;
     private IPFSConnection ipfsConnection;
 
-    public ResolveTargetDocument(Read read, BitcoinConnection bitcoinConnection, IPFSConnection ipfsConnection) {
+    public ResolveTargetDocument(Read read, BitcoinConnections bitcoinConnections, IPFSConnection ipfsConnection) {
         this.read = read;
-        this.bitcoinConnection = bitcoinConnection;
+        this.bitcoinConnections = bitcoinConnections;
         this.ipfsConnection = ipfsConnection;
     }
 
@@ -130,9 +130,9 @@ public class ResolveTargetDocument {
         Block block;
 
         if (targetTime != null) {
-            block = this.getBitcoinConnection().getBlockByTargetTime(network, targetTime);
+            block = this.getBitcoinConnections().getBitcoinConnection(network).getBlockByTargetTime(targetTime);
         } else {
-            block = this.getBitcoinConnection().getBlockByMinConfirmations(network, MIN_CONFIRMATIONS);
+            block = this.getBitcoinConnections().getBitcoinConnection(network).getBlockByMinConfirmations(MIN_CONFIRMATIONS);
         }
 
         Integer blockHeight = block.blockHeight();
@@ -229,18 +229,18 @@ public class ResolveTargetDocument {
 
         List<Signal> signals = new ArrayList<>();
 
-        Block block = this.getBitcoinConnection().getBlockByBlockHeight(network, contemporaryBlockheight);
+        Block block = this.getBitcoinConnections().getBitcoinConnection(network).getBlockByBlockHeight(contemporaryBlockheight);
 
         block.txs().stream().map(Tx::txId).forEach(txId -> {
             if (COINBASE_TX_IDENTIFIER.equals(txId)) return;
             if (GENESIS_TX_IDENTIFIER.equals(txId)) return;
-            Tx tx = this.getBitcoinConnection().getTransactionById(network, txId);
+            Tx tx = this.getBitcoinConnections().getBitcoinConnection(network).getTransactionById(txId);
             for (TxIn txIn : tx.txIns()) {
                 String prevTxId = txIn.txId();
                 if (prevTxId == null) continue;
                 if (COINBASE_TX_IDENTIFIER.equals(prevTxId)) continue;
                 if (GENESIS_TX_IDENTIFIER.equals(prevTxId)) continue;
-                Tx prevTx = this.getBitcoinConnection().getTransactionById(network, prevTxId);
+                Tx prevTx = this.getBitcoinConnections().getBitcoinConnection(network).getTransactionById(prevTxId);
                 TxOut spentTxOut = prevTx.txOuts().get(txIn.transactionOutputN());
                 Address spentAddress = spentTxOut.scriptPubKeyAddress() == null ? null : AddressParser.getDefault(network.toBitcoinjNetwork()).parseAddress(spentTxOut.scriptPubKeyAddress());
                 Beacon foundBeacon = beacons.stream().filter(beacon -> beacon.address().equals(spentAddress)).findAny().orElse(null);
@@ -384,12 +384,12 @@ public class ResolveTargetDocument {
         this.read = read;
     }
 
-    public BitcoinConnection getBitcoinConnection() {
-        return this.bitcoinConnection;
+    public BitcoinConnections getBitcoinConnections() {
+        return this.bitcoinConnections;
     }
 
-    public void setBitcoinConnection(BitcoinConnection bitcoinConnection) {
-        this.bitcoinConnection = bitcoinConnection;
+    public void setBitcoinConnections(BitcoinConnections bitcoinConnections) {
+        this.bitcoinConnections = bitcoinConnections;
     }
 
     public IPFSConnection getIpfsConnection() {

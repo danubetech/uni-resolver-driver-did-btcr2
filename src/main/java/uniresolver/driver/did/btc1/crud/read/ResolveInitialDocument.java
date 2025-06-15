@@ -135,7 +135,7 @@ public class ResolveInitialDocument {
         services.add(p2trBeacon);*/
 
         URI initialP2TRServiceId = URI.create(identifier + "#initialP2TR");
-        Address initialP2TRBeaconAddress = AddressParser.getDefault().parseAddress("bcrt1pvrdnhfzx76skpuk5tmw2ueqam9n7ud5hwu3jmsvwlnrvclsfvwkqs46vtm");
+        Address initialP2TRBeaconAddress = AddressParser.getDefault().parseAddress("tb1p5ss9d8e4rtehk32ldjtdpm38vj29yx3gwuad94q6zpx3udk8nh0q58zeeq");
         Service p2trBeacon = SingletonBeacon.establishSingletonBeacon(initialP2TRServiceId, initialP2TRBeaconAddress, network);
         services.add(p2trBeacon);
 

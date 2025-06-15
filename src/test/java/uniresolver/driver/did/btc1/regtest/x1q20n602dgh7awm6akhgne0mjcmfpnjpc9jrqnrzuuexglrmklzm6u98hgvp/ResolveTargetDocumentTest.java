@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btc1.k1qgp6haekj3w5zgk56h92juynjl4ag4pt2p9wl4ajwu7yhklyp0ngcfskwzack;
+package uniresolver.driver.did.btc1.regtest.x1q20n602dgh7awm6akhgne0mjcmfpnjpc9jrqnrzuuexglrmklzm6u98hgvp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.did.DID;
@@ -10,7 +10,6 @@ import uniresolver.driver.did.btc1.crud.read.ResolveInitialDocument;
 import uniresolver.driver.did.btc1.crud.read.ResolveTargetDocument;
 import uniresolver.driver.did.btc1.syntax.DidBtc1IdentifierDecoding;
 import uniresolver.driver.did.btc1.syntax.records.IdentifierComponents;
-import uniresolver.driver.did.btc1.util.JSONUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,7 +46,5 @@ public class ResolveTargetDocumentTest {
 
 		assertEquals(expectedTargetDIDDocumentCanonicalized, targetDIDDocumentCanonicalized);
 		assertEquals(expectedTargetDIDDocumentMap, targetDIDDocumentMap);
-
-		System.out.println(JSONUtil.mapToJson(didDocumentMetadata));
 	}
 }

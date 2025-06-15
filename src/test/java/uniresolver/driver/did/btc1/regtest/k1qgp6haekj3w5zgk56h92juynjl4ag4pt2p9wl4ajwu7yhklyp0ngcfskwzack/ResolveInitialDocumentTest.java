@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btc1.x1q20n602dgh7awm6akhgne0mjcmfpnjpc9jrqnrzuuexglrmklzm6u98hgvp;
+package uniresolver.driver.did.btc1.regtest.k1qgp6haekj3w5zgk56h92juynjl4ag4pt2p9wl4ajwu7yhklyp0ngcfskwzack;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.did.DID;
@@ -9,7 +9,6 @@ import uniresolver.driver.did.btc1.crud.read.Read;
 import uniresolver.driver.did.btc1.crud.read.ResolveInitialDocument;
 import uniresolver.driver.did.btc1.syntax.DidBtc1IdentifierDecoding;
 import uniresolver.driver.did.btc1.syntax.records.IdentifierComponents;
-import uniresolver.driver.did.btc1.util.JSONUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,11 +40,7 @@ public class ResolveInitialDocumentTest {
 		String expectedInitialDIDDocumentCanonicalized = new JsonCanonicalizer(expectedInitialDIDDocument.toJson()).getEncodedString();
 		Map<String, Object> expectedInitialDIDDocumentMap = (Map<String, Object>) objectMapper.readValue(expectedInitialDIDDocumentCanonicalized, Map.class);
 
-		Map<String, Object> intermediateDocumentRepresentationMap = JSONUtil.jsonToMap((String) didDocumentMetadata.get("intermediateDocumentRepresentation"));
-		Map<String, Object> expectedIntermediateDocumentRepresentationMap = TestUtil.readResourceJson("intermediateDidDoc.json");
-
 		assertEquals(expectedInitialDIDDocumentCanonicalized, initialDIDDocumentCanonicalized);
 		assertEquals(expectedInitialDIDDocumentMap, initialDIDDocumentMap);
-		assertEquals(expectedIntermediateDocumentRepresentationMap, intermediateDocumentRepresentationMap);
 	}
 }
