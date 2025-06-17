@@ -52,7 +52,7 @@ public class IdentifierTests {
 				"identifierComponents": {
 					"idType": "key",
 					"version": 1,
-					"network": 5,
+					"network": "userdefinedC",
 					"genesisBytes": "021fd28f958722fd58ee53e56ca7b444a22d89b4985e256c8dd7699e74a97c5c39"
 				}
 			},
