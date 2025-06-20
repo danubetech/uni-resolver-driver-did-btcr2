@@ -93,6 +93,8 @@ public class ResolveTargetDocument {
 
         Integer currentVersionId = 1;
 
+        didDocumentMetadata.put("versionId", currentVersionId);
+
         // If currentVersionId equals targetVersionId return initialDocument.
 
         if (currentVersionId.equals(targetVersionId)) return initialDocument;
@@ -221,6 +223,8 @@ public class ResolveTargetDocument {
                 // Increment currentVersionId
 
                 currentVersionId++;
+
+                didDocumentMetadata.put("versionId", currentVersionId);
 
                 // If currentVersionId equals targetVersionId return contemporaryDIDDocument.
 
