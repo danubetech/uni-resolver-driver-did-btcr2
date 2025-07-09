@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btc1.signet.x1qyj23twdpn927d5ky2f5ulgmr9uudq2pd08gxy05fdjzxvfclzn2zazps8w;
+package uniresolver.driver.did.btc1.regtest.k1qgp5h79scv4sfqkzak5g6y89dsy3cq0pd2nussu2cm3zjfhn4ekwrucc4q7t7;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import uniresolver.driver.did.btc1.Network;
@@ -34,9 +34,9 @@ public class TestUtil {
     static BitcoinConnector testBitcoinConnections() throws MalformedURLException {
         return BitcoinConnector.create(
                 Map.of(
-                        Network.signet, EsploraElectrsRESTBitcoinConnection.create(URI.create("https://mempool.space/signet/api/"))),
+                        Network.regtest, EsploraElectrsRESTBitcoinConnection.create(URI.create("http://localhost:3000/"))),
                 Map.of(
-                        Network.signet, "f61eee3b63a380a477a063af32b2bbc97c9ff9f01f2c4225e973988108000000")
+                        Network.regtest, "06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f")
         );
     }
 

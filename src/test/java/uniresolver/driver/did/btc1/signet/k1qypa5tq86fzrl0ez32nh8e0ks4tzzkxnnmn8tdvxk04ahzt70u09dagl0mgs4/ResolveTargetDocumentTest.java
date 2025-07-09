@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import uniresolver.driver.did.btc1.crud.read.Read;
 import uniresolver.driver.did.btc1.syntax.DidBtc1IdentifierDecoding;
 import uniresolver.driver.did.btc1.syntax.records.IdentifierComponents;
+import uniresolver.driver.did.btc1.util.JSONUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,5 +43,7 @@ public class ResolveTargetDocumentTest {
 
 		assertEquals(expectedTargetDIDDocumentCanonicalized, targetDIDDocumentCanonicalized);
 		assertEquals(expectedTargetDIDDocumentMap, targetDIDDocumentMap);
+
+		System.out.println(JSONUtil.mapToJson(didDocumentMetadata));
 	}
 }

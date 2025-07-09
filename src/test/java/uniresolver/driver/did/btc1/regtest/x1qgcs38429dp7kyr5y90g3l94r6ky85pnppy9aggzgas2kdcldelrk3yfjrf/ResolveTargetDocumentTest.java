@@ -1,9 +1,10 @@
-package uniresolver.driver.did.btc1.mutinynet.k1qypcylxwhf8sykn2dztm6z8lxm43kwkyzf07qmp9jafv3zfntmpwtks9hmnrw;
+package uniresolver.driver.did.btc1.regtest.x1qgcs38429dp7kyr5y90g3l94r6ky85pnppy9aggzgas2kdcldelrk3yfjrf;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
 import org.erdtman.jcs.JsonCanonicalizer;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import uniresolver.driver.did.btc1.crud.read.Read;
 import uniresolver.driver.did.btc1.syntax.DidBtc1IdentifierDecoding;
@@ -19,6 +20,7 @@ public class ResolveTargetDocumentTest {
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 
 	@Test
+	@Disabled("Only works with configured Esplora/Electrs REST API")
 	public void testResolveTargetDIDDocument() throws Exception {
 
 		Map<String, Object> didDocumentMetadata = new HashMap<>();
@@ -26,7 +28,7 @@ public class ResolveTargetDocumentTest {
 		Read read = new Read(TestUtil.testBitcoinConnections(), TestUtil.testIpfsConnection());
 
 		DID identifier = DID.fromString(TestUtil.readResourceString("did.txt"));
-		Map<String, Object> resolutionOptions = TestUtil.readResourceJson("./block2143992/resolutionOptions.json");
+		Map<String, Object> resolutionOptions = TestUtil.readResourceJson("resolutionOptions.json");
 
 		IdentifierComponents identifierComponents = DidBtc1IdentifierDecoding.didBtc1IdentifierDecoding(identifier);
 
@@ -36,7 +38,7 @@ public class ResolveTargetDocumentTest {
 		String targetDIDDocumentCanonicalized = new JsonCanonicalizer(targetDIDDocument.toJson()).getEncodedString();
 		Map<String, Object> targetDIDDocumentMap = (Map<String, Object>) objectMapper.readValue(targetDIDDocumentCanonicalized, Map.class);
 
-		DIDDocument expectedTargetDIDDocument = DIDDocument.fromMap(TestUtil.readResourceJson("./block2143992/targetDocument.json"));
+		DIDDocument expectedTargetDIDDocument = DIDDocument.fromMap(TestUtil.readResourceJson("targetDidDocument.json"));
 		String expectedTargetDIDDocumentCanonicalized = new JsonCanonicalizer(expectedTargetDIDDocument.toJson()).getEncodedString();
 		Map<String, Object> expectedTargetDIDDocumentMap = (Map<String, Object>) objectMapper.readValue(expectedTargetDIDDocumentCanonicalized, Map.class);
 

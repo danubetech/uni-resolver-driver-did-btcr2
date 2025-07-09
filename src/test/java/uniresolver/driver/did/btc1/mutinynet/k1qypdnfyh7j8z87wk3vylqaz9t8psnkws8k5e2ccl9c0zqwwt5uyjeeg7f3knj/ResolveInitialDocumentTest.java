@@ -26,7 +26,7 @@ public class ResolveInitialDocumentTest {
 		Read read = new Read(TestUtil.testBitcoinConnections(), TestUtil.testIpfsConnection());
 
 		DID identifier = DID.fromString(TestUtil.readResourceString("did.txt"));
-		Map<String, Object> resolutionOptions = TestUtil.readResourceJson("resolutionOptions.json");
+		Map<String, Object> resolutionOptions = TestUtil.readResourceJson("./block2144226/resolutionOptions.json");
 
 		IdentifierComponents identifierComponents = DidBtc1IdentifierDecoding.didBtc1IdentifierDecoding(identifier);
 
