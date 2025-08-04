@@ -29,13 +29,13 @@ public class DidBtc1IdentifierEncoding {
         // If idType is not a valid value per above, raise invalidDid error.
 
         if (! "key".equals(idType) && ! "external".equals(idType)) {
-            throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Invalid 'idType' value: " + idType);
+            throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Invalid 'idType' value: " + idType);
         }
 
         // If version is greater than 1, raise invalidDid error.
 
         if (version > 1) {
-            throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Unsupported 'version' value: " + version);
+            throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Unsupported 'version' value: " + version);
         }
 
         // If network is not a valid value per above, raise invalidDid error.
@@ -43,13 +43,13 @@ public class DidBtc1IdentifierEncoding {
         if (networkValue instanceof Network) networkValue = networkValue.toString();
 
         if (! (networkValue instanceof String networkValueString && Arrays.asList(Network.values()).contains(Network.valueOf(networkValueString))) && ! (networkValue instanceof Number)) {
-            throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Unsupported 'network' value: " + networkValue);
+            throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Unsupported 'network' value: " + networkValue);
         }
 
         // if network is a number and is outside the range of 1-8, raise invalidDid error.
 
         if (networkValue instanceof Number networkValueNumber && (networkValueNumber.intValue() < 1 || networkValueNumber.intValue() > 8)) {
-            throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Unsupported 'network' number value: " + networkValueNumber);
+            throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Unsupported 'network' number value: " + networkValueNumber);
         }
 
         // If idType is “key” and genesisBytes is not a valid compressed secp256k1 public key, raise invalidDid error.
@@ -68,7 +68,7 @@ public class DidBtc1IdentifierEncoding {
         String hrp = switch (idType) {
             case "key" -> "k";
             case "external" -> "x";
-            default -> throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Invalid 'idType' value in: " + idType);
+            default -> throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Invalid 'idType' value in: " + idType);
         };
 
         // Create an empty nibbles numeric array.
@@ -118,7 +118,7 @@ public class DidBtc1IdentifierEncoding {
         try {
             dataBytes.write(genesisBytes);
         } catch (IOException ex) {
-            throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Cannot write genesis bytes " + Hex.encodeHexString(genesisBytes) + ": " + ex.getMessage(), ex);
+            throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Cannot write genesis bytes " + Hex.encodeHexString(genesisBytes) + ": " + ex.getMessage(), ex);
         }
 
         // Set identifier to “did:btc1:”.

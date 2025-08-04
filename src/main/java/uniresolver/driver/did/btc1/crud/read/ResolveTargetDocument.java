@@ -441,7 +441,7 @@ public class ResolveTargetDocument {
 
         DataIntegrityProof dataIntegrityProof = DataIntegrityProof.getFromJsonLDObject(update);
         String capabilityId = JsonLDUtils.jsonLdGetString(dataIntegrityProof.getJsonObject(), "capability");
-        if (capabilityId == null) throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "No 'capability' found in update proof: " + update);
+        if (capabilityId == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "No 'capability' found in update proof: " + update);
 
         RootCapability rootCapability = RootDidBtc1UpdateCapabilities.dereferenceRootCapabilityIdentifier(capabilityId);
 

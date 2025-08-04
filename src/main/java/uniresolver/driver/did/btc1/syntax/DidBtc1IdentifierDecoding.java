@@ -34,9 +34,9 @@ public class DidBtc1IdentifierDecoding {
         // If components[0] is not “did”, raise invalidDid error.
         // If components[1] is not “btc1”, raise methodNotSupported error.
 
-        if (components.length != 3) throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Invalid number of ':' characters (must be 3): " + identifier.getDidString());
-        if (! "did".equals(components[0])) throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Invalid URI scheme (must be 'did'): " + identifier.getDidString());
-        if (! "btc1".equals(components[1])) throw new ResolutionException(ResolutionException.ERROR_METHODNOTSUPPORTED, "Unsupported DID method (must be 'btc1'): " + identifier.getDidString());
+        if (components.length != 3) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Invalid number of ':' characters (must be 3): " + identifier.getDidString());
+        if (! "did".equals(components[0])) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Invalid URI scheme (must be 'did'): " + identifier.getDidString());
+        if (! "btc1".equals(components[1])) throw new ResolutionException(ResolutionException.ERROR_METHOD_NOT_SUPPORTED, "Unsupported DID method (must be 'btc1'): " + identifier.getDidString());
 
         // Set encodedString to components[2].
 
@@ -49,7 +49,7 @@ public class DidBtc1IdentifierDecoding {
         try {
             bech32Data = Bech32mDecoding.bech32Decode(encodedString);
         } catch (AddressFormatException ex) {
-            throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Cannot bech32m-decode identifier: " + encodedString, ex);
+            throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Cannot bech32m-decode identifier: " + encodedString, ex);
         }
         String hrp = bech32Data.hrp;
         byte[] dataBytes = bech32Data.decode5to8();
@@ -59,7 +59,7 @@ public class DidBtc1IdentifierDecoding {
         String idType = switch(hrp) {
             case "k" -> "key";
             case "x" -> "external";
-            default -> throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Invalid 'hrp' value in " + encodedString + ": " + bech32Data.hrp);
+            default -> throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Invalid 'hrp' value in " + encodedString + ": " + bech32Data.hrp);
         };
 
         // Set version to 1.
@@ -89,7 +89,7 @@ public class DidBtc1IdentifierDecoding {
 
         // If version is greater than 1, raise invalidDid error.
 
-        if (version > 1) throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Unsupported 'version' value in " + encodedString + ": " + version);
+        if (version > 1) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Unsupported 'version' value in " + encodedString + ": " + version);
 
         // Advance to the next nibble and set networkValue to its value.
 
@@ -101,14 +101,14 @@ public class DidBtc1IdentifierDecoding {
         try {
             network = Network.valueOf(networkValue);
         } catch (Exception ex) {
-            throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Unsupported 'network' value in " + encodedString + ": " + networkValue);
+            throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Unsupported 'network' value in " + encodedString + ": " + networkValue);
         }
 
         // If the number of nibbles consumed is odd:
 
         if (nibbleStream.isOdd()) {
             byte fillerNibble = nibbleStream.nextNibble();
-            if (fillerNibble != 0) throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Invalid filler nibble in " + encodedString + ": " + fillerNibble);
+            if (fillerNibble != 0) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Invalid filler nibble in " + encodedString + ": " + fillerNibble);
         }
 
         // Set genesisBytes to the remaining dataBytes.
@@ -151,7 +151,7 @@ public class DidBtc1IdentifierDecoding {
             byte nextNibble = this.nextHighNibble ? higherNibble(this.dataBytes[this.nextByteIndex]) : lowerNibble(this.dataBytes[this.nextByteIndex]);
             this.nextHighNibble = ! this.nextHighNibble;
             if (this.nextHighNibble) this.nextByteIndex++;
-            if (this.nextByteIndex >= this.dataBytes.length) throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Mot enough bytes left at index " + this.nextByteIndex + ": " + Hex.encodeHexString(this.dataBytes));
+            if (this.nextByteIndex >= this.dataBytes.length) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Mot enough bytes left at index " + this.nextByteIndex + ": " + Hex.encodeHexString(this.dataBytes));
             return nextNibble;
         }
 

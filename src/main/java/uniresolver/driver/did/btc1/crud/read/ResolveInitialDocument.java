@@ -174,7 +174,7 @@ public class ResolveInitialDocument {
         // If hashBytes does not equal identifierComponents.genesisBytes MUST throw an invalidDid error.
 
         if (! Arrays.equals(hashBytes, identifierComponents.genesisBytes())) {
-            throw new ResolutionException(ResolutionException.ERROR_INVALIDDID, "Initial document cannot be validated");
+            throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Initial document cannot be validated");
         }
 
         // DID DOCUMENT METADATA
