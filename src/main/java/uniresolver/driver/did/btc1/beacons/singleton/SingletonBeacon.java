@@ -118,6 +118,7 @@ public class SingletonBeacon {
         List<Map<String, Object>> didDocumentMetadataSignals = (List<Map<String, Object>>) didDocumentMetadata.get("signals");
         log.warn(didDocumentMetadataSignals.toString());
         Map<String, Object> didDocumentMetadataSignal = didDocumentMetadataSignals.stream().filter(x -> x.get("signalId").equals(tx.txId())).findFirst().get();
+        didDocumentMetadataSignal.put("beaconType", "SingletonBeacon");
         didDocumentMetadataSignal.put("updatePayload", didUpdate.toMap());
 
         if (log.isDebugEnabled()) log.debug("processSingletonBeaconSignal: " + didUpdate);
