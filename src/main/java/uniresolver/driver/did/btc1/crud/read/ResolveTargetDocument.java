@@ -29,9 +29,9 @@ import uniresolver.driver.did.btc1.crud.read.records.BeaconSignal;
 import uniresolver.driver.did.btc1.crud.update.jsonld.DIDUpdate;
 import uniresolver.driver.did.btc1.crud.update.jsonld.RootCapability;
 import uniresolver.driver.did.btc1.dataintegrity.DataIntegrity;
-import uniresolver.driver.did.btc1.util.DIDDocumentUtil;
 import uniresolver.driver.did.btc1.util.HexUtil;
 import uniresolver.driver.did.btc1.util.JSONPatchUtil;
+import uniresolver.driver.did.btc1.util.JsonLDUtil;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -102,6 +102,10 @@ public class ResolveTargetDocument {
 
         List<byte[]> updateHashHistory = new ArrayList<>();
 
+        // Set didDocumentHistory to an array containing the initialDocument.
+
+        List<DIDDocument> didDocumentHistory = new ArrayList<>(List.of(initialDocument));
+
         // Set contemporaryBlockheight to 0.
 
         Integer contemporaryBlockheight = 0;
@@ -120,6 +124,7 @@ public class ResolveTargetDocument {
                 currentVersionId,
                 targetVersionId,
                 targetTime,
+                didDocumentHistory,
                 updateHashHistory,
                 signalsMetadata,
                 network,
@@ -132,8 +137,8 @@ public class ResolveTargetDocument {
     private static final Integer MIN_CONFIRMATIONS = 10; /* TODO: what is X. Is it variable? */
 
     // See https://dcdpr.github.io/did-btc1/#traverse-blockchain-history
-    private DIDDocument traverseBlockchainHistory(DIDDocument contemporaryDIDDocument, Integer contemporaryBlockheight, Integer currentVersionId, Integer targetVersionId, Long targetTime, List<byte[]> updateHashHistory, Map<String, Object> signalsMetadata, Network network, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
-        if (log.isDebugEnabled()) log.debug("traverseBlockchainHistory ({}, {}, {}, {}, {}, {}, {}, {})", contemporaryDIDDocument, contemporaryBlockheight, currentVersionId, targetVersionId, targetTime, updateHashHistory, signalsMetadata, network);
+    private DIDDocument traverseBlockchainHistory(DIDDocument contemporaryDIDDocument, Integer contemporaryBlockheight, Integer currentVersionId, Integer targetVersionId, Long targetTime, List<DIDDocument> didDocumentHistory, List<byte[]> updateHashHistory, Map<String, Object> signalsMetadata, Network network, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
+        if (log.isDebugEnabled()) log.debug("traverseBlockchainHistory ({}, {}, {}, {}, {}, {}, {}, {}, {})", contemporaryDIDDocument, contemporaryBlockheight, currentVersionId, targetVersionId, targetTime, didDocumentHistory, updateHashHistory, signalsMetadata, network);
 
         // Set contemporaryHash to the result of passing contemporaryDIDDocument into the JSON Canonicalization and Hash algorithm.
 
@@ -204,7 +209,7 @@ public class ResolveTargetDocument {
 
             if (update.getTargetVersionId() == currentVersionId + 1) {
 
-                // Check that update.sourceHash equals contemporaryHash, else MUST raise latePublishing error.
+                // Check that the base58 decoding of update.sourceHash equals contemporaryHash, else MUST raise latePublishing error.
 
                 try {
                     if (!Arrays.equals(Base58.decode(update.getSourceHash()), contemporaryHash)) {
@@ -219,6 +224,10 @@ public class ResolveTargetDocument {
 
                 contemporaryDIDDocument = applyDIDUpdate(contemporaryDIDDocument, update);
 
+                // Push contemporaryDIDDocument onto didDocumentHistory.
+
+                didDocumentHistory.add(contemporaryDIDDocument);
+
                 // Increment currentVersionId
 
                 currentVersionId++;
@@ -227,13 +236,21 @@ public class ResolveTargetDocument {
 
                 // If currentVersionId equals targetVersionId return contemporaryDIDDocument.
 
-                if (currentVersionId.equals(targetVersionId)) {
+/*                if (currentVersionId.equals(targetVersionId)) {
                     return contemporaryDIDDocument;
-                }
+                }*/
 
-                // Set updateHash to the result of passing update into the JSON Canonicalization and Hash algorithm
+                // Set unsecuredUpdate to a copy of the update object.
 
-                byte[] updateHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(update);
+                DIDUpdate unsecuredUpdate = JsonLDUtil.copy(update, DIDUpdate.class);
+
+                // Remove the proof property from the unsecuredUpdate object.
+
+                JsonLDUtils.jsonLdRemove(unsecuredUpdate, "proof");
+
+                // Set updateHash to the result of passing unsecuredUpdate into the JSON Canonicalization and Hash algorithm
+
+                byte[] updateHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(unsecuredUpdate);
 
                 // Push updateHash onto updateHashHistory.
 
@@ -258,7 +275,7 @@ public class ResolveTargetDocument {
 
         // Set targetDocument to the result of calling the Traverse Blockchain History algorithm passing in
         // contemporaryDIDDocument, contemporaryBlockheight, currentVersionId, targetVersionId, targetTime,
-        // updateHashHistory, signalsMetadata, and network.
+        // didDocumentHistory, updateHashHistory, signalsMetadata, and network.
 
         DIDDocument targetDocument = this.traverseBlockchainHistory(
                 contemporaryDIDDocument,
@@ -266,6 +283,7 @@ public class ResolveTargetDocument {
                 currentVersionId,
                 targetVersionId,
                 targetTime,
+                didDocumentHistory,
                 updateHashHistory,
                 signalsMetadata,
                 network,
@@ -419,7 +437,9 @@ public class ResolveTargetDocument {
     private static void confirmDuplicateUpdate(DIDUpdate update, List<byte[]> updateHashHistory, byte[] contemporaryHash) throws ResolutionException {
         if (log.isDebugEnabled()) log.debug("confirmDuplicateUpdate ({}, {}, {})", update, updateHashHistory, contemporaryHash);
 
-        byte[] updateHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(update);
+        DIDUpdate unsecuredUpdate = JsonLDUtil.copy(update, DIDUpdate.class);
+        JsonLDUtils.jsonLdRemove(unsecuredUpdate, "proof");
+        byte[] updateHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(unsecuredUpdate);
         Integer updateHashIndex = update.getTargetVersionId() - 2;
         byte[] historicalUpdateHash = updateHashHistory.get(updateHashIndex);
         if (! Arrays.equals(historicalUpdateHash, updateHash)) {
@@ -458,7 +478,7 @@ public class ResolveTargetDocument {
             throw new ResolutionException("invalidUpdateProof", "Update payload could not be verified: " + update);
         }
 
-        DIDDocument targetDIDDocument = DIDDocumentUtil.copy(contemporaryDIDDocument);
+        DIDDocument targetDIDDocument = JsonLDUtil.copy(contemporaryDIDDocument, DIDDocument.class);
         targetDIDDocument = JSONPatchUtil.apply(targetDIDDocument, update.getPatch());
         try {
             // TODO: Validation.validate(targetDIDDocument);

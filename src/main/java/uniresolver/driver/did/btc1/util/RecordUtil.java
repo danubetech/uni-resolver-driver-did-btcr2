@@ -1,11 +1,13 @@
 package uniresolver.driver.did.btc1.util;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import foundation.identity.did.DIDDocument;
 import org.bitcoinj.base.Address;
 
 import java.io.IOException;
@@ -28,5 +30,13 @@ public class RecordUtil {
 
     public static Map<String, Object> toMap(Record record) {
         return objectMapper.convertValue(record, Map.class);
+    }
+
+    public static <T extends Record> T copy(T record, Class<T> clazz) {
+        try {
+            return objectMapper.readValue(objectMapper.writeValueAsString(record), clazz);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalArgumentException(ex.getMessage(), ex);
+        }
     }
 }
