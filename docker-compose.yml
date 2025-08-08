@@ -1,25 +1,21 @@
 version: "3.6"
 
-networks:
-  universal-resolver:
-    external: true
-
 services:
-  ipfs:
-    networks:
-      - universal-resolver
-    image: ipfs/kubo:release
-    container_name: ipfs
+  uni-resolver-web:
+    container_name: uni-resolver-web
+    image: universalresolver/uni-resolver-web:latest
+    environment:
+      spring.config.location: file:/opt/config/application.yml
+    volumes:
+      - ./application-universal-resolver.yml:/opt/config/application.yml
     ports:
-      - "4001:4001"
-      - "5001:5001"
+      - "8080:8080"
   driver-did-btc1:
-    networks:
-      - universal-resolver
-    image: universalresolver/driver-did-btc1:latest
     container_name: driver-did-btc1
-    ports:
-      - "10080:8080"
+    image: universalresolver/driver-did-btc1:latest
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
     environment:
       uniresolver_driver_did_btc1_bitcoinConnection: bitcoind
       uniresolver_driver_did_btc1_rpcUrlMainnet: http://user:pass@172.17.42.1:8332/
@@ -31,3 +27,11 @@ services:
       uniresolver_driver_did_btc1_rpcCertRegtest:
       uniresolver_driver_did_btc1_rpcCertTestnet:
       uniresolver_driver_did_btc1_ipfs: /dns4/ipfs/tcp/5001
+    ports:
+      - "10081:8080"
+  ipfs:
+    container_name: ipfs
+    image: ipfs/kubo:release
+    ports:
+      - "4001:4001"
+      - "5001:5001"
