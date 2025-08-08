@@ -17,7 +17,7 @@ import uniresolver.driver.did.btc1.util.HexUtil;
 
 import java.net.URI;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -115,8 +115,10 @@ public class SingletonBeacon {
 
         // Return didUpdatePayload.
 
-        Map<String, Map<String, Object>> didDocumentMetadataDidUpdatePayloads = (Map<String, Map<String, Object>>) didDocumentMetadata.computeIfAbsent("didUpdatePayloads", x -> new LinkedHashMap<>());
-        didDocumentMetadataDidUpdatePayloads.put(tx.txId(), didUpdate.toMap());
+        List<Map<String, Object>> didDocumentMetadataSignals = (List<Map<String, Object>>) didDocumentMetadata.get("signals");
+        log.warn(didDocumentMetadataSignals.toString());
+        Map<String, Object> didDocumentMetadataSignal = didDocumentMetadataSignals.stream().filter(x -> x.get("signalId").equals(tx.txId())).findFirst().get();
+        didDocumentMetadataSignal.put("updatePayload", didUpdate.toMap());
 
         if (log.isDebugEnabled()) log.debug("processSingletonBeaconSignal: " + didUpdate);
         return didUpdate;

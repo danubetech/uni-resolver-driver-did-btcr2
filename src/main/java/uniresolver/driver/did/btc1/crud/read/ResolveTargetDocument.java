@@ -32,7 +32,6 @@ import uniresolver.driver.did.btc1.dataintegrity.DataIntegrity;
 import uniresolver.driver.did.btc1.util.DIDDocumentUtil;
 import uniresolver.driver.did.btc1.util.HexUtil;
 import uniresolver.driver.did.btc1.util.JSONPatchUtil;
-import uniresolver.driver.did.btc1.util.RecordUtil;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -290,9 +289,6 @@ public class ResolveTargetDocument {
 
         // For each beacon in beacons:
 
-        Map<Integer, Object> didDocumentMetadataNextSignals = (Map<Integer, Object>) didDocumentMetadata.computeIfAbsent("nextSignals", x -> new LinkedHashMap<>());
-        Map<String, Object> didDocumentMetadataNextSignalsContemporaryBlockHeight = (Map<String, Object>) didDocumentMetadataNextSignals.computeIfAbsent(contemporaryBlockheight, x -> new LinkedHashMap<>());
-
         for (Beacon beacon : beacons) {
 
             if (log.isDebugEnabled()) log.debug("Processing beacon: " + beacon);
@@ -313,11 +309,6 @@ public class ResolveTargetDocument {
 
             beaconSpends = beaconSpends.stream().filter(tx -> PATTERN_TXOUT.matcher(tx.txOuts().getLast().asm()).matches()).toList();
 
-            List<Map<String, Object>> didDocumentMetadataBeaconSpends = (List<Map<String, Object>>) didDocumentMetadataNextSignalsContemporaryBlockHeight.computeIfAbsent("beaconSpends", x -> new ArrayList<>());
-            didDocumentMetadataBeaconSpends.add(Map.of(
-                    "beacon", RecordUtil.toMap(beacon),
-                    "beaconSpends", beaconSpends.stream().map(RecordUtil::toMap).toList()));
-
             // For each of the filtered beaconSpends push the following beaconSignal object onto the signals array.
 
             for (Tx beaconSpend : beaconSpends) {
@@ -332,10 +323,14 @@ public class ResolveTargetDocument {
                         beaconSpendsBlocks.get(beaconSpend).blockTime());
 
                 beaconSignals.add(beaconSignal);
+
+                List<Map<String, Object>> didDocumentMetadataSignals = (List<Map<String, Object>>) didDocumentMetadata.computeIfAbsent("signals", x -> new ArrayList<>());
+                Map<String, Object> didDocumentMetadataSignal = new LinkedHashMap<>();
+                didDocumentMetadataSignals.add(didDocumentMetadataSignal);
+                didDocumentMetadataSignal.put("signalId", beaconSpend.txId());
+                didDocumentMetadataSignal.put("blockheight", beaconSpendsBlocks.get(beaconSpend).blockHeight());
             }
         }
-
-        didDocumentMetadataNextSignalsContemporaryBlockHeight.put("beaconSignals", beaconSignals.stream().map(RecordUtil::toMap).toList());
 
         // If signals is empty, return signals.
 
@@ -349,9 +344,6 @@ public class ResolveTargetDocument {
 
         Integer lowestBlockHeight = orderedBeaconSignals.getFirst().blockheight();
         List<BeaconSignal> nextSignals = orderedBeaconSignals.stream().filter(x -> Objects.equals(x.blockheight(), lowestBlockHeight)).toList();
-
-        didDocumentMetadataNextSignalsContemporaryBlockHeight.put("lowestBlockHeight", lowestBlockHeight);
-        didDocumentMetadataNextSignalsContemporaryBlockHeight.put("nextSignals", nextSignals.stream().map(RecordUtil::toMap).toList());
 
         // Return nextSignals.
 
