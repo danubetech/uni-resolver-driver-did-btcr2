@@ -169,11 +169,6 @@
 			<artifactId>uni-resolver-driver</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>decentralized-identity</groupId>
-			<artifactId>did-common-java</artifactId>
-			<version>1.18.0</version>
-		</dependency>
-		<dependency>
 			<groupId>com.danubetech</groupId>
 			<artifactId>key-formats-java</artifactId>
 			<version>1.22.0</version>

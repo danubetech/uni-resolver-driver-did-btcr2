@@ -26,7 +26,7 @@ ENV uniresolver_driver_did_btc1_ipfs=/ip4/127.0.0.1/tcp/5001
 
 COPY --from=build --chown=jetty /opt/driver-did-btc1/target/*.war /var/lib/jetty/webapps/ROOT.war
 
-#done
+# done
 
 EXPOSE 8080
 RUN java -Djetty.http.port=8080 -jar "$JETTY_HOME/start.jar" --add-modules=ee10-webapp,ee10-deploy,ee10-jsp,ee10-jstl
