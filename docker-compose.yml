@@ -1,5 +1,3 @@
-version: "3.6"
-
 services:
   uni-resolver-web:
     container_name: uni-resolver-web
