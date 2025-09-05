@@ -10,6 +10,7 @@ RUN cd /opt/driver-did-btc1/ && mvn org.apache.maven.plugins:maven-dependency-pl
 ADD . /opt/driver-did-btc1/
 RUN cd /opt/driver-did-btc1/ && mvn clean package -P war -N -DskipTests
 
+# build image
 
 FROM jetty:12.0.18-jre21-eclipse-temurin
 MAINTAINER Markus Sabadello <markus@danubetech.com>
