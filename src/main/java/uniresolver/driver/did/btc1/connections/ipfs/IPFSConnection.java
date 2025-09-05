@@ -5,6 +5,8 @@ import io.ipfs.multiaddr.MultiAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 public class IPFSConnection {
 
 	private static final Logger log = LoggerFactory.getLogger(IPFSConnection.class);
@@ -25,7 +27,7 @@ public class IPFSConnection {
 
 	public IPFS getIpfs() {
 		if (this.ipfs == null) this.ipfs = new IPFS(this.getIpfsMultiaddr());
-		if (log.isDebugEnabled()) log.debug("getIpfs: " + this.ipfs);
+		if (log.isDebugEnabled()) log.debug("getIpfs: " + this.ipfs.protocol + " " + this.ipfs.host + ":" + this.ipfs.port);
 		return this.ipfs;
 	}
 
