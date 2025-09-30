@@ -20,7 +20,7 @@ public class DidBtcr2IdentifierEncoding {
     private static final Logger log = LoggerFactory.getLogger(DidBtcr2IdentifierEncoding.class);
 
     /*
-     * 3.2 did:btcr2 Identifier Encoding
+     * 4.2 did:btcr2 Identifier Encoding
      */
 
     // See https://dcdpr.github.io/did-btcr2/#didbtcr2-identifier-encoding

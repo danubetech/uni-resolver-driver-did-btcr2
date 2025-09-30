@@ -53,7 +53,7 @@ public class ResolveTargetDocument {
     }
 
     /*
-     * 4.2.2 Resolve Target Document
+     * 7.2.2 Resolve Target Document
      */
 
     // See https://dcdpr.github.io/did-btcr2/#resolve-target-document

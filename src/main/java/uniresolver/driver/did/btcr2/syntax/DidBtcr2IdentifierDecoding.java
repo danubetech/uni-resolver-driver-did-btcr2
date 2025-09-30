@@ -18,7 +18,7 @@ public class DidBtcr2IdentifierDecoding {
     private static final Logger log = LoggerFactory.getLogger(DidBtcr2IdentifierDecoding.class);
 
     /*
-     * 3.3 did:btcr2 Identifier Decoding
+     * 4.3 did:btcr2 Identifier Decoding
      */
 
     // See https://dcdpr.github.io/did-btcr2/#didbtcr2-identifier-decoding

@@ -26,7 +26,7 @@ public class Read {
     }
 
     /*
-     * 4.2 Read
+     * 7.2 Read
      */
 
     // See https://dcdpr.github.io/did-btcr2/#read

@@ -46,10 +46,10 @@ public class ResolveInitialDocument {
     }
 
     /*
-     * 4.2.1 Resolve Initial Document
+     * 7.2.1 Resolve Initial Document
      */
 
-    // See https://dcdpr.github.io/did-btcr2/#resolve-initial-document
+    // See https://dcdpr.github.io/did-btcr2/#resolve-initial-did-document
     public DIDDocument resolveInitialDIDDocument(DID identifier, IdentifierComponents identifierComponents, Map<String, Object> resolutionOptions, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
         if (log.isDebugEnabled()) log.debug("resolveInitialDIDDocument ({}, {}, {})", identifier, identifierComponents, resolutionOptions);
 
