@@ -81,7 +81,7 @@ public class ResolveInitialDocument {
         DIDDocument.Builder<? extends DIDDocument.Builder<?>> initialDocumentBuilder = DIDDocument.builder();
         initialDocumentBuilder.id(identifier.toUri());
         initialDocumentBuilder.defaultContexts(false);
-        /* TODO is this in the spec? */ initialDocumentBuilder.contexts(List.of(URI.create("https://www.w3.org/TR/did-1.1"), URI.create("https://did-btcr2/TBD/context")));
+        /* TODO is this in the spec? */ initialDocumentBuilder.contexts(List.of(URI.create("https://www.w3.org/TR/did-1.1"), URI.create("https://btcr2.dev/context/v1")));
         initialDocumentBuilder.controller(identifier.toUri());
 
         VerificationMethod.Builder<? extends VerificationMethod.Builder<?>> verificationMethodBuilder = VerificationMethod.builder();
@@ -162,9 +162,9 @@ public class ResolveInitialDocument {
         String intermediateDocumentRepresentation = JSONUtil.mapToJson(initialDocument);
 
         // Find and replace all values of identifier contained within the intermediateDocumentRepresentation
-        // with the string (did:btcr2:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx).
+        // with the string (did:btcr2:_).
 
-        intermediateDocumentRepresentation = intermediateDocumentRepresentation.replace(identifier.toString(), "did:btcr2:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+        intermediateDocumentRepresentation = intermediateDocumentRepresentation.replace(identifier.toString(), "did:btcr2:_");
 
         // Set hashBytes to the SHA256 hash of the intermediateDocumentRepresentation.
 
@@ -205,7 +205,7 @@ public class ResolveInitialDocument {
             throw new ResolutionException("Cannot retrieve intermediate document representation for " + cid + " from CAS: " + ex.getMessage(), ex);
         }
 
-        String initialDocument = intermediateDocumentRepresentation.replace("did:btcr2:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", identifier.toString());
+        String initialDocument = intermediateDocumentRepresentation.replace("did:btcr2:_", identifier.toString());
         DIDDocument parsedInitialDocument = DIDDocument.fromJson(initialDocument);
 
         if (log.isDebugEnabled()) log.debug("casRetrieval: " + parsedInitialDocument);
