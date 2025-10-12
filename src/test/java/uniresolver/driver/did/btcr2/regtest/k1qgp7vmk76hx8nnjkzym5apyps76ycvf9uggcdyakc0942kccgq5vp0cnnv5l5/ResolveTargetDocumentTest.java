@@ -23,6 +23,7 @@ public class ResolveTargetDocumentTest {
     private static final String TEST_DID = "did:btcr2:k1qgp7vmk76hx8nnjkzym5apyps76ycvf9uggcdyakc0942kccgq5vp0cnnv5l5";
 
 	@Test
+    @Disabled("Only works with configured Esplora/Electrs REST API")
 	public void testResolveTargetDIDDocument() throws Exception {
 
 		Map<String, Object> didDocumentMetadata = new HashMap<>();
