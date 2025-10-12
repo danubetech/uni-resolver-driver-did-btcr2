@@ -1,0 +1,52 @@
+{
+  "@context": [
+    "https://www.w3.org/TR/did-1.1",
+    "https://btcr2.dev/context/v1"
+  ],
+  "assertionMethod": [
+    "did:btcr2:k1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h#initialKey"
+  ],
+  "authentication": [
+    "did:btcr2:k1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h#initialKey"
+  ],
+  "capabilityDelegation": [
+    "did:btcr2:k1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h#initialKey"
+  ],
+  "capabilityInvocation": [
+    "did:btcr2:k1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h#initialKey"
+  ],
+  "controller": [
+    "did:btcr2:k1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h"
+  ],
+  "id": "did:btcr2:k1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h",
+  "service": [
+    {
+      "id": "did:btcr2:k1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h#initialP2PKH",
+      "serviceEndpoint": "bitcoin:n1twwQ99uF11FVsqSjqYfkBwxXonYXgSm2",
+      "type": "SingletonBeacon"
+    },
+    {
+      "id": "did:btcr2:k1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h#initialP2WPKH",
+      "serviceEndpoint": "bitcoin:tb1qm794a8pmctrzthfdhnz9rk3s3fm63y6l3j0r7a",
+      "type": "SingletonBeacon"
+    },
+    {
+      "id": "did:btcr2:k1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h#initialP2TR",
+      "serviceEndpoint": "bitcoin:tb1p6vj00phfwg4tphjw2jq7nlv5z9pzxuh0c600cdfzs2k7v2gdds7szqt5zr",
+      "type": "SingletonBeacon"
+    },
+    {
+      "id": "did:btcr2:k1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h#initialP2PKH",
+      "serviceEndpoint": "bitcoin:mx1d72m2yzbJiTCdjrJKJNDtANURL3BGDD",
+      "type": "SingletonBeacon"
+    }
+  ],
+  "verificationMethod": [
+    {
+      "controller": "did:btcr2:k1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h",
+      "id": "did:btcr2:k1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h#initialKey",
+      "publicKeyMultibase": "zQ3shtZ7YyvurkGhuqYGryjtogyus7dksMCTKR5fb5az78RtB",
+      "type": "Multikey"
+    }
+  ]
+}
