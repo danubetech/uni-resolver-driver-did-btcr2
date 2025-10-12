@@ -81,7 +81,7 @@ public class SingletonBeacon {
 
             // Set didUpdatePayload to signalSidecarData.updatePayload
 
-            Map<String, Object> didUpdatePayloadMap = (Map<String, Object>) signalSidecarData.get("updatePayload");
+            Map<String, Object> didUpdatePayloadMap = (Map<String, Object>) signalSidecarData.get("didUpdate");
 
             // Set updateHashBytes to the result of passing didUpdatePayload to the JSON Canonicalization and Hash algorithm.
 
