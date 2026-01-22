@@ -2,8 +2,6 @@
 
 This is a [Universal Resolver](https://github.com/decentralized-identity/universal-resolver/) driver for **did:btcr2** identifiers.
 
-(work in progress)
-
 ## Specifications
 
 * [Decentralized Identifiers](https://www.w3.org/TR/did-1.0/)
