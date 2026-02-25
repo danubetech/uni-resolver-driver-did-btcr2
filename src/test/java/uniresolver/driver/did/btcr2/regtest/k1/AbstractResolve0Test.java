@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btcr2.mutinynet.k1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h;
+package uniresolver.driver.did.btcr2.regtest.k1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.did.DID;
@@ -14,21 +14,21 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ResolveInitialDocumentTest {
+public class Resolve0Test {
 
 	private static final ObjectMapper objectMapper = new ObjectMapper();
-
-    private static final String TEST_DID = "did:btcr2:k1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h";
 
 	@Test
 	public void testResolveInitialDIDDocument() throws Exception {
 
-		Map<String, Object> didDocumentMetadata = new HashMap<>();
+		TestUtil.Input input = TestUtil.readResourceInput("input.json");
+		TestUtil.Output output = TestUtil.readResourceOutput("output.json");
 
 		Read read = new Read(TestUtil.testBitcoinConnections(), TestUtil.testIpfsConnection());
 
-		DID identifier = DID.fromString(TEST_DID);
-		Map<String, Object> resolutionOptions = TestUtil.readResourceJson("./resolution-options.json");
+		DID identifier = DID.fromString(input.did());
+		Map<String, Object> resolutionOptions = input.sidecar();
+		Map<String, Object> didDocumentMetadata = new HashMap<>();
 
 		IdentifierComponents identifierComponents = DidBtcr2IdentifierDecoding.didBtcr2IdentifierDecoding(identifier);
 
@@ -36,7 +36,7 @@ public class ResolveInitialDocumentTest {
 		String initialDIDDocumentCanonicalized = new JsonCanonicalizer(initialDIDDocument.toJson()).getEncodedString();
 		Map<String, Object> initialDIDDocumentMap = (Map<String, Object>) objectMapper.readValue(initialDIDDocumentCanonicalized, Map.class);
 
-		DIDDocument expectedInitialDIDDocument = DIDDocument.fromMap(TestUtil.readResourceJson("initial-did-document.json"));
+		DIDDocument expectedInitialDIDDocument = output.didDocument();
 		String expectedInitialDIDDocumentCanonicalized = new JsonCanonicalizer(expectedInitialDIDDocument.toJson()).getEncodedString();
 		Map<String, Object> expectedInitialDIDDocumentMap = (Map<String, Object>) objectMapper.readValue(expectedInitialDIDDocumentCanonicalized, Map.class);
 

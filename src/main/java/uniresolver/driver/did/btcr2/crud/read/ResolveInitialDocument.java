@@ -82,7 +82,6 @@ public class ResolveInitialDocument {
         initialDocumentBuilder.id(identifier.toUri());
         initialDocumentBuilder.defaultContexts(false);
         /* TODO is this in the spec? */ initialDocumentBuilder.contexts(List.of(URI.create("https://www.w3.org/TR/did-1.1"), URI.create("https://btcr2.dev/context/v1")));
-        initialDocumentBuilder.controller(identifier.toUri());
 
         VerificationMethod.Builder<? extends VerificationMethod.Builder<?>> verificationMethodBuilder = VerificationMethod.builder();
         verificationMethodBuilder.id(URI.create(identifier + "#initialKey"));
