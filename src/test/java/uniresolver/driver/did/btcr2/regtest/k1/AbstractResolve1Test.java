@@ -15,16 +15,21 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class Resolve1Test {
+public abstract class AbstractResolve1Test {
 
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 
+	private final String relativePath;
+
+	protected AbstractResolve1Test(String relativePath) {
+		this.relativePath = relativePath;
+	}
+
 	@Test
-    @Disabled("Only works with configured Esplora/Electrs REST API")
 	public void testResolveTargetDIDDocument() throws Exception {
 
-		TestUtil.Input input = TestUtil.readResourceInput("input.json");
-		TestUtil.Output output = TestUtil.readResourceOutput("output.json");
+		TestUtil.Input input = TestUtil.readResourceInput(this.relativePath + "1/" + "input.json");
+		TestUtil.Output output = TestUtil.readResourceOutput(this.relativePath + "1/" + "output.json");
 
 		Read read = new Read(TestUtil.testBitcoinConnections(), TestUtil.testIpfsConnection());
 
