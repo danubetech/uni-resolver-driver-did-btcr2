@@ -4,6 +4,9 @@
         "contentType": "application/ld+json"
     },
     "didDocumentMetadata": {
+        "versionId": "2",
+        "confirmations": 19,
+        "updated": "2026-02-24T18:29:46Z",
         "deactivated": false
     },
     "didDocument": {
@@ -17,7 +20,7 @@
                 "id": "did:btcr2:k1qgpxxm7r66wkdsl6vevscva762megm67synsvfumh7fu4js56mjxefq8jg4q3#initialKey",
                 "type": "Multikey",
                 "controller": "did:btcr2:k1qgpxxm7r66wkdsl6vevscva762megm67synsvfumh7fu4js56mjxefq8jg4q3",
-                "publicKeyMultibase": "zQ3shU6wxt7F9ZmuFUGhXbhCe4wyfakRb1m4boNuX9nzEXgkB"
+                "publicKeyMultibase": "zQ3shcTp69TcWb7gonaeT82VEc5kYv2UyZm3Vwmc8Sb7mUJfb"
             }
         ],
         "authentication": [

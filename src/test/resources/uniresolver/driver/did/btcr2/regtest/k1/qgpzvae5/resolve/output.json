@@ -4,6 +4,9 @@
         "contentType": "application/ld+json"
     },
     "didDocumentMetadata": {
+        "versionId": "2",
+        "confirmations": 7,
+        "updated": "2026-02-24T19:02:15Z",
         "deactivated": false
     },
     "didDocument": {
@@ -47,6 +50,11 @@
                 "id": "did:btcr2:k1qgpzvae5ztle4qmtkkdk0nwtd7gyz8kyskumkvr3fcpuaysg2k8lmwqufqxxt#initialP2TR",
                 "type": "SingletonBeacon",
                 "serviceEndpoint": "bitcoin:bcrt1p42uy8fkha840n7dlkldz9y07606zach8m7q4xtp9zqem6v4ksnesw9lguk"
+            },
+            {
+                "id": "did:btcr2:k1qgpzvae5ztle4qmtkkdk0nwtd7gyz8kyskumkvr3fcpuaysg2k8lmwqufqxxt#additionalP2PKH",
+                "type": "SingletonBeacon",
+                "serviceEndpoint": "bitcoin:mjixpoTrtBV9xBYuzKRd8DxHA8xRu888i9"
             }
         ]
     }

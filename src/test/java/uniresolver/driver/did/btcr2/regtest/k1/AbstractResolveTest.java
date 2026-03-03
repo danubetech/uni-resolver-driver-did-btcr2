@@ -14,21 +14,21 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public abstract class AbstractResolve0Test {
+public abstract class AbstractResolveTest {
 
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 
 	private final String relativePath;
 
-	protected AbstractResolve0Test(String relativePath) {
+	protected AbstractResolveTest(String relativePath) {
 		this.relativePath = relativePath;
 	}
 
 	@Test
 	public void testResolveInitialDIDDocument() throws Exception {
 
-		TestUtil.Input input = TestUtil.readResourceInput(this.relativePath + "0/" + "input.json");
-		TestUtil.Output output = TestUtil.readResourceOutput(this.relativePath + "0/" + "output.json");
+		TestUtil.Input input = TestUtil.readResourceInput(this.relativePath + "/" + "input.json");
+		TestUtil.Output output = TestUtil.readResourceOutput(this.relativePath + "/" + "output.json");
 
 		Read read = new Read(TestUtil.testBitcoinConnections(), TestUtil.testIpfsConnection());
 
