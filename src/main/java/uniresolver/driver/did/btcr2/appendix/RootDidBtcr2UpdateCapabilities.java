@@ -3,7 +3,7 @@ package uniresolver.driver.did.btcr2.appendix;
 import foundation.identity.did.DID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uniresolver.driver.did.btcr2.crud.update.jsonld.RootCapability;
+import uniresolver.driver.did.btcr2.data.jsonld.RootCapability;
 
 import java.net.URI;
 import java.net.URLDecoder;

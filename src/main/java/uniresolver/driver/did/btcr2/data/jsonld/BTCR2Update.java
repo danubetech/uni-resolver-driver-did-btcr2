@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btcr2.crud.update.jsonld;
+package uniresolver.driver.did.btcr2.data.jsonld;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import foundation.identity.jsonld.JsonLDObject;
@@ -8,14 +8,14 @@ import java.io.Reader;
 import java.util.List;
 import java.util.Map;
 
-public class DIDUpdate extends JsonLDObject {
+public class BTCR2Update extends JsonLDObject {
 
     @JsonCreator
-    public DIDUpdate() {
+    public BTCR2Update() {
         super();
     }
 
-    protected DIDUpdate(Map<String, Object> jsonObject) {
+    protected BTCR2Update(Map<String, Object> jsonObject) {
         super(jsonObject);
     }
 
@@ -23,22 +23,22 @@ public class DIDUpdate extends JsonLDObject {
      * Factory methods
      */
 
-    public static DIDUpdate fromJsonObject(Map<String, Object> jsonObject) {
-        return new DIDUpdate(jsonObject);
+    public static BTCR2Update fromJsonObject(Map<String, Object> jsonObject) {
+        return new BTCR2Update(jsonObject);
     }
 
-    public static DIDUpdate fromJsonLDObject(JsonLDObject jsonLDObject) { return fromJsonObject(jsonLDObject.getJsonObject()); }
+    public static BTCR2Update fromJsonLDObject(JsonLDObject jsonLDObject) { return fromJsonObject(jsonLDObject.getJsonObject()); }
 
-    public static DIDUpdate fromJson(Reader reader) {
-        return new DIDUpdate(readJson(reader));
+    public static BTCR2Update fromJson(Reader reader) {
+        return new BTCR2Update(readJson(reader));
     }
 
-    public static DIDUpdate fromJson(String json) {
-        return new DIDUpdate(readJson(json));
+    public static BTCR2Update fromJson(String json) {
+        return new BTCR2Update(readJson(json));
     }
 
-    public static DIDUpdate fromMap(Map<String, Object> map) {
-        return new DIDUpdate(map);
+    public static BTCR2Update fromMap(Map<String, Object> map) {
+        return new BTCR2Update(map);
     }
 
     /*

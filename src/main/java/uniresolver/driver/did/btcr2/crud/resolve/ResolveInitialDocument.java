@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btcr2.crud.read;
+package uniresolver.driver.did.btcr2.crud.resolve;
 
 import com.apicatalog.multicodec.codec.KeyCodec;
 import foundation.identity.did.DID;
@@ -16,11 +16,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
 import uniresolver.driver.did.btcr2.Network;
-import uniresolver.driver.did.btcr2.appendix.JsonCanonicalizationAndHash;
+import uniresolver.driver.did.btcr2.algorithms.JSONDocumentHashing;
 import uniresolver.driver.did.btcr2.beacons.singleton.SingletonBeacon;
 import uniresolver.driver.did.btcr2.connections.bitcoin.BitcoinConnector;
 import uniresolver.driver.did.btcr2.connections.ipfs.IPFSConnection;
-import uniresolver.driver.did.btcr2.syntax.records.IdentifierComponents;
+import uniresolver.driver.did.btcr2.data.records.IdentifierComponents;
 import uniresolver.driver.did.btcr2.util.JSONUtil;
 
 import java.io.IOException;
@@ -35,12 +35,12 @@ public class ResolveInitialDocument {
 
     private static final Logger log = LoggerFactory.getLogger(ResolveInitialDocument.class);
 
-    private Read read;
+    private Resolve resolve;
     private BitcoinConnector bitcoinConnector;
     private IPFSConnection ipfsConnection;
 
-    public ResolveInitialDocument(Read read, BitcoinConnector bitcoinConnector, IPFSConnection ipfsConnection) {
-        this.read = read;
+    public ResolveInitialDocument(Resolve resolve, BitcoinConnector bitcoinConnector, IPFSConnection ipfsConnection) {
+        this.resolve = resolve;
         this.bitcoinConnector = bitcoinConnector;
         this.ipfsConnection = ipfsConnection;
     }
@@ -167,7 +167,7 @@ public class ResolveInitialDocument {
 
         // Set hashBytes to the SHA256 hash of the intermediateDocumentRepresentation.
 
-        byte[] hashBytes = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(JSONUtil.jsonToMap(intermediateDocumentRepresentation));
+        byte[] hashBytes = JSONDocumentHashing.jsonDocumentHashing(JSONUtil.jsonToMap(intermediateDocumentRepresentation));
 
         // If hashBytes does not equal identifierComponents.genesisBytes MUST throw an invalidDid error.
 
@@ -215,12 +215,12 @@ public class ResolveInitialDocument {
      * Getters and setters
      */
 
-    public Read getRead() {
-        return read;
+    public Resolve getRead() {
+        return resolve;
     }
 
-    public void setRead(Read read) {
-        this.read = read;
+    public void setRead(Resolve resolve) {
+        this.resolve = resolve;
     }
 
     public BitcoinConnector getBitcoinConnector() {

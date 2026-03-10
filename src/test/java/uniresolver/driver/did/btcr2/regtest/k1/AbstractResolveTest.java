@@ -5,9 +5,9 @@ import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
 import org.erdtman.jcs.JsonCanonicalizer;
 import org.junit.jupiter.api.Test;
-import uniresolver.driver.did.btcr2.crud.read.Read;
+import uniresolver.driver.did.btcr2.crud.resolve.Resolve;
 import uniresolver.driver.did.btcr2.syntax.DidBtcr2IdentifierDecoding;
-import uniresolver.driver.did.btcr2.syntax.records.IdentifierComponents;
+import uniresolver.driver.did.btcr2.data.records.IdentifierComponents;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +30,7 @@ public abstract class AbstractResolveTest {
 		TestUtil.Input input = TestUtil.readResourceInput(this.relativePath + "/" + "input.json");
 		TestUtil.Output output = TestUtil.readResourceOutput(this.relativePath + "/" + "output.json");
 
-		Read read = new Read(TestUtil.testBitcoinConnections(), TestUtil.testIpfsConnection());
+		Resolve resolve = new Resolve(TestUtil.testBitcoinConnections(), TestUtil.testIpfsConnection());
 
 		DID identifier = DID.fromString(input.did());
 		Map<String, Object> resolutionOptions = input.sidecar();
@@ -38,7 +38,7 @@ public abstract class AbstractResolveTest {
 
 		IdentifierComponents identifierComponents = DidBtcr2IdentifierDecoding.didBtcr2IdentifierDecoding(identifier);
 
-		DIDDocument initialDIDDocument = read.getResolveInitialDocument().resolveInitialDIDDocument(identifier, identifierComponents, resolutionOptions, didDocumentMetadata);
+		DIDDocument initialDIDDocument = resolve.getResolveInitialDocument().resolveInitialDIDDocument(identifier, identifierComponents, resolutionOptions, didDocumentMetadata);
 		String initialDIDDocumentCanonicalized = new JsonCanonicalizer(initialDIDDocument.toJson()).getEncodedString();
 		Map<String, Object> initialDIDDocumentMap = (Map<String, Object>) objectMapper.readValue(initialDIDDocumentCanonicalized, Map.class);
 

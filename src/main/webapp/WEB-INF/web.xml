@@ -4,7 +4,7 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
 	id="WebApp_ID" version="2.5" metadata-complete="true">
 
-	<display-name>uni-read-driver-did-btcr2</display-name>
+	<display-name>uni-resolve-driver-did-btcr2</display-name>
 
 	<!-- SERVLET -->
 

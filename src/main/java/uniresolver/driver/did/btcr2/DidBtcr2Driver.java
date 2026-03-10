@@ -10,7 +10,7 @@ import uniresolver.DereferencingException;
 import uniresolver.ResolutionException;
 import uniresolver.driver.Driver;
 import uniresolver.driver.did.btcr2.config.Configuration;
-import uniresolver.driver.did.btcr2.crud.read.Read;
+import uniresolver.driver.did.btcr2.crud.resolve.Resolve;
 import uniresolver.result.DereferenceResult;
 import uniresolver.result.ResolveResult;
 
@@ -23,7 +23,7 @@ public class DidBtcr2Driver implements Driver {
 
 	private Map<String, Object> properties;
 
-	private Read read;
+	private Resolve resolve;
 
 	public DidBtcr2Driver() {
 		this(Configuration.getPropertiesFromEnvironment());
@@ -77,11 +77,11 @@ public class DidBtcr2Driver implements Driver {
 		Configuration.configureFromProperties(this, properties);
 	}
 
-	public Read getRead() {
-		return this.read;
+	public Resolve getRead() {
+		return this.resolve;
 	}
 
-	public void setRead(Read read) {
-		this.read = read;
+	public void setRead(Resolve resolve) {
+		this.resolve = resolve;
 	}
 }

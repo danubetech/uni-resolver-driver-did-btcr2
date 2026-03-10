@@ -6,7 +6,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.junit.jupiter.api.Test;
 import uniresolver.driver.did.btcr2.syntax.DidBtcr2IdentifierDecoding;
 import uniresolver.driver.did.btcr2.syntax.DidBtcr2IdentifierEncoding;
-import uniresolver.driver.did.btcr2.syntax.records.IdentifierComponents;
+import uniresolver.driver.did.btcr2.data.records.IdentifierComponents;
 
 import java.io.StringReader;
 import java.util.List;

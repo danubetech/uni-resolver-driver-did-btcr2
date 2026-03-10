@@ -8,11 +8,11 @@ import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
 import uniresolver.driver.did.btcr2.Network;
 import uniresolver.driver.did.btcr2.appendix.FetchContentFromAddressableStorage;
-import uniresolver.driver.did.btcr2.appendix.JsonCanonicalizationAndHash;
+import uniresolver.driver.did.btcr2.algorithms.JSONDocumentHashing;
 import uniresolver.driver.did.btcr2.connections.bitcoin.records.Tx;
 import uniresolver.driver.did.btcr2.connections.bitcoin.records.TxOut;
 import uniresolver.driver.did.btcr2.connections.ipfs.IPFSConnection;
-import uniresolver.driver.did.btcr2.crud.update.jsonld.DIDUpdate;
+import uniresolver.driver.did.btcr2.data.jsonld.BTCR2Update;
 import uniresolver.driver.did.btcr2.util.HexUtil;
 
 import java.net.URI;
@@ -55,7 +55,7 @@ public class SingletonBeacon {
     private static final Pattern PATTERN_TXOUT = Pattern.compile("^OP_RETURN OP_PUSHBYTES_32 ([0-9a-fA-F]{64})$");
 
     // See https://dcdpr.github.io/did-btcr2/#process-singleton-beacon-signal
-    public static DIDUpdate processSingletonBeaconSignal(Tx tx, Map<String, Object> signalSidecarData, IPFSConnection ipfsConnection, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
+    public static BTCR2Update processSingletonBeaconSignal(Tx tx, Map<String, Object> signalSidecarData, IPFSConnection ipfsConnection, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
 
         // Initialize a txOut variable to the 0th transaction output of the tx.
         // TODO: This is incorrect, should be last instead of 0th?
@@ -64,14 +64,14 @@ public class SingletonBeacon {
 
         // Set didUpdatePayload to null.
 
-        DIDUpdate didUpdate = null;
+        BTCR2Update BTCR2Update = null;
 
         // Set hashBytes to the 32 bytes in the txOut.
 
         Matcher matcher = PATTERN_TXOUT.matcher(txOut.asm());
         if (! matcher.matches()) {
-            if (log.isInfoEnabled()) log.debug("processSingletonBeaconSignal: Not a beacon signal: " + didUpdate);
-            return didUpdate;
+            if (log.isInfoEnabled()) log.debug("processSingletonBeaconSignal: Not a beacon signal: " + BTCR2Update);
+            return BTCR2Update;
         }
         byte[] hashBytes = HexUtil.hexDecode(matcher.group(1));
 
@@ -85,7 +85,7 @@ public class SingletonBeacon {
 
             // Set updateHashBytes to the result of passing didUpdatePayload to the JSON Canonicalization and Hash algorithm.
 
-            byte[] updateHashBytes = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(didUpdatePayloadMap);
+            byte[] updateHashBytes = JSONDocumentHashing.jsonDocumentHashing(didUpdatePayloadMap);
 
             // If updateHashBytes does not equal hashBytes, MUST throw an invalidSidecarData error.
 
@@ -95,7 +95,7 @@ public class SingletonBeacon {
 
             // Return didUpdatePayload
 
-            didUpdate = DIDUpdate.fromMap(didUpdatePayloadMap);
+            BTCR2Update = BTCR2Update.fromMap(didUpdatePayloadMap);
 
         // Else:
 
@@ -103,12 +103,12 @@ public class SingletonBeacon {
 
             // Set didUpdatePayload to the result of passing hashBytes into the Fetch Content from Addressable Storage algorithm.
 
-            didUpdate = FetchContentFromAddressableStorage.fetchJsonLDObjectContentFromAddressableStorage(hashBytes, DIDUpdate.class, ipfsConnection);
+            BTCR2Update = FetchContentFromAddressableStorage.fetchJsonLDObjectContentFromAddressableStorage(hashBytes, BTCR2Update.class, ipfsConnection);
 
             // If didUpdatePayload is null, MUST raise a latePublishingError. MAY identify Beacon Signal to resolver and request
             // additional Sidecar data be provided.
 
-            if (didUpdate == null) {
+            if (BTCR2Update == null) {
                 throw new ResolutionException("latePublishingError", "didUpdatePayload is null for beacon signal");
             }
         }
@@ -119,9 +119,9 @@ public class SingletonBeacon {
         log.warn(didDocumentMetadataSignals.toString());
         Map<String, Object> didDocumentMetadataSignal = didDocumentMetadataSignals.stream().filter(x -> x.get("signalId").equals(tx.txId())).findFirst().get();
         didDocumentMetadataSignal.put("beaconType", "SingletonBeacon");
-        didDocumentMetadataSignal.put("updatePayload", didUpdate.toMap());
+        didDocumentMetadataSignal.put("updatePayload", BTCR2Update.toMap());
 
-        if (log.isDebugEnabled()) log.debug("processSingletonBeaconSignal: " + didUpdate);
-        return didUpdate;
+        if (log.isDebugEnabled()) log.debug("processSingletonBeaconSignal: " + BTCR2Update);
+        return BTCR2Update;
     }
 }

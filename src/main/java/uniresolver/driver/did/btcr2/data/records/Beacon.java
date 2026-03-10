@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btcr2.crud.read.records;
+package uniresolver.driver.did.btcr2.data.records;
 
 import org.bitcoinj.base.Address;
 

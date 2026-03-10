@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btcr2.appendix;
+package uniresolver.driver.did.btcr2.algorithms;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,13 +13,18 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-public class JsonCanonicalizationAndHash {
+/*
+ * JSON Document Hashing
+ * See https://dcdpr.github.io/did-btcr2/algorithms.html#json-document-hashing
+ */
 
-    private static final Logger log = LoggerFactory.getLogger(JsonCanonicalizationAndHash.class);
+public class JSONDocumentHashing {
+
+    private static final Logger log = LoggerFactory.getLogger(JSONDocumentHashing.class);
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static byte[] jsonCanonicalizationAndHash(String json) {
+    public static byte[] jsonDocumentHashing(String json) {
         String encodedString;
         try {
             encodedString = new JsonCanonicalizer(json).getEncodedString();
@@ -31,28 +36,28 @@ public class JsonCanonicalizationAndHash {
         return hash;
     }
 
-    public static byte[] jsonCanonicalizationAndHash(Record record) {
+    public static byte[] jsonDocumentHashing(Record record) {
         String json;
         try {
             json = objectMapper.writeValueAsString(record);
         } catch (JsonProcessingException ex) {
             throw new IllegalArgumentException(ex.getMessage(), ex);
         }
-        return jsonCanonicalizationAndHash(json);
+        return jsonDocumentHashing(json);
     }
 
-    public static byte[] jsonCanonicalizationAndHash(Map<String, Object> map) {
+    public static byte[] jsonDocumentHashing(Map<String, ?> map) {
         String json;
         try {
             json = objectMapper.writeValueAsString(map);
         } catch (JsonProcessingException ex) {
             throw new IllegalArgumentException(ex.getMessage(), ex);
         }
-        return jsonCanonicalizationAndHash(json);
+        return jsonDocumentHashing(json);
     }
 
-    public static byte[] jsonCanonicalizationAndHash(JsonLDObject jsonLDObject) {
+    public static byte[] jsonDocumentHashing(JsonLDObject jsonLDObject) {
         Map<String, Object> map = jsonLDObject.toMap();
-        return jsonCanonicalizationAndHash(map);
+        return jsonDocumentHashing(map);
     }
 }

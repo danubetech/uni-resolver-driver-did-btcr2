@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btcr2.crud.update.jsonld;
+package uniresolver.driver.did.btcr2.data.jsonld;
 
 import com.apicatalog.jsonld.loader.DocumentLoader;
 import com.fasterxml.jackson.annotation.JsonCreator;

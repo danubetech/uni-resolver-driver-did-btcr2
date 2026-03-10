@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btcr2.crud.read;
+package uniresolver.driver.did.btcr2.crud.resolve;
 
 import com.danubetech.dataintegrity.DataIntegrityProof;
 import com.danubetech.dataintegrity.suites.DataIntegritySuite;
@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
 import uniresolver.driver.did.btcr2.Network;
-import uniresolver.driver.did.btcr2.appendix.JsonCanonicalizationAndHash;
+import uniresolver.driver.did.btcr2.algorithms.JSONDocumentHashing;
 import uniresolver.driver.did.btcr2.appendix.RootDidBtcr2UpdateCapabilities;
 import uniresolver.driver.did.btcr2.beacons.singleton.CIDAggregateBeacon;
 import uniresolver.driver.did.btcr2.beacons.singleton.SMTAggregateBeacon;
@@ -24,10 +24,10 @@ import uniresolver.driver.did.btcr2.connections.bitcoin.BitcoinConnector;
 import uniresolver.driver.did.btcr2.connections.bitcoin.records.Block;
 import uniresolver.driver.did.btcr2.connections.bitcoin.records.Tx;
 import uniresolver.driver.did.btcr2.connections.ipfs.IPFSConnection;
-import uniresolver.driver.did.btcr2.crud.read.records.Beacon;
-import uniresolver.driver.did.btcr2.crud.read.records.BeaconSignal;
-import uniresolver.driver.did.btcr2.crud.update.jsonld.DIDUpdate;
-import uniresolver.driver.did.btcr2.crud.update.jsonld.RootCapability;
+import uniresolver.driver.did.btcr2.data.records.Beacon;
+import uniresolver.driver.did.btcr2.data.records.BeaconSignal;
+import uniresolver.driver.did.btcr2.data.jsonld.BTCR2Update;
+import uniresolver.driver.did.btcr2.data.jsonld.RootCapability;
 import uniresolver.driver.did.btcr2.dataintegrity.DataIntegrity;
 import uniresolver.driver.did.btcr2.util.HexUtil;
 import uniresolver.driver.did.btcr2.util.JSONPatchUtil;
@@ -42,12 +42,12 @@ public class ResolveTargetDocument {
 
     private static final Logger log = LoggerFactory.getLogger(ResolveTargetDocument.class);
 
-    private Read read;
+    private Resolve resolve;
     private BitcoinConnector bitcoinConnector;
     private IPFSConnection ipfsConnection;
 
-    public ResolveTargetDocument(Read read, BitcoinConnector bitcoinConnector, IPFSConnection ipfsConnection) {
-        this.read = read;
+    public ResolveTargetDocument(Resolve resolve, BitcoinConnector bitcoinConnector, IPFSConnection ipfsConnection) {
+        this.resolve = resolve;
         this.bitcoinConnector = bitcoinConnector;
         this.ipfsConnection = ipfsConnection;
     }
@@ -142,7 +142,7 @@ public class ResolveTargetDocument {
 
         // Set contemporaryHash to the result of passing contemporaryDIDDocument into the JSON Canonicalization and Hash algorithm.
 
-        byte[] contemporaryHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(contemporaryDIDDocument);
+        byte[] contemporaryHash = JSONDocumentHashing.jsonDocumentHashing(contemporaryDIDDocument);
 
         // Find all beacons in contemporaryDIDDocument: All service in contemporaryDIDDocument.service where service.type equals
         // one of SingletonBeacon, CIDAggregateBeacon and SMTAggregateBeacon Beacon.
@@ -188,15 +188,15 @@ public class ResolveTargetDocument {
 
         // Set updates to the result of calling algorithm Process Beacon Signals passing in nextSignals and signalsMetadata.
 
-        List<DIDUpdate> updates = this.processBeaconSignals(nextSignals, signalsMetadata, didDocumentMetadata);
+        List<BTCR2Update> updates = this.processBeaconSignals(nextSignals, signalsMetadata, didDocumentMetadata);
 
         // Set orderedUpdates to the list of updates ordered by the targetVersionId property.
 
-        List<DIDUpdate> orderedUpdates = updates.stream().sorted(Comparator.comparing(DIDUpdate::getTargetVersionId)).toList();
+        List<BTCR2Update> orderedUpdates = updates.stream().sorted(Comparator.comparing(BTCR2Update::getTargetVersionId)).toList();
 
         // For update in orderedUpdates:
 
-        for (DIDUpdate update : orderedUpdates) {
+        for (BTCR2Update update : orderedUpdates) {
 
             // If update.targetVersionId is less than or equal to currentVersionId, run the
             // Confirm Duplicate Update Algorithm passing in update, updateHashHistory, and contemporaryHash.
@@ -242,7 +242,7 @@ public class ResolveTargetDocument {
 
                 // Set unsecuredUpdate to a copy of the update object.
 
-                DIDUpdate unsecuredUpdate = JsonLDUtil.copy(update, DIDUpdate.class);
+                BTCR2Update unsecuredUpdate = JsonLDUtil.copy(update, BTCR2Update.class);
 
                 // Remove the proof property from the unsecuredUpdate object.
 
@@ -250,7 +250,7 @@ public class ResolveTargetDocument {
 
                 // Set updateHash to the result of passing unsecuredUpdate into the JSON Canonicalization and Hash algorithm
 
-                byte[] updateHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(unsecuredUpdate);
+                byte[] updateHash = JSONDocumentHashing.jsonDocumentHashing(unsecuredUpdate);
 
                 // Push updateHash onto updateHashHistory.
 
@@ -259,7 +259,7 @@ public class ResolveTargetDocument {
                 // Set contemporaryHash to result of passing contemporaryDIDDocument into the
                 // JSON Canonicalization and Hash algorithm.
 
-                contemporaryHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(contemporaryDIDDocument);
+                contemporaryHash = JSONDocumentHashing.jsonDocumentHashing(contemporaryDIDDocument);
             }
 
             // If update.targetVersionId is greater than currentVersionId + 1, MUST throw a LatePublishing error.
@@ -370,12 +370,12 @@ public class ResolveTargetDocument {
     }
 
     // See https://dcdpr.github.io/did-btcr2/#process-beacon-signals
-    private List<DIDUpdate> processBeaconSignals(List<BeaconSignal> beaconSignals, Map<String, Object> signalsMetadata, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
+    private List<BTCR2Update> processBeaconSignals(List<BeaconSignal> beaconSignals, Map<String, Object> signalsMetadata, /* TODO: extra, not in spec */ Map<String, Object> didDocumentMetadata) throws ResolutionException {
         if (log.isDebugEnabled()) log.debug("processBeaconSignals ({}, {})", beaconSignals, signalsMetadata);
 
         // Set updates to an empty array.
 
-        List<DIDUpdate> updates = new ArrayList<>();
+        List<BTCR2Update> updates = new ArrayList<>();
 
         // For beaconSignal in beaconSignals:
 
@@ -399,7 +399,7 @@ public class ResolveTargetDocument {
 
             // Set didUpdatePayload to null.
 
-            DIDUpdate didUpdate = switch(type) {
+            BTCR2Update BTCR2Update = switch(type) {
 
                 // If type == SingletonBeacon:
                 //    Set didUpdatePayload to the result of passing signalTx and
@@ -424,7 +424,7 @@ public class ResolveTargetDocument {
 
             // If didUpdatePayload is not null, push didUpdatePayload to updates.
 
-            if (didUpdate != null) updates.add(didUpdate);
+            if (BTCR2Update != null) updates.add(BTCR2Update);
         }
 
         // Return updates.
@@ -434,12 +434,12 @@ public class ResolveTargetDocument {
     }
 
     // See https://dcdpr.github.io/did-btcr2/#confirm-duplicate-update
-    private static void confirmDuplicateUpdate(DIDUpdate update, List<byte[]> updateHashHistory, byte[] contemporaryHash) throws ResolutionException {
+    private static void confirmDuplicateUpdate(BTCR2Update update, List<byte[]> updateHashHistory, byte[] contemporaryHash) throws ResolutionException {
         if (log.isDebugEnabled()) log.debug("confirmDuplicateUpdate ({}, {}, {})", update, updateHashHistory, contemporaryHash);
 
-        DIDUpdate unsecuredUpdate = JsonLDUtil.copy(update, DIDUpdate.class);
+        BTCR2Update unsecuredUpdate = JsonLDUtil.copy(update, BTCR2Update.class);
         JsonLDUtils.jsonLdRemove(unsecuredUpdate, "proof");
-        byte[] updateHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(unsecuredUpdate);
+        byte[] updateHash = JSONDocumentHashing.jsonDocumentHashing(unsecuredUpdate);
         Integer updateHashIndex = update.getTargetVersionId() - 2;
         byte[] historicalUpdateHash = updateHashHistory.get(updateHashIndex);
         if (! Arrays.equals(historicalUpdateHash, updateHash)) {
@@ -448,7 +448,7 @@ public class ResolveTargetDocument {
     }
 
     // See https://dcdpr.github.io/did-btcr2/#apply-did-update
-    private static DIDDocument applyDIDUpdate(DIDDocument contemporaryDIDDocument, DIDUpdate update) throws ResolutionException {
+    private static DIDDocument applyDIDUpdate(DIDDocument contemporaryDIDDocument, BTCR2Update update) throws ResolutionException {
         if (log.isDebugEnabled()) log.debug("applyDIDUpdate ({}, {})", contemporaryDIDDocument, update);
 
         DataIntegrityProof dataIntegrityProof = DataIntegrityProof.getFromJsonLDObject(update);
@@ -486,7 +486,7 @@ public class ResolveTargetDocument {
             throw new ResolutionException("invalidDidDocument", "Invalid target DID document: " + ex.getMessage(), ex);
         }
 
-        byte[] targetHash = JsonCanonicalizationAndHash.jsonCanonicalizationAndHash(targetDIDDocument);
+        byte[] targetHash = JSONDocumentHashing.jsonDocumentHashing(targetDIDDocument);
         try {
             if (! Arrays.equals(targetHash, Base58.decode(update.getTargetHash()))) {
                 throw new ResolutionException("invalidDidUpdate", "targetHash " + Base58.encode(targetHash) + " does not match update.targetHash: " + update.getTargetHash());
@@ -503,12 +503,12 @@ public class ResolveTargetDocument {
      * Getters and setters
      */
 
-    public Read getRead() {
-        return read;
+    public Resolve getRead() {
+        return resolve;
     }
 
-    public void setRead(Read read) {
-        this.read = read;
+    public void setRead(Resolve resolve) {
+        this.resolve = resolve;
     }
 
     public BitcoinConnector getBitcoinConnector() {

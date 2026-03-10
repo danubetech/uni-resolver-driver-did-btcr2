@@ -9,7 +9,8 @@ import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
 import uniresolver.driver.did.btcr2.Network;
 import uniresolver.driver.did.btcr2.appendix.Bech32mEncoding;
-import uniresolver.driver.did.btcr2.syntax.records.IdentifierComponents;
+import uniresolver.driver.did.btcr2.data.records.GenesisBytesType;
+import uniresolver.driver.did.btcr2.data.records.IdentifierComponents;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,22 +21,22 @@ public class DidBtcr2IdentifierEncoding {
     private static final Logger log = LoggerFactory.getLogger(DidBtcr2IdentifierEncoding.class);
 
     /*
-     * 4.2 did:btcr2 Identifier Encoding
+     * DID-BTCR2 Identifier Encoding
      */
 
-    // See https://dcdpr.github.io/did-btcr2/#didbtcr2-identifier-encoding
-    public static DID didBtcr2IdentifierEncoding(String idType, Integer version, Object networkValue, byte[] genesisBytes) throws ResolutionException {
+    // See https://dcdpr.github.io/did-btcr2/algorithms.html#did-btcr2-identifier-encoding
+    public static DID didBtcr2IdentifierEncoding(Integer version, Object networkValue, byte[] genesisBytes, GenesisBytesType genesisBytesType) throws ResolutionException {
+
+        // The version_number value MUST be 1, declaring the encoding follows this specification.
+
+        if (version > 1) {
+            throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Unsupported 'version' value: " + version);
+        }
 
         // If idType is not a valid value per above, raise invalidDid error.
 
         if (! "key".equals(idType) && ! "external".equals(idType)) {
             throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Invalid 'idType' value: " + idType);
-        }
-
-        // If version is greater than 1, raise invalidDid error.
-
-        if (version > 1) {
-            throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Unsupported 'version' value: " + version);
         }
 
         // If network is not a valid value per above, raise invalidDid error.
