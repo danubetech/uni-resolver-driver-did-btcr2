@@ -7,11 +7,11 @@ import uniresolver.driver.did.btcr2.data.jsonld.BTCR2Update;
 
 import java.util.Map;
 
-public class SMTAggregateBeacon {
+public class SMTBeacon {
 
-    private static final Logger log = LoggerFactory.getLogger(SMTAggregateBeacon.class);
+    private static final Logger log = LoggerFactory.getLogger(SMTBeacon.class);
 
-    public static final String TYPE = "SMTAggregateBeacon";
+    public static final String TYPE = "SMTBeacon";
 
     /*
      * 5.3.3 Process SMTAggregate Beacon Signal

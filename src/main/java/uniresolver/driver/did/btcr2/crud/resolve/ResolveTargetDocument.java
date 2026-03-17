@@ -17,8 +17,8 @@ import uniresolver.ResolutionException;
 import uniresolver.driver.did.btcr2.Network;
 import uniresolver.driver.did.btcr2.algorithms.JSONDocumentHashing;
 import uniresolver.driver.did.btcr2.appendix.RootDidBtcr2UpdateCapabilities;
-import uniresolver.driver.did.btcr2.beacons.singleton.CIDAggregateBeacon;
-import uniresolver.driver.did.btcr2.beacons.singleton.SMTAggregateBeacon;
+import uniresolver.driver.did.btcr2.beacons.singleton.CASBeacon;
+import uniresolver.driver.did.btcr2.beacons.singleton.SMTBeacon;
 import uniresolver.driver.did.btcr2.beacons.singleton.SingletonBeacon;
 import uniresolver.driver.did.btcr2.connections.bitcoin.BitcoinConnector;
 import uniresolver.driver.did.btcr2.connections.bitcoin.records.Block;
@@ -147,7 +147,7 @@ public class ResolveTargetDocument {
         // Find all beacons in contemporaryDIDDocument: All service in contemporaryDIDDocument.service where service.type equals
         // one of SingletonBeacon, CIDAggregateBeacon and SMTAggregateBeacon Beacon.
 
-        List<Service> beaconServices = contemporaryDIDDocument.getServices().stream().filter(service -> Arrays.asList(SingletonBeacon.TYPE, CIDAggregateBeacon.TYPE, SMTAggregateBeacon.TYPE).contains(service.getType())).toList();
+        List<Service> beaconServices = contemporaryDIDDocument.getServices().stream().filter(service -> Arrays.asList(SingletonBeacon.TYPE, CASBeacon.TYPE, SMTBeacon.TYPE).contains(service.getType())).toList();
 
         // For each beacon in beacons convert the beacon.serviceEndpoint to a Bitcoin address following BIP21.
         // Set beacon.address to the Bitcoin address.
@@ -411,13 +411,13 @@ public class ResolveTargetDocument {
                 //    Set didUpdatePayload to the result of passing signalTx and
                 //    signalSidecarData to the Process CIDAggregate Beacon Signal algorithm.
 
-                case CIDAggregateBeacon.TYPE -> CIDAggregateBeacon.processCIDAggregateBeaconSignal(signalTx, signalSidecarData);
+                case CASBeacon.TYPE -> CASBeacon.processCIDAggregateBeaconSignal(signalTx, signalSidecarData);
 
                 // If type == SMTAggregateBeacon:
                 //    Set didUpdatePayload to the result of passing signalTx and
                 //    signalSidecarData to the Process SMTAggregate Beacon Signal algorithm.
 
-                case SMTAggregateBeacon.TYPE -> SMTAggregateBeacon.processSMTAggregateBeaconSignal(signalTx, signalSidecarData);
+                case SMTBeacon.TYPE -> SMTBeacon.processSMTAggregateBeaconSignal(signalTx, signalSidecarData);
 
                 default -> null;
             };

@@ -3,18 +3,27 @@ package uniresolver.driver.did.btcr2.crud.resolve;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
+import foundation.identity.did.Service;
 import fr.acinq.bitcoin.BlockHash;
+import fr.acinq.bitcoin.PublicKey;
 import io.ipfs.multibase.binary.Base64;
 import io.leonard.Base58;
+import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.bitcoinj.base.Address;
 import org.bitcoinj.base.AddressParser;
 import org.bitcoinj.uri.BitcoinURI;
+import org.bitcoinj.uri.BitcoinURIParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
 import uniresolver.driver.did.btcr2.Network;
 import uniresolver.driver.did.btcr2.algorithms.JSONDocumentHashing;
+import uniresolver.driver.did.btcr2.beacons.singleton.CASBeacon;
+import uniresolver.driver.did.btcr2.beacons.singleton.SMTBeacon;
+import uniresolver.driver.did.btcr2.beacons.singleton.SingletonBeacon;
 import uniresolver.driver.did.btcr2.connections.bitcoin.BitcoinConnector;
+import uniresolver.driver.did.btcr2.connections.bitcoin.records.Tx;
 import uniresolver.driver.did.btcr2.connections.ipfs.IPFSConnection;
 import uniresolver.driver.did.btcr2.data.json.CASAnnouncement;
 import uniresolver.driver.did.btcr2.data.json.SMTProof;
@@ -25,10 +34,9 @@ import uniresolver.driver.did.btcr2.data.records.IdentifierComponents;
 import uniresolver.driver.did.btcr2.syntax.DidBtcr2IdentifierDecoding;
 import uniresolver.result.ResolveResult;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Resolve {
@@ -83,6 +91,7 @@ public class Resolve {
                   ]
                 }
             """;
+    private static final Pattern PATTERN_TX_SIGNALBYTES = Pattern.compile("^OP_RETURN OP_PUSHBYTES_32 ([0-9a-fA-F]{64})$");
 
     private static final Logger log = LoggerFactory.getLogger(Resolve.class);
 
@@ -166,62 +175,164 @@ public class Resolve {
 
         // Resolution begins by creating an Initial Did Document called current_document (Current DID Document).
 
-        DIDDocument current_document = null;
+        DIDDocument current_document;
 
-        /*
-         * If genesis_bytes is a SHA-256 Hash
-         * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#if-genesis_bytes-is-a-sha-256-hash
-         */
+        // Choose how to establish current_document based on the type of genesis_bytes retrieved from the decoded did:
 
-        if (GenesisBytesType.SHA256HASH == identifierComponents.genesisBytesType()) {
+        current_document = switch (identifierComponents.genesisBytesType()) {
 
-            // Process the Genesis Document provided in sidecar.genesisDocument by replacing the identifier
-            // placeholder ("did:btcr2:_") with the did.
+            /*
+             * If genesis_bytes is a SHA-256 Hash
+             * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#if-genesis_bytes-is-a-sha-256-hash
+             */
 
-            DIDDocument genesisDocument = sidecar.getGenesisDocument();
-            if (genesisDocument == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "Missing genesis document in sidecar data");
-            current_document = DIDDocument.fromJson(sidecar.getGenesisDocument().toJson().replace("did:btcr2:_", identifier.getDidString()));
-        }
+            case SHA256HASH -> {
 
-        /*
-         * If genesis_bytes is a secp256k1 Public Key
-         * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#if-genesis_bytes-is-a-secp256k1-public-key
-         */
+                // Process the Genesis Document provided in sidecar.genesisDocument by replacing the identifier
+                // placeholder ("did:btcr2:_") with the did.
 
-        if (GenesisBytesType.SECP256K1PUBLICKEY == identifierComponents.genesisBytesType()) {
+                DIDDocument genesisDocument = sidecar == null ? null : sidecar.getGenesisDocument();
+                if (genesisDocument == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "Missing genesis document in sidecar data");
+                yield DIDDocument.fromJson(sidecar.getGenesisDocument().toJson().replace("did:btcr2:_", identifier.getDidString()));
+            }
 
-            // Render the Initial DID Document template with these values
-            // (Bitcoin addresses MUST use the Bitcoin URI Scheme [BIP321]):
+            /*
+             * If genesis_bytes is a secp256k1 Public Key
+             * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#if-genesis_bytes-is-a-secp256k1-public-key
+             */
 
-            byte[] publicKeyBytes = identifierComponents.genesisBytes();
-            AddressParser addressParser = AddressParser.getDefault();
-            Network network = identifierComponents.network();
-            fr.acinq.bitcoin.PublicKey initialPublicKey = fr.acinq.bitcoin.PublicKey.parse(publicKeyBytes);
+            case SECP256K1PUBLICKEY -> {
 
-            String did = identifier.getDidString();
-            String public_key_multikey = Base58.encode(publicKeyBytes);
-            String p2pkh_bitcoin_address = BitcoinURI.convertToBitcoinURI(network.toBitcoinjNetwork(), AddressParser.getDefault().parseAddress(initialPublicKey.p2pkhAddress(new BlockHash(this.getBitcoinConnector().getGensisHash(network)))).toString(), null, null, null);
-            String p2wpkh_bitcoin_address = BitcoinURI.convertToBitcoinURI(network.toBitcoinjNetwork(), AddressParser.getDefault().parseAddress(initialPublicKey.p2wpkhAddress(new BlockHash(this.getBitcoinConnector().getGensisHash(network)))).toString(), null, null, null);
-            String p2tr_bitcoin_address = BitcoinURI.convertToBitcoinURI(network.toBitcoinjNetwork(), AddressParser.getDefault().parseAddress(initialPublicKey.p2trAddress(new BlockHash(this.getBitcoinConnector().getGensisHash(network)))).toString(), null, null, null);
+                // Render the Initial DID Document template with these values
+                // (Bitcoin addresses MUST use the Bitcoin URI Scheme [BIP321]):
 
-            String initialDidDocumentString = INITIAL_DID_DOCUMENT_TEMPLATE
-                    .replace("{{did}}", did)
-                    .replace("{{public-key-multikey}}", public_key_multikey)
-                    .replace("{{p2pkh-bitcoin-address}}", p2pkh_bitcoin_address)
-                    .replace("{{p2wpkh-bitcoin-address}}", p2wpkh_bitcoin_address)
-                    .replace("{{p2tr-bitcoin-address}}", p2tr_bitcoin_address);
+                byte[] publicKeyBytes = identifierComponents.genesisBytes();
+                AddressParser addressParser = AddressParser.getDefault();
+                Network network = identifierComponents.network();
+                PublicKey initialPublicKey = PublicKey.parse(publicKeyBytes);
 
-            // Parse the rendered template as JSON to form current_document.
+                String did = identifier.getDidString();
+                String public_key_multikey = Base58.encode(publicKeyBytes);
+                String p2pkh_bitcoin_address = BitcoinURI.convertToBitcoinURI(network.toBitcoinjNetwork(), addressParser.parseAddress(initialPublicKey.p2pkhAddress(new BlockHash(this.getBitcoinConnector().getGensisHash(network)))).toString(), null, null, null);
+                String p2wpkh_bitcoin_address = BitcoinURI.convertToBitcoinURI(network.toBitcoinjNetwork(), addressParser.parseAddress(initialPublicKey.p2wpkhAddress(new BlockHash(this.getBitcoinConnector().getGensisHash(network)))).toString(), null, null, null);
+                String p2tr_bitcoin_address = BitcoinURI.convertToBitcoinURI(network.toBitcoinjNetwork(), addressParser.parseAddress(initialPublicKey.p2trAddress(new BlockHash(this.getBitcoinConnector().getGensisHash(network)))).toString(), null, null, null);
 
-            current_document = DIDDocument.fromJson(initialDidDocumentString);
-        }
+                String initialDidDocumentString = INITIAL_DID_DOCUMENT_TEMPLATE
+                        .replace("{{did}}", did)
+                        .replace("{{public-key-multikey}}", public_key_multikey)
+                        .replace("{{p2pkh-bitcoin-address}}", p2pkh_bitcoin_address)
+                        .replace("{{p2wpkh-bitcoin-address}}", p2wpkh_bitcoin_address)
+                        .replace("{{p2tr-bitcoin-address}}", p2tr_bitcoin_address);
+
+                // Parse the rendered template as JSON to form current_document.
+
+                yield DIDDocument.fromJson(initialDidDocumentString);
+            }
+        };
 
         /*
          * Process Beacon Signals
          * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#process-beacon-signals
          */
 
-        // TODO
+        // Scan the service entries in current_document (DID Document (data structure))
+        // and identify BTCR2 Beacons by matching service type to Beacons Table 1: Beacon Types.
+
+        List<Service> beaconServices = current_document.getServices();
+        if (beaconServices == null) {
+            if (log.isWarnEnabled()) log.warn("No services found in current_document: " + current_document);
+        } else {
+            beaconServices = beaconServices.stream().filter(service -> Arrays.asList(SingletonBeacon.TYPE, CASBeacon.TYPE, SMTBeacon.TYPE).contains(service.getType())).toList();
+            if (beaconServices.isEmpty()) {
+                if (log.isWarnEnabled()) log.warn("No beacon services found in current_document: " + current_document);
+            }
+        }
+
+        // Parse each beacon serviceEndpoint as a Beacon Address
+
+        Map<Address, String> beaconAddresses = new LinkedHashMap<>();
+        if (beaconServices != null) {
+            for (Service beaconService : beaconServices) {
+                try {
+                    Address beaconAddress = BitcoinURI.of((beaconService.getServiceEndpoint()).toString()).getAddress();
+                    String beaconServiceType = beaconService.getType();
+                    if (log.isDebugEnabled()) log.debug("Adding beacon address " + beaconAddress + " for service type " + beaconServiceType);
+                    beaconAddresses.put(beaconAddress, beaconServiceType);
+                } catch (BitcoinURIParseException ex) {
+                    throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "Cannot parse Bitcoin address: " + beaconService.getServiceEndpoint());
+                }
+            }
+        }
+
+        // then use those Beacon Addresses to find Bitcoin transactions whose last output script contains Signal Bytes.
+
+        Map<Tx, String> beaconsServiceTypes = new LinkedHashMap<>();
+        Map<Tx, byte[]> beaconsSignalBytes = new LinkedHashMap<>();
+        for (Map.Entry<Address, String> beaconTransactionEntry : beaconAddresses.entrySet()) {
+            Address beaconAddress = beaconTransactionEntry.getKey();
+            String beaconServiceType = beaconTransactionEntry.getValue();
+            for (Tx beaconTransaction : this.getBitcoinConnector().getBitcoinConnection(identifierComponents.network()).getAddressTransactions(beaconAddress)) {
+                Matcher matcher = PATTERN_TX_SIGNALBYTES.matcher(beaconTransaction.txOuts().getLast().asm());
+                if (! matcher.matches()) {
+                    if (log.isDebugEnabled()) log.debug("Transaction {} does not have signal bytes. Skipping.", beaconTransaction);
+                    continue;
+                }
+                String beaconSignalBytesString = matcher.group(1);
+                byte[] beaconSignalBytes;
+                try {
+                    beaconSignalBytes = Hex.decodeHex(matcher.group(1));
+                } catch (DecoderException ex) {
+                    if (log.isWarnEnabled()) log.warn("Transaction {} has invalid signal bytes: {}. Skipping.", beaconTransaction, beaconSignalBytesString);
+                    continue;
+                }
+                if (log.isDebugEnabled()) log.debug("Transaction {} has service type {} and signal bytes {}. Adding.", beaconTransaction, beaconServiceType, beaconSignalBytesString);
+                beaconsServiceTypes.put(beaconTransaction, beaconServiceType);
+                beaconsSignalBytes.put(beaconTransaction, beaconSignalBytes);
+            }
+        }
+
+        // For each transaction found:
+
+        for (Tx beaconTransaction : beaconsServiceTypes.keySet()) {
+
+            String beaconServiceType = beaconsServiceTypes.get(beaconTransaction);
+            byte[] beaconSignalBytes = beaconsSignalBytes.get(beaconTransaction);
+
+            // Derive update_hash from the transaction’s Signal Bytes based on the beacon type:
+
+            byte[] update_hash = switch (beaconServiceType) {
+
+                case SingletonBeacon.TYPE ->
+                        // update_hash is the Signal Bytes.
+                        beaconSignalBytes;
+
+                case CASBeacon.TYPE ->
+                        // use Process CAS Beacon.
+                        processCASBeacon(beaconSignalBytes, cas_lookup_table);
+
+                case SMTBeacon.TYPE ->
+                        // use Process SMT Beacon.
+                        processSMTBeacon(beaconSignalBytes, smt_lookup_table);
+
+                default -> null;
+            };
+
+            if (update_hash == null) {
+                if (log.isWarnEnabled()) log.warn("Transaction {} with service type {} has no update_hash. Skipping.", beaconTransaction, beaconServiceType);
+                continue;
+            }
+
+
+            // Build a tuple with:
+
+
+        }
+
+
+
+
+
+
 
         // didResolutionMetadata
 
@@ -241,6 +352,14 @@ public class Resolve {
         ResolveResult resolveResult = ResolveResult.build(didResolutionMetadata, current_document, didDocumentMetadata);
         if (log.isDebugEnabled()) log.debug("resolve: " + current_document);
         return resolveResult;
+    }
+
+    private static byte[] processCASBeacon(byte[] signalBytes, Map<byte[], CASAnnouncement> cas_lookup_table) {
+
+    }
+
+    private static byte[] processSMTBeacon(byte[] signalBytes, Map<String, SMTProof> smt_lookup_table) {
+
     }
 
     /*

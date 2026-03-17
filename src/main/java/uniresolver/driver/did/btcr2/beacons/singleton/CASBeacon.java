@@ -7,11 +7,11 @@ import uniresolver.driver.did.btcr2.data.jsonld.BTCR2Update;
 
 import java.util.Map;
 
-public class CIDAggregateBeacon {
+public class CASBeacon {
 
-    private static final Logger log = LoggerFactory.getLogger(CIDAggregateBeacon.class);
+    private static final Logger log = LoggerFactory.getLogger(CASBeacon.class);
 
-    public static final String TYPE = "CIDAggregateBeacon";
+    public static final String TYPE = "CASBeacon";
 
     /*
      * 5.2.3 Process CIDAggregate Beacon Signal
