@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btcr2.beacons.singleton;
+package uniresolver.driver.did.btcr2.beacons;
 
 import foundation.identity.did.Service;
 import org.bitcoinj.base.Address;

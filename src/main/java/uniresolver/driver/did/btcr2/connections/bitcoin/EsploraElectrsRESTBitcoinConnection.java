@@ -66,16 +66,16 @@ public class EsploraElectrsRESTBitcoinConnection extends AbstractBitcoinConnecti
 	}
 
 	@Override
-	public Block getBlockByTransaction(String txid) {
-		URI apiEndpoint = URI.create(this.apiEndpointBase + "tx/" + txid);
+	public Block getBlockByTransaction(Tx tx) {
+		URI apiEndpoint = URI.create(this.apiEndpointBase + "tx/" + tx.txId());
 		Map<String, Object> response = readObject(apiEndpoint);
 		Map<String, Object> status = (Map<String, Object>) response.get("status");
 		Integer blockHeight = status == null ? null : ((Number) status.get("block_height")).intValue();
 		String blockHash = status == null ? null : (String) status.get("block_hash");
 		Long blockTime = status == null ? null : ((Number) status.get("block_time")).longValue();
-		List<Tx> txs = null;
-		Block block = new Block(blockHeight, blockHash, blockTime, txs);
-		if (log.isDebugEnabled()) log.debug("getBlockByTransaction for {}: {}", txid, block);
+		Integer confirmations = status == null ? null : (((Boolean) status.get("confirmed")) ? 1 : 0);
+		Block block = new Block(blockHeight, blockHash, blockTime, confirmations);
+		if (log.isDebugEnabled()) log.debug("getBlockByTransaction for {}: {}", tx, block);
 		return block;
 	}
 
@@ -85,10 +85,9 @@ public class EsploraElectrsRESTBitcoinConnection extends AbstractBitcoinConnecti
 
 	private static Tx txFromMap(Map<String, Object> map) {
 		String txId = (String) map.get("txid");
-		String txHex = null;
 		List<TxIn> txIns = ((List<Map<String, Object>>) map.get("vin")).stream().map(EsploraElectrsRESTBitcoinConnection::txInFromMap).toList();
 		List<TxOut> txOuts = ((List<Map<String, Object>>) map.get("vout")).stream().map(EsploraElectrsRESTBitcoinConnection::txOutFromMap).toList();
-		return new Tx(txId, txHex, txIns, txOuts);
+		return new Tx(txId, txIns, txOuts);
 	}
 
 	private static TxIn txInFromMap(Map<String, Object> map) {

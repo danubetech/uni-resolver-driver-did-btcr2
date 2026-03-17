@@ -13,5 +13,5 @@ public interface BitcoinConnection {
     Block getBlockByTargetTime(Long targetTime);
     Block getBlockByMinConfirmations(Integer confirmations);
     List<Tx> getAddressTransactions(Address address);
-    Block getBlockByTransaction(String txid);
+    Block getBlockByTransaction(Tx tx);
 }

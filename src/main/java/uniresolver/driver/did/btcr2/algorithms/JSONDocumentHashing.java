@@ -17,7 +17,6 @@ import java.util.Map;
  * JSON Document Hashing
  * See https://dcdpr.github.io/did-btcr2/algorithms.html#json-document-hashing
  */
-
 public class JSONDocumentHashing {
 
     private static final Logger log = LoggerFactory.getLogger(JSONDocumentHashing.class);

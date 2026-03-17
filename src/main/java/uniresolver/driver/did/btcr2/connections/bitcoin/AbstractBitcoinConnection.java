@@ -34,7 +34,7 @@ public abstract class AbstractBitcoinConnection implements BitcoinConnection {
     }
 
     @Override
-    public Block getBlockByTransaction(String txid) {
+    public Block getBlockByTransaction(Tx tx) {
         throw new RuntimeException("Not implemented");
     }
 }

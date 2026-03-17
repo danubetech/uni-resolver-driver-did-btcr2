@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
 import uniresolver.driver.did.btcr2.Network;
 import uniresolver.driver.did.btcr2.algorithms.JSONDocumentHashing;
-import uniresolver.driver.did.btcr2.beacons.singleton.SingletonBeacon;
+import uniresolver.driver.did.btcr2.beacons.SingletonBeacon;
 import uniresolver.driver.did.btcr2.connections.bitcoin.BitcoinConnector;
 import uniresolver.driver.did.btcr2.connections.ipfs.IPFSConnection;
 import uniresolver.driver.did.btcr2.data.records.IdentifierComponents;

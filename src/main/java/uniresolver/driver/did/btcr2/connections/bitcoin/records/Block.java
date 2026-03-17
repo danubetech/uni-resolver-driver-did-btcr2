@@ -6,5 +6,5 @@ public record Block(
         Integer blockHeight,
         String blockHash,
         Long blockTime,
-        List<Tx> txs) {
+        Integer confirmations) {
 }

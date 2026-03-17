@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btcr2.beacons.singleton;
+package uniresolver.driver.did.btcr2.beacons;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
