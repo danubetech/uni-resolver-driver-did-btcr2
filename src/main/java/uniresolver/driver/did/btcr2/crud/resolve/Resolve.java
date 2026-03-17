@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
 import foundation.identity.did.Service;
+import foundation.identity.did.representations.Representations;
 import foundation.identity.did.validation.Validation;
 import foundation.identity.jsonld.JsonLDUtils;
 import fr.acinq.bitcoin.BlockHash;
@@ -426,6 +427,7 @@ public class Resolve {
         // done
 
         Map<String, Object> didResolutionMetadata = new LinkedHashMap<>();
+        didResolutionMetadata.put("contentType", Representations.DEFAULT_MEDIA_TYPE);
         Map<String, Object> didDocumentMetadata = new LinkedHashMap<>();
         didDocumentMetadata.put("versionId", Integer.toString(current_version_id));
         didDocumentMetadata.put("confirmations", (block_confirmations == null ? null : block_confirmations.toString()));

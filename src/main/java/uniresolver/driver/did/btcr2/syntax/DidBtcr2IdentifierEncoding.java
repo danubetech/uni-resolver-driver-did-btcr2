@@ -35,8 +35,8 @@ public class DidBtcr2IdentifierEncoding {
 
         // If idType is not a valid value per above, raise invalidDid error.
 
-        if (! "key".equals(idType) && ! "external".equals(idType)) {
-            throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Invalid 'idType' value: " + idType);
+        if (GenesisBytesType.SECP256K1PUBLICKEY != genesisBytesType && GenesisBytesType.SHA256HASH != genesisBytesType) {
+            throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Invalid 'idType' value: " + genesisBytesType);
         }
 
         // If network is not a valid value per above, raise invalidDid error.
@@ -55,7 +55,7 @@ public class DidBtcr2IdentifierEncoding {
 
         // If idType is “key” and genesisBytes is not a valid compressed secp256k1 public key, raise invalidDid error.
 
-        if ("key".equals(idType)) {
+        if (GenesisBytesType.SECP256K1PUBLICKEY != genesisBytesType) {
             try {
                 ECKey ecKey = ECKey.fromPublicOnly(genesisBytes);
                 if (! ecKey.isCompressed()) throw new IllegalArgumentException("Not compressed");
@@ -66,10 +66,10 @@ public class DidBtcr2IdentifierEncoding {
 
         // Map idType to hrp from the following:
 
-        String hrp = switch (idType) {
-            case "key" -> "k";
-            case "external" -> "x";
-            default -> throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Invalid 'idType' value in: " + idType);
+        String hrp = switch (genesisBytesType) {
+            case GenesisBytesType.SECP256K1PUBLICKEY -> "k";
+            case GenesisBytesType.SHA256HASH -> "x";
+            default -> throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Invalid 'idType' value in: " + genesisBytesType);
         };
 
         // Create an empty nibbles numeric array.
@@ -147,6 +147,6 @@ public class DidBtcr2IdentifierEncoding {
     // See https://dcdpr.github.io/did-btcr2/#didbtcr2-identifier-encoding
     public static DID didBtcr2IdentifierEncoding(IdentifierComponents identifierComponents) throws ResolutionException {
 
-        return didBtcr2IdentifierEncoding(identifierComponents.idType(), identifierComponents.version(), identifierComponents.network(), identifierComponents.genesisBytes());
+        return didBtcr2IdentifierEncoding(identifierComponents.version(), identifierComponents.network(), identifierComponents.genesisBytes(), identifierComponents.genesisBytesType());
     }
 }

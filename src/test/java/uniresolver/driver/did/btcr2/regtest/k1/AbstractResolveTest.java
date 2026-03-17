@@ -6,10 +6,7 @@ import foundation.identity.did.DIDDocument;
 import org.erdtman.jcs.JsonCanonicalizer;
 import org.junit.jupiter.api.Test;
 import uniresolver.driver.did.btcr2.crud.resolve.Resolve;
-import uniresolver.driver.did.btcr2.syntax.DidBtcr2IdentifierDecoding;
-import uniresolver.driver.did.btcr2.data.records.IdentifierComponents;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,19 +31,18 @@ public abstract class AbstractResolveTest {
 
 		DID identifier = DID.fromString(input.did());
 		Map<String, Object> resolutionOptions = input.sidecar();
-		Map<String, Object> didDocumentMetadata = new HashMap<>();
 
-		IdentifierComponents identifierComponents = DidBtcr2IdentifierDecoding.didBtcr2IdentifierDecoding(identifier);
+		uniresolver.result.ResolveResult resolveResult = resolve.resolve(identifier, resolutionOptions);
 
-		DIDDocument initialDIDDocument = resolve.getResolveInitialDocument().resolveInitialDIDDocument(identifier, identifierComponents, resolutionOptions, didDocumentMetadata);
-		String initialDIDDocumentCanonicalized = new JsonCanonicalizer(initialDIDDocument.toJson()).getEncodedString();
-		Map<String, Object> initialDIDDocumentMap = (Map<String, Object>) objectMapper.readValue(initialDIDDocumentCanonicalized, Map.class);
+		DIDDocument resolvedDIDDocument = resolveResult.getDidDocument();
+		String resolvedDIDDocumentCanonicalized = new JsonCanonicalizer(resolvedDIDDocument.toJson()).getEncodedString();
+		Map<String, Object> resolvedDIDDocumentMap = (Map<String, Object>) objectMapper.readValue(resolvedDIDDocumentCanonicalized, Map.class);
 
-		DIDDocument expectedInitialDIDDocument = output.didDocument();
-		String expectedInitialDIDDocumentCanonicalized = new JsonCanonicalizer(expectedInitialDIDDocument.toJson()).getEncodedString();
-		Map<String, Object> expectedInitialDIDDocumentMap = (Map<String, Object>) objectMapper.readValue(expectedInitialDIDDocumentCanonicalized, Map.class);
+		DIDDocument expectedDIDDocument = output.didDocument();
+		String expectedDIDDocumentCanonicalized = new JsonCanonicalizer(expectedDIDDocument.toJson()).getEncodedString();
+		Map<String, Object> expectedDIDDocumentMap = (Map<String, Object>) objectMapper.readValue(expectedDIDDocumentCanonicalized, Map.class);
 
-		assertEquals(expectedInitialDIDDocumentCanonicalized, initialDIDDocumentCanonicalized);
-		assertEquals(expectedInitialDIDDocumentMap, initialDIDDocumentMap);
+		assertEquals(expectedDIDDocumentCanonicalized, resolvedDIDDocumentCanonicalized);
+		assertEquals(expectedDIDDocumentMap, resolvedDIDDocumentMap);
 	}
 }

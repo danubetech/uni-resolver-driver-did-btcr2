@@ -99,7 +99,7 @@ public class Configuration {
 
             // configure
 
-            didBtcr2Driver.setRead(new Resolve(bitcoinConnector, ipfsConnection));
+            didBtcr2Driver.setResolve(new Resolve(bitcoinConnector, ipfsConnection));
         } catch (IllegalArgumentException ex) {
             throw ex;
         } catch (Exception ex) {
