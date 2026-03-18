@@ -11,8 +11,8 @@ import foundation.identity.did.validation.Validation;
 import foundation.identity.jsonld.JsonLDUtils;
 import fr.acinq.bitcoin.BlockHash;
 import fr.acinq.bitcoin.PublicKey;
+import io.ipfs.multibase.Multibase;
 import io.ipfs.multibase.binary.Base64;
-import io.leonard.Base58;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.bitcoinj.base.Address;
@@ -43,6 +43,7 @@ import uniresolver.driver.did.btcr2.syntax.DidBtcr2IdentifierDecoding;
 import uniresolver.driver.did.btcr2.util.JSONPatchUtil;
 import uniresolver.result.ResolveResult;
 
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -58,9 +59,6 @@ public class Resolve {
                     "https://btcr2.dev/context/v1"
                   ],
                   "id": "{{did}}",
-                  "controller": [
-                    "{{did}}"
-                  ],
                   "verificationMethod": [
                     {
                       "id": "{{did}}#initialKey",
@@ -128,7 +126,7 @@ public class Resolve {
         List<Map.Entry<Block, BTCR2Update>> updates = new ArrayList<>();
         DIDDocument current_document;
         int current_version_id = 1;
-        List<byte[]> update_hash_history = new ArrayList<>();
+        List<ByteBuffer> update_hash_history = new ArrayList<>();
         Integer block_confirmations = null;
 
         /*
@@ -154,18 +152,18 @@ public class Resolve {
         // and build a map from hash to update (update_lookup_table).
 
         List<BTCR2Update> sidecarUpdates = sidecar == null ? null : sidecar.getUpdates();
-        Map<byte[], BTCR2Update> update_lookup_table = sidecarUpdates == null ? null : sidecarUpdates.stream().collect(Collectors.toMap(JSONDocumentHashing::jsonDocumentHashing, btcr2Update -> btcr2Update));
+        Map<ByteBuffer, BTCR2Update> update_lookup_table = sidecarUpdates == null ? null : sidecarUpdates.stream().collect(Collectors.toMap(update -> ByteBuffer.wrap(JSONDocumentHashing.jsonDocumentHashing(update)), update -> update));
 
         // Hash each CAS Announcement (data structure) in sidecar.casUpdates with the JSON Document Hashing algorithm
         // and build a map from hash to announcement (cas_lookup_table).
 
         List<CASAnnouncement> sidecarCasUpdates = sidecar == null ? null : sidecar.getCasUpdates();
-        Map<byte[], CASAnnouncement> cas_lookup_table = sidecarCasUpdates == null ? null : sidecarCasUpdates.stream().collect(Collectors.toMap(JSONDocumentHashing::jsonDocumentHashing, casAnnouncement -> casAnnouncement));
+        Map<ByteBuffer, CASAnnouncement> cas_lookup_table = sidecarCasUpdates == null ? null : sidecarCasUpdates.stream().collect(Collectors.toMap(casAnnouncement -> ByteBuffer.wrap(JSONDocumentHashing.jsonDocumentHashing(casAnnouncement)), casAnnouncement -> casAnnouncement));
 
         // Build a map from sidecar.smtProofs keyed by proof id (smt_lookup_table).
 
         List<SMTProof> smtProofs = sidecar == null ? null : sidecar.getSmtProofs();
-        Map<byte[], SMTProof> smt_lookup_table = smtProofs == null ? null : smtProofs.stream().collect(Collectors.toMap(smtProof -> Base64.decodeBase64(smtProof.getId()), smtProof -> smtProof));
+        Map<ByteBuffer, SMTProof> smt_lookup_table = smtProofs == null ? null : smtProofs.stream().collect(Collectors.toMap(smtProof -> ByteBuffer.wrap(Base64.decodeBase64(smtProof.getId())), smtProof -> smtProof));
 
         // If genesis_bytes is a SHA-256 hash, hash sidecar.genesisDocument with the JSON Document Hashing algorithm.
         // Raise an INVALID_DID error if the computed hash does not match genesis_bytes.
@@ -222,7 +220,7 @@ public class Resolve {
                 PublicKey initialPublicKey = PublicKey.parse(publicKeyBytes);
 
                 String did = identifier.getDidString();
-                String public_key_multikey = Base58.encode(publicKeyBytes);
+                String public_key_multikey = publicKeyMultikey(publicKeyBytes);
                 String p2pkh_bitcoin_address = BitcoinURI.convertToBitcoinURI(network.toBitcoinjNetwork(), addressParser.parseAddress(initialPublicKey.p2pkhAddress(new BlockHash(this.getBitcoinConnector().getGensisHash(network)))).toString(), null, null, null);
                 String p2wpkh_bitcoin_address = BitcoinURI.convertToBitcoinURI(network.toBitcoinjNetwork(), addressParser.parseAddress(initialPublicKey.p2wpkhAddress(new BlockHash(this.getBitcoinConnector().getGensisHash(network)))).toString(), null, null, null);
                 String p2tr_bitcoin_address = BitcoinURI.convertToBitcoinURI(network.toBitcoinjNetwork(), addressParser.parseAddress(initialPublicKey.p2trAddress(new BlockHash(this.getBitcoinConnector().getGensisHash(network)))).toString(), null, null, null);
@@ -312,7 +310,7 @@ public class Resolve {
 
             // For each transaction found:
 
-            for (Tx beaconTransaction : beaconsServiceTypes.keySet()) {
+            for (Tx beaconTransaction : beaconsBlocks.keySet()) {
 
                 Block beaconBlock = beaconsBlocks.get(beaconTransaction);
                 String beaconServiceType = beaconsServiceTypes.get(beaconTransaction);
@@ -348,7 +346,7 @@ public class Resolve {
 
                 if (update_lookup_table == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "No update_lookup_table provided");
 
-                BTCR2Update update = update_lookup_table.get(update_hash);
+                BTCR2Update update = update_lookup_table.get(ByteBuffer.wrap(update_hash));
                 if (update == null) throw new ResolutionException("MISSING_UPDATE_DATA", "No update found for update_hash " + Base64.encodeBase64String(update_hash));
 
                 Map.Entry<Block, BTCR2Update> updateTuple = Map.entry(beaconBlock, update);
@@ -450,7 +448,7 @@ public class Resolve {
      * Process CAS Beacon
      * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#process-cas-beacon
      */
-    private static byte[] processCASBeacon(byte[] signalBytes, DID did, Map<byte[], CASAnnouncement> cas_lookup_table) throws ResolutionException {
+    private static byte[] processCASBeacon(byte[] signalBytes, DID did, Map<ByteBuffer, CASAnnouncement> cas_lookup_table) throws ResolutionException {
 
         if (cas_lookup_table == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "No cas_lookup_table provided");
 
@@ -460,7 +458,7 @@ public class Resolve {
 
         // Look up map_update_hash in cas_lookup_table to retrieve a CAS Announcement (data structure)
 
-        CASAnnouncement casAnnouncement = cas_lookup_table.get(map_update_hash);
+        CASAnnouncement casAnnouncement = cas_lookup_table.get(ByteBuffer.wrap(map_update_hash));
         if (casAnnouncement == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No CAS Announcement found for map_update_hash " + Base64.encodeBase64String(map_update_hash));
 
         // and read update_hash from the announcement entry keyed by did.
@@ -479,7 +477,7 @@ public class Resolve {
      * Process SMT Beacon
      * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#process-smt-beacon
      */
-    private static byte[] processSMTBeacon(byte[] signalBytes, Map<byte[], SMTProof> smt_lookup_table) throws ResolutionException {
+    private static byte[] processSMTBeacon(byte[] signalBytes, Map<ByteBuffer, SMTProof> smt_lookup_table) throws ResolutionException {
 
         if (smt_lookup_table == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "No smt_lookup_table provided");
 
@@ -489,7 +487,7 @@ public class Resolve {
 
         // Look up smt_root in smt_lookup_table to retrieve an SMT Proof (data structure).
 
-        SMTProof smtProof = smt_lookup_table.get(smt_root);
+        SMTProof smtProof = smt_lookup_table.get(ByteBuffer.wrap(smt_root));
         if (smtProof == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No SMT Proof found for smt_root " + Base64.encodeBase64String(smt_root));
 
         // Validate the proof with the SMT Proof Verification algorithm.
@@ -507,7 +505,7 @@ public class Resolve {
      * Check update.targetVersionId
      * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#check-update-version
      */
-    private static DIDDocument checkUpdateTargetVersionId(DIDDocument current_document, BTCR2Update update, DID did, int current_version_id, List<byte[]> update_hash_history) throws ResolutionException {
+    private static DIDDocument checkUpdateTargetVersionId(DIDDocument current_document, BTCR2Update update, DID did, int current_version_id, List<ByteBuffer> update_hash_history) throws ResolutionException {
 
         // Compare update.targetVersionId to current_version_id.
 
@@ -542,7 +540,7 @@ public class Resolve {
      * Confirm Duplicate Update
      * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#confirm-duplicate-update
      */
-    private static void confirmDuplicateUpdate(BTCR2Update update, List<byte[]> update_hash_history) throws ResolutionException {
+    private static void confirmDuplicateUpdate(BTCR2Update update, List<ByteBuffer> update_hash_history) throws ResolutionException {
 
         // Create unsigned_update by removing the proof property from update.
 
@@ -556,7 +554,7 @@ public class Resolve {
         // and compare it to update_hash_history[update.targetVersionId - 2].
         // Raise a LATE_PUBLISHING error if the hashes differ.
 
-        if (! Arrays.equals(unsignedUpdateHash, update_hash_history.get(update.getTargetVersionId() - 2))) {
+        if (! ByteBuffer.wrap(unsignedUpdateHash).equals(update_hash_history.get(update.getTargetVersionId() - 2))) {
             throw new ResolutionException("LATE_PUBLISHING", "unsigned_update hash (" + Hex.encodeHexString(unsignedUpdateHash) + ") differs from update_hash_history[" + (update.getTargetVersionId()-2) + "] (" + Hex.encodeHexString(update_hash_history.get(update.getTargetVersionId() - 2)) + ")");
         }
     }
@@ -565,7 +563,7 @@ public class Resolve {
      * Apply update
      * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#apply-update
      */
-    private static DIDDocument applyUpdate(DIDDocument current_document, BTCR2Update update, DID did, List<byte[]> update_hash_history) throws ResolutionException {
+    private static DIDDocument applyUpdate(DIDDocument current_document, BTCR2Update update, DID did, List<ByteBuffer> update_hash_history) throws ResolutionException {
 
         // Hash current_document with the JSON Document Hashing algorithm.
 
@@ -618,7 +616,7 @@ public class Resolve {
 
         // append the hash to update_hash_history.
 
-        update_hash_history.add(unsignedUpdateHash);
+        update_hash_history.add(ByteBuffer.wrap(unsignedUpdateHash));
 
         // done
 
@@ -632,6 +630,19 @@ public class Resolve {
     private static void checkUpdateProof() {
 
         // TODO
+    }
+
+    /*
+     * Helper methods
+     */
+
+    public static final byte[] MULTICODEC_SECP256K1_PUB = new byte[] { (byte)0xe7, (byte)0x01 };    //  0xe7
+
+    private static String publicKeyMultikey(byte[] publicKeyBytes) {
+        byte[] multicodec = new byte[MULTICODEC_SECP256K1_PUB.length + publicKeyBytes.length];
+        System.arraycopy(MULTICODEC_SECP256K1_PUB, 0, multicodec, 0, MULTICODEC_SECP256K1_PUB.length);
+        System.arraycopy(publicKeyBytes, 0, multicodec, 2, publicKeyBytes.length);
+        return Multibase.encode(Multibase.Base.Base58BTC, multicodec);
     }
 
     /*
