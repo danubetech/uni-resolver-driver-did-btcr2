@@ -1,6 +1,6 @@
 package uniresolver.driver.did.btcr2.regtest.k1;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
 import org.erdtman.jcs.JsonCanonicalizer;
@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public abstract class AbstractResolveTest {
 
-	private static final ObjectMapper objectMapper = new ObjectMapper();
+	private static final JsonMapper jsonMapper = JsonMapper.builder().build();
 
 	private final String relativePath;
 
@@ -30,17 +30,17 @@ public abstract class AbstractResolveTest {
 		Resolve resolve = new Resolve(TestUtil.testBitcoinConnections(), TestUtil.testIpfsConnection());
 
 		DID identifier = DID.fromString(input.did());
-		Map<String, Object> resolutionOptions = input.sidecar();
+		Map<String, Object> resolutionOptions = input.resolutionOptions();
 
 		uniresolver.result.ResolveResult resolveResult = resolve.resolve(identifier, resolutionOptions);
 
 		DIDDocument resolvedDIDDocument = resolveResult.getDidDocument();
 		String resolvedDIDDocumentCanonicalized = new JsonCanonicalizer(resolvedDIDDocument.toJson()).getEncodedString();
-		Map<String, Object> resolvedDIDDocumentMap = (Map<String, Object>) objectMapper.readValue(resolvedDIDDocumentCanonicalized, Map.class);
+		Map<String, Object> resolvedDIDDocumentMap = (Map<String, Object>) jsonMapper.readValue(resolvedDIDDocumentCanonicalized, Map.class);
 
 		DIDDocument expectedDIDDocument = output.didDocument();
 		String expectedDIDDocumentCanonicalized = new JsonCanonicalizer(expectedDIDDocument.toJson()).getEncodedString();
-		Map<String, Object> expectedDIDDocumentMap = (Map<String, Object>) objectMapper.readValue(expectedDIDDocumentCanonicalized, Map.class);
+		Map<String, Object> expectedDIDDocumentMap = (Map<String, Object>) jsonMapper.readValue(expectedDIDDocumentCanonicalized, Map.class);
 
 		assertEquals(expectedDIDDocumentCanonicalized, resolvedDIDDocumentCanonicalized);
 		assertEquals(expectedDIDDocumentMap, resolvedDIDDocumentMap);

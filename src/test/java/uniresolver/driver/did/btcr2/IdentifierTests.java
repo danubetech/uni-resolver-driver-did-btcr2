@@ -1,6 +1,6 @@
 package uniresolver.driver.did.btcr2;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import foundation.identity.did.DID;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.jupiter.api.Test;
@@ -105,12 +105,12 @@ public class IdentifierTests {
 		]
 	""";
 
-	private static final ObjectMapper objectMapper = new ObjectMapper();
+	private static final JsonMapper jsonMapper = JsonMapper.builder().build();
 
 	@Test
 	public void testIdentifiers() throws Exception {
 
-		List<Map<String, Object>> testIdentifiers = objectMapper.readValue(new StringReader(IDENTIFIER_TESTS), List.class);
+		List<Map<String, Object>> testIdentifiers = jsonMapper.readValue(new StringReader(IDENTIFIER_TESTS), List.class);
 
 		for (Map<String, Object> testIdentifier : testIdentifiers) {
 			DID did = DID.fromString((String) testIdentifier.get("did"));

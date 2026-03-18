@@ -1,6 +1,6 @@
 package uniresolver.driver.did.btcr2.appendix;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import foundation.identity.jsonld.JsonLDObject;
 import io.ipfs.cid.Cid;
 import io.ipfs.multihash.Multihash;
@@ -15,7 +15,7 @@ public class FetchContentFromAddressableStorage {
 
     private static final Logger log = LoggerFactory.getLogger(FetchContentFromAddressableStorage.class);
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final JsonMapper jsonMapper = JsonMapper.builder().build();
 
     public static byte[] fetchContentFromAddressableStorage(byte[] hashBytes, IPFSConnection ipfsConnection) {
         Cid cid = Cid.buildV0(new Multihash(Multihash.Type.sha2_256, hashBytes));
@@ -34,7 +34,7 @@ public class FetchContentFromAddressableStorage {
         if (content == null) return null;
         T record;
         try {
-            record = objectMapper.readValue(content, clazz);
+            record = jsonMapper.readValue(content, clazz);
         } catch (IOException ex) {
             throw new RuntimeException(ex.getMessage(), ex);
         }
@@ -47,7 +47,7 @@ public class FetchContentFromAddressableStorage {
         if (content == null) return null;
         T record;
         try {
-            record = objectMapper.readValue(content, clazz);
+            record = jsonMapper.readValue(content, clazz);
         } catch (IOException ex) {
             throw new RuntimeException(ex.getMessage(), ex);
         }

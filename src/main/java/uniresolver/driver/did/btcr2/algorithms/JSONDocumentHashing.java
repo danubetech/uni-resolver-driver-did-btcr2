@@ -1,7 +1,7 @@
 package uniresolver.driver.did.btcr2.algorithms;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import foundation.identity.jsonld.JsonLDObject;
 import org.apache.commons.codec.binary.Hex;
 import org.erdtman.jcs.JsonCanonicalizer;
@@ -21,7 +21,7 @@ public class JSONDocumentHashing {
 
     private static final Logger log = LoggerFactory.getLogger(JSONDocumentHashing.class);
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final JsonMapper jsonMapper = JsonMapper.builder().build();
 
     public static byte[] jsonDocumentHashing(String json) {
         String encodedString;
@@ -38,7 +38,7 @@ public class JSONDocumentHashing {
     public static byte[] jsonDocumentHashing(Record record) {
         String json;
         try {
-            json = objectMapper.writeValueAsString(record);
+            json = jsonMapper.writeValueAsString(record);
         } catch (JsonProcessingException ex) {
             throw new IllegalArgumentException(ex.getMessage(), ex);
         }
@@ -48,7 +48,7 @@ public class JSONDocumentHashing {
     public static byte[] jsonDocumentHashing(Map<String, ?> map) {
         String json;
         try {
-            json = objectMapper.writeValueAsString(map);
+            json = jsonMapper.writeValueAsString(map);
         } catch (JsonProcessingException ex) {
             throw new IllegalArgumentException(ex.getMessage(), ex);
         }

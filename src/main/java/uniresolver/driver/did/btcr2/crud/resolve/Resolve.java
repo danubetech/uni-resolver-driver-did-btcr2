@@ -1,7 +1,8 @@
 package uniresolver.driver.did.btcr2.crud.resolve;
 
 import com.danubetech.dataintegrity.jsonld.DataIntegrityKeywords;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
 import foundation.identity.did.Service;
@@ -103,7 +104,9 @@ public class Resolve {
 
     private static final Logger log = LoggerFactory.getLogger(Resolve.class);
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final JsonMapper jsonMapper = JsonMapper.builder()
+            .configure(MapperFeature.USE_GETTERS_AS_SETTERS, false)
+            .build();
 
     private BitcoinConnector bitcoinConnector;
     private IPFSConnection ipfsConnection;
@@ -144,8 +147,8 @@ public class Resolve {
 
         // resolutionOptions contains a sidecar property (Sidecar Data (data structure)) which SHOULD be prepared as lookup tables:
 
-        Map<String, Object> sidecarMap = (Map<String, Object>) resolutionOptions.get("sidecar");
-        SidecarData sidecar = sidecarMap == null ? null : objectMapper.convertValue(sidecarMap, SidecarData.class);
+        Map<String, Object> sidecarMap = resolutionOptions == null ? null : (Map<String, Object>) resolutionOptions.get("sidecar");
+        SidecarData sidecar = sidecarMap == null ? null : jsonMapper.convertValue(sidecarMap, SidecarData.class);
 
         // Hash each BTCR2 Signed Update (data structure) in sidecar.updates with the JSON Document Hashing algorithm
         // and build a map from hash to update (update_lookup_table).

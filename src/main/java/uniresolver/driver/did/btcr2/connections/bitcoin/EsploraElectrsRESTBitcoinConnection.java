@@ -2,8 +2,8 @@ package uniresolver.driver.did.btcr2.connections.bitcoin;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.bitcoinj.base.Address;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,15 +25,12 @@ public class EsploraElectrsRESTBitcoinConnection extends AbstractBitcoinConnecti
 
 	private static final Logger log = LoggerFactory.getLogger(EsploraElectrsRESTBitcoinConnection.class);
 
-	private static final ObjectMapper objectMapper;
+	private static final JsonMapper jsonMapper = JsonMapper.builder()
+			.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+			.build();
 
 	private final URI apiEndpointBase;
-
-	static {
-		objectMapper = new ObjectMapper();
-		objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-	}
 
 	private EsploraElectrsRESTBitcoinConnection(URI apiEndpointBase) {
 		if (log.isDebugEnabled()) log.debug("Creating EsploraElectrsRESTBitcoinConnection: " + apiEndpointBase);
@@ -128,7 +125,7 @@ public class EsploraElectrsRESTBitcoinConnection extends AbstractBitcoinConnecti
 
 	private static Map<String, Object> readObject(URI uri) {
 		try {
-			return (Map<String, Object>) objectMapper.readValue(readString(uri), Map.class);
+			return (Map<String, Object>) jsonMapper.readValue(readString(uri), Map.class);
 		} catch (JsonProcessingException ex) {
 			throw new RuntimeException("Cannot parse object response from " + uri + "; " + ex.getMessage(), ex);
 		}
@@ -136,7 +133,7 @@ public class EsploraElectrsRESTBitcoinConnection extends AbstractBitcoinConnecti
 
 	private static List<Object> readArray(URI uri) {
 		try {
-			return (List<Object>) objectMapper.readValue(readString(uri), List.class);
+			return (List<Object>) jsonMapper.readValue(readString(uri), List.class);
 		} catch (JsonProcessingException ex) {
 			throw new RuntimeException("Cannot parse array response from " + uri + "; " + ex.getMessage(), ex);
 		}

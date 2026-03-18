@@ -1,6 +1,5 @@
 package uniresolver.driver.did.btcr2.util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.did.DIDDocument;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
@@ -11,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 public class JSONPatchUtil {
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public static DIDDocument apply(DIDDocument didDocument, List<Map<String, Object>> patch) {
         JsonPatch jsonPatch = Json.createPatch(Json.createArrayBuilder(patch).build());

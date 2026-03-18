@@ -1,14 +1,13 @@
 package uniresolver.driver.did.btcr2.regtest.k1;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import foundation.identity.did.DIDDocument;
 import uniresolver.driver.did.btcr2.Network;
 import uniresolver.driver.did.btcr2.connections.bitcoin.BitcoinConnector;
 import uniresolver.driver.did.btcr2.connections.bitcoin.EsploraElectrsRESTBitcoinConnection;
 import uniresolver.driver.did.btcr2.connections.ipfs.IPFSConnection;
-import uniresolver.openapi.model.DidDocumentMetadata;
-import uniresolver.openapi.model.DidResolutionMetadata;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -20,26 +19,24 @@ import java.util.Objects;
 
 public class TestUtil {
 
-    private static final ObjectMapper objectMapper;
+    private static final JsonMapper jsonMapper = JsonMapper.builder()
+            .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .build();
 
-    static {
-        objectMapper = new ObjectMapper();
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    }
-
-    public record Input(String did, Map<String, Object> sidecar) { }
-    public record Output(DidResolutionMetadata didResolutionMetadata, DidDocumentMetadata didDocumentMetadata, DIDDocument didDocument) { }
+    public record Input(String did, Map<String, Object> resolutionOptions) { }
+    public record Output(Map<String, Object> didResolutionMetadata, Map<String, Object> didDocumentMetadata, DIDDocument didDocument) { }
 
     public static InputStreamReader readResourceString(String resourceName) {
         return new InputStreamReader(Objects.requireNonNull(TestUtil.class.getResourceAsStream(resourceName)), StandardCharsets.UTF_8);
     }
 
     public static Input readResourceInput(String resourceName) throws IOException {
-        return objectMapper.readValue(readResourceString(resourceName), Input.class);
+        return jsonMapper.readValue(readResourceString(resourceName), Input.class);
     }
 
     public static Output readResourceOutput(String resourceName) throws IOException {
-        return objectMapper.readValue(readResourceString(resourceName), Output.class);
+        return jsonMapper.readValue(readResourceString(resourceName), Output.class);
     }
 
     public static BitcoinConnector testBitcoinConnections() throws MalformedURLException {
