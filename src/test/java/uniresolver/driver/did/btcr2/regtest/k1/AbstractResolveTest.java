@@ -22,7 +22,7 @@ public abstract class AbstractResolveTest {
 	}
 
 	@Test
-	public void testResolveInitialDIDDocument() throws Exception {
+	public void testResolve() throws Exception {
 
 		TestUtil.Input input = TestUtil.readResourceInput(this.relativePath + "/" + "input.json");
 		TestUtil.Output output = TestUtil.readResourceOutput(this.relativePath + "/" + "output.json");

@@ -22,6 +22,24 @@ public class IdentifierTests {
 	"""
 		[
 			{
+				"did": "did:btcr2:k1qqt36kwa95n5qywtkzg2e3dpdrwf3ucr0y8le684gaum4mvp3yxpkqqx0845q",
+				"identifierComponents": {
+					"version": 1,
+					"network": "bitcoin",
+					"genesisBytes": "171d59dd2d274011cbb090acc5a168dc98f303790ffce8f54779baed81890c1b00",
+					"genesisBytesType": "SECP256K1PUBLICKEY"
+				}
+			},
+			{
+				"did": "did:btcr2:x1qhjw6jnhwcyu5wau4x0cpwvz74c3g82c3uaehqpaf7lzfgmnwsd7spmmf54",
+				"identifierComponents": {
+					"version": 1,
+					"network": "mutinynet",
+					"genesisBytes": "e4ed4a777609ca3bbca99f80b982f571141d588f3b9b803d4fbe24a373741be8",
+					"genesisBytesType": "SHA256HASH"
+				}
+			},
+			{
 				"did": "did:btcr2:k1qqptaz4ydc2q8qjgch9kl46y48ccdhjyqdzxxjmmaupwsv9sut5ssfsm0s3dn",
 				"identifierComponents": {
 					"version": 1,
@@ -52,7 +70,7 @@ public class IdentifierTests {
 				"did": "did:btcr2:k1psppl550jkrj9l2caef72m98k3z2ytvfkjv9uftv3htkn8n54979cwg5ht5py",
 				"identifierComponents": {
 					"version": 1,
-					"network": "userdefinedC",
+					"network": "custom1",
 					"genesisBytes": "021fd28f958722fd58ee53e56ca7b444a22d89b4985e256c8dd7699e74a97c5c39",
 					"genesisBytesType": "SECP256K1PUBLICKEY"
 				}

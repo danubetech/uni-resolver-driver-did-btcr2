@@ -53,17 +53,6 @@ public class DidBtcr2IdentifierEncoding {
             throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Unsupported 'network' number value: " + networkValueNumber);
         }
 
-        // If idType is “key” and genesisBytes is not a valid compressed secp256k1 public key, raise invalidDid error.
-
-        if (GenesisBytesType.SECP256K1PUBLICKEY != genesisBytesType) {
-            try {
-                ECKey ecKey = ECKey.fromPublicOnly(genesisBytes);
-                if (! ecKey.isCompressed()) throw new IllegalArgumentException("Not compressed");
-            } catch (Exception ex) {
-                throw new ResolutionException("Genesis bytes " + Hex.encodeHexString(genesisBytes) + " are not a valid compressed secp256k1 public key: " + ex.getMessage(), ex);
-            }
-        }
-
         // Map idType to hrp from the following:
 
         String hrp = switch (genesisBytesType) {

@@ -43,12 +43,11 @@ public class DidBtcr2IdentifierDecoding {
         // Parse the unencoded data bytes according to Table 2: Unencoded Data Bytes to retrieve the
         // btcr2_version, network_value and genesis_bytes.
 
-        byte[] btcr2_version_bytes = Arrays.copyOfRange(dataBytes, 0, 4);
-        byte[] network_value_bytes = Arrays.copyOfRange(dataBytes, 4, 8);
-        byte[] genesis_bytes = Arrays.copyOfRange(dataBytes, 8, dataBytes.length);
+        byte btcr2_version_and_network_value_byte = dataBytes[0];
+        byte[] genesis_bytes = Arrays.copyOfRange(dataBytes, 1, dataBytes.length);
 
-        int btcr2_version = ((btcr2_version_bytes[0] & 0xFF) << 24) | ((btcr2_version_bytes[1] & 0xFF) << 16) | ((btcr2_version_bytes[2] & 0xFF) << 8)  | ((btcr2_version_bytes[3] & 0xFF));;
-        int network_value = ((network_value_bytes[0] & 0xFF) << 24) | ((network_value_bytes[1] & 0xFF) << 16) | ((network_value_bytes[2] & 0xFF) << 8)  | ((network_value_bytes[3] & 0xFF));;
+        int btcr2_version = btcr2_version_and_network_value_byte & 0xF0;
+        int network_value = btcr2_version_and_network_value_byte & 0x0F;
 
         // btcr2_version MUST be 0. Introduce version_number as btcr2_version + 1.
 
