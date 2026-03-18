@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btcr2.regtest.k1;
+package uniresolver.driver.did.btcr2;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import foundation.identity.did.DID;

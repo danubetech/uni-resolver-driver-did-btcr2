@@ -1,10 +1,9 @@
-package uniresolver.driver.did.btcr2.regtest.k1;
+package uniresolver.driver.did.btcr2;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import foundation.identity.did.DIDDocument;
-import uniresolver.driver.did.btcr2.Network;
 import uniresolver.driver.did.btcr2.connections.bitcoin.BitcoinConnector;
 import uniresolver.driver.did.btcr2.connections.bitcoin.EsploraElectrsRESTBitcoinConnection;
 import uniresolver.driver.did.btcr2.connections.ipfs.IPFSConnection;

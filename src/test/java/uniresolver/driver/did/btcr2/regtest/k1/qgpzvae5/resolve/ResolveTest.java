@@ -1,10 +1,10 @@
 package uniresolver.driver.did.btcr2.regtest.k1.qgpzvae5.resolve;
 
-import uniresolver.driver.did.btcr2.regtest.k1.AbstractResolveTest;
+import uniresolver.driver.did.btcr2.AbstractResolveTest;
 
 public class ResolveTest extends AbstractResolveTest {
 
     public ResolveTest() {
-        super("qgpzvae5/resolve/");
+        super("regtest/k1/qgpzvae5/resolve/");
     }
 }
