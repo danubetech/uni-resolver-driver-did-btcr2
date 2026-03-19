@@ -56,7 +56,7 @@ public class Resolve {
             """
                 {
                   "@context": [
-                    "https://www.w3.org/TR/did-1.1",
+                    "https://www.w3.org/ns/did/v1.1",
                     "https://btcr2.dev/context/v1"
                   ],
                   "id": "{{did}}",

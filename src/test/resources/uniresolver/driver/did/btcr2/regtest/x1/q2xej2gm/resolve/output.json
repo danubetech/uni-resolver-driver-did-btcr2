@@ -10,7 +10,7 @@
     "didDocument": {
         "id": "did:btcr2:x1q2xej2gmp7dyg6np7dewful678wpnt88c0twvwflx6hlzanrg6yxx9hm0qr",
         "@context": [
-            "https://www.w3.org/TR/did-1.1",
+            "https://www.w3.org/ns/did/v1.1",
             "https://btcr2.dev/context/v1"
         ],
         "verificationMethod": [
