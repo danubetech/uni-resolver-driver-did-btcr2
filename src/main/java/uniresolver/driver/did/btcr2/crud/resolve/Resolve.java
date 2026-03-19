@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import foundation.identity.did.DID;
 import foundation.identity.did.DIDDocument;
+import foundation.identity.did.DIDDocumentV1_1;
 import foundation.identity.did.Service;
 import foundation.identity.did.representations.Representations;
 import foundation.identity.did.validation.Validation;
@@ -124,7 +125,7 @@ public class Resolve {
         // Resolution maintains the following state while building the DID document:
 
         List<Map.Entry<Block, BTCR2Update>> updates = new ArrayList<>();
-        DIDDocument current_document;
+        DIDDocumentV1_1 current_document;
         int current_version_id = 1;
         List<ByteBuffer> update_hash_history = new ArrayList<>();
         Integer block_confirmations = null;
@@ -173,7 +174,7 @@ public class Resolve {
             if (genesisDocument != null) {
                 byte[] genesisDocumentHash = JSONDocumentHashing.jsonDocumentHashing(genesisDocument);
                 if (! Arrays.equals(genesisDocumentHash, identifierComponents.genesisBytes())) {
-                    throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Computed hash " + Base64.encodeBase64String(genesisDocumentHash) + " does not match genesis_bytes " + Base64.encodeBase64String(identifierComponents.genesisBytes()));
+                    throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Computed hash " + Base64.encodeBase64URLSafeString(genesisDocumentHash) + " does not match genesis_bytes " + Base64.encodeBase64URLSafeString(identifierComponents.genesisBytes()));
                 }
             }
         }
@@ -201,7 +202,7 @@ public class Resolve {
 
                 DIDDocument genesisDocument = sidecar == null ? null : sidecar.getGenesisDocument();
                 if (genesisDocument == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "Missing genesis document in sidecar data");
-                yield DIDDocument.fromJson(sidecar.getGenesisDocument().toJson().replace("did:btcr2:_", identifier.getDidString()));
+                yield DIDDocumentV1_1.fromJson(sidecar.getGenesisDocument().toJson().replace("did:btcr2:_", identifier.getDidString()));
             }
 
             /*
@@ -234,13 +235,13 @@ public class Resolve {
 
                 // Parse the rendered template as JSON to form current_document.
 
-                yield DIDDocument.fromJson(initialDidDocumentString);
+                yield DIDDocumentV1_1.fromJson(initialDidDocumentString);
             }
         };
 
         // 2. Repeats the following loop:
 
-        process: while (true) {
+        process: do {
 
             /*
              * Process Beacon Signals
@@ -347,7 +348,7 @@ public class Resolve {
                 if (update_lookup_table == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "No update_lookup_table provided");
 
                 BTCR2Update update = update_lookup_table.get(ByteBuffer.wrap(update_hash));
-                if (update == null) throw new ResolutionException("MISSING_UPDATE_DATA", "No update found for update_hash " + Base64.encodeBase64String(update_hash));
+                if (update == null) throw new ResolutionException("MISSING_UPDATE_DATA", "No update found for update_hash " + Base64.encodeBase64URLSafeString(update_hash));
 
                 Map.Entry<Block, BTCR2Update> updateTuple = Map.entry(beaconBlock, update);
 
@@ -402,6 +403,7 @@ public class Resolve {
                 // 5. Increment current_version_id.
 
                 current_version_id++;
+                if (log.isDebugEnabled()) log.debug("current_version_id is now {}", current_version_id);
 
                 // 6. If current_version_id is greater than or equal to the integer form of resolutionOptions.versionId,
                 // resolve current_document as didDocument.
@@ -423,7 +425,7 @@ public class Resolve {
                     break process;
                 }
             }
-        }
+        } while (false);
 
         // done
 
@@ -459,17 +461,17 @@ public class Resolve {
         // Look up map_update_hash in cas_lookup_table to retrieve a CAS Announcement (data structure)
 
         CASAnnouncement casAnnouncement = cas_lookup_table.get(ByteBuffer.wrap(map_update_hash));
-        if (casAnnouncement == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No CAS Announcement found for map_update_hash " + Base64.encodeBase64String(map_update_hash));
+        if (casAnnouncement == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No CAS Announcement found for map_update_hash " + Base64.encodeBase64URLSafeString(map_update_hash));
 
         // and read update_hash from the announcement entry keyed by did.
 
         String update_hash_string = casAnnouncement.get(did.getDidString());
-        if (update_hash_string == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No update_hash found for DID " + did + " and map_update_hash " + Base64.encodeBase64String(map_update_hash));
+        if (update_hash_string == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No update_hash found for DID " + did + " and map_update_hash " + Base64.encodeBase64URLSafeString(map_update_hash));
 
         // done
 
         byte[] update_hash = Base64.decodeBase64(update_hash_string);
-        if (log.isDebugEnabled()) log.debug("For did {} and map_update_hash {} found update_hash: {}", did, Base64.encodeBase64String(map_update_hash), Base64.encodeBase64String(update_hash));
+        if (log.isDebugEnabled()) log.debug("For did {} and map_update_hash {} found update_hash: {}", did, Base64.encodeBase64URLSafeString(map_update_hash), Base64.encodeBase64URLSafeString(update_hash));
         return update_hash;
     }
 
@@ -488,7 +490,7 @@ public class Resolve {
         // Look up smt_root in smt_lookup_table to retrieve an SMT Proof (data structure).
 
         SMTProof smtProof = smt_lookup_table.get(ByteBuffer.wrap(smt_root));
-        if (smtProof == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No SMT Proof found for smt_root " + Base64.encodeBase64String(smt_root));
+        if (smtProof == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No SMT Proof found for smt_root " + Base64.encodeBase64URLSafe(smt_root));
 
         // Validate the proof with the SMT Proof Verification algorithm.
 
@@ -497,7 +499,7 @@ public class Resolve {
         // Use smt_proof.updateId as update_hash.
 
         byte[] update_hash = Base64.decodeBase64(smtProof.getUpdateId());
-        if (log.isDebugEnabled()) log.debug("For smt_root {} found update_hash: {}", Base64.encodeBase64String(smt_root), Base64.encodeBase64String(update_hash));
+        if (log.isDebugEnabled()) log.debug("For smt_root {} found update_hash: {}", Base64.encodeBase64URLSafe(smt_root), Base64.encodeBase64URLSafeString(update_hash));
         return update_hash;
     }
 
@@ -505,7 +507,7 @@ public class Resolve {
      * Check update.targetVersionId
      * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#check-update-version
      */
-    private static DIDDocument checkUpdateTargetVersionId(DIDDocument current_document, BTCR2Update update, DID did, int current_version_id, List<ByteBuffer> update_hash_history) throws ResolutionException {
+    private static DIDDocumentV1_1 checkUpdateTargetVersionId(DIDDocumentV1_1 current_document, BTCR2Update update, DID did, int current_version_id, List<ByteBuffer> update_hash_history) throws ResolutionException {
 
         // Compare update.targetVersionId to current_version_id.
 
@@ -533,7 +535,7 @@ public class Resolve {
 
         // done
 
-        return current_document;
+        throw new IllegalStateException("Illegal update.targetVersionId " + update.getTargetVersionId() + " and current_version_id " + current_version_id);
     }
 
     /*
@@ -563,7 +565,7 @@ public class Resolve {
      * Apply update
      * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#apply-update
      */
-    private static DIDDocument applyUpdate(DIDDocument current_document, BTCR2Update update, DID did, List<ByteBuffer> update_hash_history) throws ResolutionException {
+    private static DIDDocumentV1_1 applyUpdate(DIDDocumentV1_1 current_document, BTCR2Update update, DID did, List<ByteBuffer> update_hash_history) throws ResolutionException {
 
         // Hash current_document with the JSON Document Hashing algorithm.
 
@@ -571,8 +573,13 @@ public class Resolve {
 
         // Raise an INVALID_DID_UPDATE error if the result does not match the decoded update.sourceHash.
 
-        if (! Arrays.equals(currentDocumentHash, Base64.decodeBase64(update.getSourceHash()))) {
-            throw new ResolutionException("INVALID_DID_UPDATE", "current_document hash (" + Base64.encodeBase64String(currentDocumentHash) + ") differs from update.sourceHash (" + update.getSourceHash() + ")");
+        try {
+            byte[] decodedSourceHash = Multibase.decode(update.getSourceHash());
+            if (! Arrays.equals(currentDocumentHash, decodedSourceHash)) {
+                throw new ResolutionException("INVALID_DID_UPDATE", "current_document hash (" + Base64.encodeBase64URLSafeString(currentDocumentHash) + ") differs from decoded update.sourceHash (" + Base64.encodeBase64URLSafeString(decodedSourceHash) + " decoded from " + update.getSourceHash() + ")");
+            }
+        } catch (IllegalArgumentException ex) {
+            throw new ResolutionException("INVALID_DID_UPDATE", "Cannot decode update.sourceHash " + update.getSourceHash() + ": " + ex.getMessage(), ex);
         }
 
         // Check update.proof.
@@ -601,8 +608,13 @@ public class Resolve {
 
         // Raise an INVALID_DID_UPDATE error if the result does not match the decoded update.targetHash.
 
-        if (! Arrays.equals(currentDocumentHash, Base64.decodeBase64(update.getTargetHash()))) {
-            throw new ResolutionException("INVALID_DID_UPDATE", "current_document hash (" + Base64.encodeBase64String(currentDocumentHash) + ") differs from update.targetHash (" + update.getTargetHash() + ")");
+        try {
+            byte[] decodedTargetHash = Multibase.decode(update.getTargetHash());
+            if (! Arrays.equals(currentDocumentHash, decodedTargetHash)) {
+                throw new ResolutionException("INVALID_DID_UPDATE", "current_document hash (" + Base64.encodeBase64URLSafeString(currentDocumentHash) + ") differs from decoded update.targetHash (" + Base64.encodeBase64URLSafeString(decodedTargetHash) + " decoded from " + update.getTargetHash() + ")");
+            }
+        } catch (IllegalArgumentException ex) {
+            throw new ResolutionException("INVALID_DID_UPDATE", "Cannot decode update.targetHash " + update.getTargetHash() + ": " + ex.getMessage(), ex);
         }
 
         // Create unsigned_update by removing the proof property from update

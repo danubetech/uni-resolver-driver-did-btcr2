@@ -1,6 +1,6 @@
 package uniresolver.driver.did.btcr2.util;
 
-import foundation.identity.did.DIDDocument;
+import foundation.identity.did.DIDDocumentV1_1;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonPatch;
@@ -11,12 +11,12 @@ import java.util.Map;
 
 public class JSONPatchUtil {
 
-    public static DIDDocument apply(DIDDocument didDocument, List<Map<String, Object>> patch) {
+    public static DIDDocumentV1_1 apply(DIDDocumentV1_1 didDocument, List<Map<String, Object>> patch) {
         JsonPatch jsonPatch = Json.createPatch(Json.createArrayBuilder(patch).build());
         JsonObject didDocumentObject = Json.createObjectBuilder(didDocument.toMap()).build();
         JsonObject patchedDidDocumentObject = jsonPatch.apply(didDocumentObject);
         StringWriter stringWriter = new StringWriter();
         Json.createWriter(stringWriter).write(patchedDidDocumentObject);
-        return DIDDocument.fromJson(stringWriter.toString());
+        return DIDDocumentV1_1.fromJson(stringWriter.toString());
     }
 }
