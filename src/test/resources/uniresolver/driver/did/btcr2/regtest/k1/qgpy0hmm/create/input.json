@@ -1,0 +1,6 @@
+{
+    "idType": "KEY",
+    "version": 1,
+    "network": "regtest",
+    "genesisBytes": "0247df7b3d51aec055f22b0d6bc0149a769f23d5bf229c870f703df1f67576f8f9"
+}
