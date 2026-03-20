@@ -1,6 +1,5 @@
 package uniresolver.driver.did.btcr2.util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import foundation.identity.jsonld.JsonLDObject;
 
 import java.lang.reflect.InvocationTargetException;
@@ -8,8 +7,6 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 public class JsonLDUtil {
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public static <T extends JsonLDObject> T copy(T jsonLDObject, Class<T> clazz) {
         try {

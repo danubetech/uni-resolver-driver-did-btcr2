@@ -16,7 +16,7 @@ import org.bitcoinj.crypto.ECKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
-import uniresolver.driver.did.btcr2.crud.update.jsonld.DIDUpdate;
+import uniresolver.driver.did.btcr2.data.jsonld.BTCR2Update;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -25,7 +25,7 @@ public class DataIntegrity {
 
     private static final Logger log = LoggerFactory.getLogger(DataIntegrity.class);
 
-    public static boolean verifyProofAlgorithm(String mediaType, byte[] documentBytes, DataIntegritySuite cryptosuite, String expectedProofPurpose, /* TODO: extra, not in spec */ DIDUpdate update, DataIntegrityProof dataIntegrityProof, DIDDocument contemporaryDIDDocument) throws ResolutionException {
+    public static boolean verifyProofAlgorithm(String mediaType, byte[] documentBytes, DataIntegritySuite cryptosuite, String expectedProofPurpose, /* TODO: extra, not in spec */ BTCR2Update update, DataIntegrityProof dataIntegrityProof, DIDDocument contemporaryDIDDocument) throws ResolutionException {
 
         VerificationMethod verificationMethod = VerificationMethod.fromJsonLDObject(JsonLDDereferencer.findByIdInJsonLdObject(contemporaryDIDDocument, dataIntegrityProof.getVerificationMethod(), null));
         byte[] publicKeyBytes = MulticodecDecoder.getInstance().decode(Multibase.decode(verificationMethod.getPublicKeyMultibase()));

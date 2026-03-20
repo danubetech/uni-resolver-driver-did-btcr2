@@ -9,7 +9,8 @@ import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
 import uniresolver.driver.did.btcr2.Network;
 import uniresolver.driver.did.btcr2.appendix.Bech32mEncoding;
-import uniresolver.driver.did.btcr2.syntax.records.IdentifierComponents;
+import uniresolver.driver.did.btcr2.data.records.GenesisBytesType;
+import uniresolver.driver.did.btcr2.data.records.IdentifierComponents;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,22 +21,22 @@ public class DidBtcr2IdentifierEncoding {
     private static final Logger log = LoggerFactory.getLogger(DidBtcr2IdentifierEncoding.class);
 
     /*
-     * 4.2 did:btcr2 Identifier Encoding
+     * DID-BTCR2 Identifier Encoding
      */
 
-    // See https://dcdpr.github.io/did-btcr2/#didbtcr2-identifier-encoding
-    public static DID didBtcr2IdentifierEncoding(String idType, Integer version, Object networkValue, byte[] genesisBytes) throws ResolutionException {
+    // See https://dcdpr.github.io/did-btcr2/algorithms.html#did-btcr2-identifier-encoding
+    public static DID didBtcr2IdentifierEncoding(Integer version, Object networkValue, byte[] genesisBytes, GenesisBytesType genesisBytesType) throws ResolutionException {
 
-        // If idType is not a valid value per above, raise invalidDid error.
-
-        if (! "key".equals(idType) && ! "external".equals(idType)) {
-            throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Invalid 'idType' value: " + idType);
-        }
-
-        // If version is greater than 1, raise invalidDid error.
+        // The version_number value MUST be 1, declaring the encoding follows this specification.
 
         if (version > 1) {
             throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Unsupported 'version' value: " + version);
+        }
+
+        // If idType is not a valid value per above, raise invalidDid error.
+
+        if (GenesisBytesType.SECP256K1PUBLICKEY != genesisBytesType && GenesisBytesType.SHA256HASH != genesisBytesType) {
+            throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Invalid 'idType' value: " + genesisBytesType);
         }
 
         // If network is not a valid value per above, raise invalidDid error.
@@ -52,23 +53,12 @@ public class DidBtcr2IdentifierEncoding {
             throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Unsupported 'network' number value: " + networkValueNumber);
         }
 
-        // If idType is “key” and genesisBytes is not a valid compressed secp256k1 public key, raise invalidDid error.
-
-        if ("key".equals(idType)) {
-            try {
-                ECKey ecKey = ECKey.fromPublicOnly(genesisBytes);
-                if (! ecKey.isCompressed()) throw new IllegalArgumentException("Not compressed");
-            } catch (Exception ex) {
-                throw new ResolutionException("Genesis bytes " + Hex.encodeHexString(genesisBytes) + " are not a valid compressed secp256k1 public key: " + ex.getMessage(), ex);
-            }
-        }
-
         // Map idType to hrp from the following:
 
-        String hrp = switch (idType) {
-            case "key" -> "k";
-            case "external" -> "x";
-            default -> throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Invalid 'idType' value in: " + idType);
+        String hrp = switch (genesisBytesType) {
+            case GenesisBytesType.SECP256K1PUBLICKEY -> "k";
+            case GenesisBytesType.SHA256HASH -> "x";
+            default -> throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Invalid 'idType' value in: " + genesisBytesType);
         };
 
         // Create an empty nibbles numeric array.
@@ -146,6 +136,6 @@ public class DidBtcr2IdentifierEncoding {
     // See https://dcdpr.github.io/did-btcr2/#didbtcr2-identifier-encoding
     public static DID didBtcr2IdentifierEncoding(IdentifierComponents identifierComponents) throws ResolutionException {
 
-        return didBtcr2IdentifierEncoding(identifierComponents.idType(), identifierComponents.version(), identifierComponents.network(), identifierComponents.genesisBytes());
+        return didBtcr2IdentifierEncoding(identifierComponents.version(), identifierComponents.network(), identifierComponents.genesisBytes(), identifierComponents.genesisBytesType());
     }
 }

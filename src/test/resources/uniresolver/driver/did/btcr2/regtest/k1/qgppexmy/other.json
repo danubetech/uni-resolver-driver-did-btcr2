@@ -1,0 +1,10 @@
+{
+    "genesisKeys": {
+        "secret": "e8f4403b3bb6d0e6e118ef450fa9f917697639d1dee3864fc8740facee0b5a6d",
+        "public": "021c9b64003f8c96795d891bd783548ade0cf197b7e633b52fac9bb51002965999"
+    },
+    "newBeaconKeys": {
+        "secret": "8e718c55b7b31c65388fa9ec7287f1518b656a979c5872284c198390da4e7415",
+        "public": "033cdb78554ef27dbecbcdc7d0ee9b03f546f7907a385144ec24686e14dd8133e4"
+    }
+}

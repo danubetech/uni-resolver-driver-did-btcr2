@@ -6,7 +6,7 @@ import uniresolver.driver.did.btcr2.DidBtcr2Driver;
 import uniresolver.driver.did.btcr2.Network;
 import uniresolver.driver.did.btcr2.connections.bitcoin.*;
 import uniresolver.driver.did.btcr2.connections.ipfs.IPFSConnection;
-import uniresolver.driver.did.btcr2.crud.read.Read;
+import uniresolver.driver.did.btcr2.crud.resolve.Resolve;
 
 import java.net.URI;
 import java.util.*;
@@ -99,7 +99,7 @@ public class Configuration {
 
             // configure
 
-            didBtcr2Driver.setRead(new Read(bitcoinConnector, ipfsConnection));
+            didBtcr2Driver.setResolve(new Resolve(bitcoinConnector, ipfsConnection));
         } catch (IllegalArgumentException ex) {
             throw ex;
         } catch (Exception ex) {

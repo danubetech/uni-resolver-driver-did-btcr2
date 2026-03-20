@@ -4,7 +4,6 @@ import java.util.List;
 
 public record Tx(
         String txId,
-        String txHex,
         List<TxIn> txIns,
         List<TxOut> txOuts) {
 

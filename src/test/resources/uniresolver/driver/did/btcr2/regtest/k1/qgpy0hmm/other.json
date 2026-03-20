@@ -1,0 +1,16 @@
+{
+    "genesisKeys": {
+        "secret": "f7f92bc333d8198ef4feded4c9a52df4c0cfd00347e861d292f2131c9cd8e000",
+        "public": "0247df7b3d51aec055f22b0d6bc0149a769f23d5bf229c870f703df1f67576f8f9"
+    },
+    "generatedKeys": {
+        "service-service-1": {
+            "secret": "b1077e020f8b3372f45afff109ce65b524a8b586000cd6ea060597b8a15e6490",
+            "public": "02d969d40040719a6ffdf4d8e2104dd4f2ff8cdfc215c0f14882ff7d549226fcde"
+        },
+        "service-service-3": {
+            "secret": "2fc3d9c502b225f5429b3b6e61f26bf1479fc59a3cfbc3325fbe955e8e51a6b0",
+            "public": "03704d682c686fff55b21e333d3c86af0036dea1230c2d9210bcddce8d3ca17ee7"
+        }
+    }
+}

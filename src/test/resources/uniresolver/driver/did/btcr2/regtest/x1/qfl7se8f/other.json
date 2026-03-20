@@ -1,0 +1,46 @@
+{
+    "genesisKeys": {
+        "secret": "5edaed093bc8692e8399281eb30cc7b9498774444b2693fbe73a5cf4eea77a96",
+        "public": "03c833a7aea8a0160ffa76eb9e61fa3e9fed362b841f22002d5b1f59e6acc9fdaa"
+    },
+    "genesisDocument": {
+        "id": "did:btcr2:_",
+        "@context": [
+            "https://www.w3.org/ns/did/v1.1",
+            "https://btcr2.dev/context/v1"
+        ],
+        "verificationMethod": [
+            {
+                "id": "did:btcr2:_#key-0",
+                "type": "Multikey",
+                "controller": "did:btcr2:_",
+                "publicKeyMultibase": "zQ3sht7cMJP2TtTjdxT4kwsqevykUXSgQiPFTkrohZ8K5Wkyf"
+            }
+        ],
+        "authentication": [
+            "did:btcr2:_#key-0"
+        ],
+        "assertionMethod": [
+            "did:btcr2:_#key-0"
+        ],
+        "capabilityInvocation": [
+            "did:btcr2:_#key-0"
+        ],
+        "capabilityDelegation": [
+            "did:btcr2:_#key-0"
+        ],
+        "service": [
+            {
+                "id": "did:btcr2:_#service-0",
+                "serviceEndpoint": "bitcoin:mzKU2nJETEKED1WbXi9UfCi2LpzkEkZNtX",
+                "type": "SingletonBeacon"
+            }
+        ]
+    },
+    "generatedKeys": {
+        "verificationMethod-key-1": {
+            "secret": "dc382e2f176a86bae14c57d002d5997fcbdd7fea8d3417c4b95d18bfdacf6e04",
+            "public": "03b4322bdf18deac1a28b629497d08e047bdab7b0bed05ad2e84e3815c3ecf59ac"
+        }
+    }
+}
