@@ -33,14 +33,14 @@ public class RootDidBtcr2UpdateCapabilities {
         return rootCapability;
     }
 
-    public static RootCapability dereferenceRootCapabilityIdentifier(String capabilityId) {
+    public static RootCapability dereferenceRootCapabilityIdentifier(URI capabilityId) {
 
         RootCapability.Builder<? extends RootCapability.Builder<?>> rootCapabilityBuilder = RootCapability.builder();
 
         rootCapabilityBuilder.defaultContexts(false);
         rootCapabilityBuilder.context(URI.create("https://w3id.org/zcap/v1’"));
 
-        String[] components = capabilityId.split(":");
+        String[] components = capabilityId.toString().split(":");
 
         if (components.length != 4) throw new IllegalArgumentException("Length of components for " + capabilityId + " is not 4: " + components.length);
         if (! "urn".equals(components[0])) throw new IllegalArgumentException("Components[0] for " + capabilityId + " is not 'urn': " + components[0]);
@@ -51,7 +51,7 @@ public class RootDidBtcr2UpdateCapabilities {
 
         String btcr2Identifier = URLDecoder.decode(uriEncodedId, StandardCharsets.UTF_8);
 
-        rootCapabilityBuilder.id(URI.create(capabilityId));
+        rootCapabilityBuilder.id(capabilityId);
         rootCapabilityBuilder.controller(URI.create(btcr2Identifier));
         rootCapabilityBuilder.invocationTarget(URI.create(btcr2Identifier));
 

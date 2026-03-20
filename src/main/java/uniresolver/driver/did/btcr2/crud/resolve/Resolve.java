@@ -1,14 +1,18 @@
 package uniresolver.driver.did.btcr2.crud.resolve;
 
+import com.apicatalog.multicodec.MulticodecDecoder;
+import com.danubetech.dataintegrity.DataIntegrityProof;
 import com.danubetech.dataintegrity.jsonld.DataIntegrityKeywords;
+import com.danubetech.dataintegrity.verifier.DataIntegrityProofLdVerifier;
+import com.danubetech.dataintegrity.verifier.LdVerifierRegistry;
+import com.danubetech.keyformats.crypto.impl.secp256k1_ES256KS_PublicKeyVerifier;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import foundation.identity.did.DID;
-import foundation.identity.did.DIDDocument;
-import foundation.identity.did.DIDDocumentV1_1;
-import foundation.identity.did.Service;
+import foundation.identity.did.*;
 import foundation.identity.did.representations.Representations;
 import foundation.identity.did.validation.Validation;
+import foundation.identity.jsonld.JsonLDDereferencer;
+import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDUtils;
 import fr.acinq.bitcoin.BlockHash;
 import fr.acinq.bitcoin.PublicKey;
@@ -17,6 +21,7 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.bitcoinj.base.Address;
 import org.bitcoinj.base.AddressParser;
+import org.bitcoinj.crypto.ECKey;
 import org.bitcoinj.uri.BitcoinURI;
 import org.bitcoinj.uri.BitcoinURIParseException;
 import org.slf4j.Logger;
@@ -25,6 +30,7 @@ import uniresolver.ResolutionException;
 import uniresolver.driver.did.btcr2.Network;
 import uniresolver.driver.did.btcr2.algorithms.JSONDocumentHashing;
 import uniresolver.driver.did.btcr2.algorithms.SMTProofVerification;
+import uniresolver.driver.did.btcr2.appendix.RootDidBtcr2UpdateCapabilities;
 import uniresolver.driver.did.btcr2.beacons.CASBeacon;
 import uniresolver.driver.did.btcr2.beacons.SMTBeacon;
 import uniresolver.driver.did.btcr2.beacons.SingletonBeacon;
@@ -37,13 +43,16 @@ import uniresolver.driver.did.btcr2.data.json.CASAnnouncement;
 import uniresolver.driver.did.btcr2.data.json.SMTProof;
 import uniresolver.driver.did.btcr2.data.json.SidecarData;
 import uniresolver.driver.did.btcr2.data.jsonld.BTCR2Update;
+import uniresolver.driver.did.btcr2.data.jsonld.RootCapability;
 import uniresolver.driver.did.btcr2.data.records.GenesisBytesType;
 import uniresolver.driver.did.btcr2.data.records.IdentifierComponents;
 import uniresolver.driver.did.btcr2.syntax.DidBtcr2IdentifierDecoding;
 import uniresolver.driver.did.btcr2.util.JSONPatchUtil;
 import uniresolver.result.ResolveResult;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -583,7 +592,7 @@ public class Resolve {
 
         // Check update.proof.
 
-        checkUpdateProof();
+        checkUpdateProof(current_document, update);
 
         // Apply the update.patch JSON Patch [RFC6902] to current_document.
 
@@ -638,9 +647,55 @@ public class Resolve {
      * Check update.proof
      * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#check-update-proof
      */
-    private static void checkUpdateProof() {
+    private static void checkUpdateProof(DIDDocument current_document, BTCR2Update update) throws ResolutionException {
 
-        // TODO
+        DataIntegrityProof proof = DataIntegrityProof.getFromJsonLDObject(update);
+        if (proof == null) {
+            throw new ResolutionException("INVALID_DID_UPDATE", "Update has no proof: " + update);
+        }
+        if (proof.getVerificationMethod() == null) {
+            throw new ResolutionException("INVALID_DID_UPDATE", "Update proof has no verification method: " + update);
+        }
+
+        // Implementations MAY derive a Root Capability (data structure) from update.proof and
+        // invoke it according to Authorization Capabilities for Linked Data v0.3 [ZCAP-LD].
+
+        RootCapability rootCapability = RootDidBtcr2UpdateCapabilities.dereferenceRootCapabilityIdentifier(proof.getCapability());
+        if (! rootCapability.getInvocationTarget().equals(current_document.getId())) {
+            throw new ResolutionException("INVALID_DID_UPDATE", "Root capability 'invocationTarget' " + rootCapability.getInvocationTarget() + " does not match contemporary DID document 'id': " + current_document.getId());
+        }
+        if (! rootCapability.getController().equals(current_document.getId())) {
+            throw new ResolutionException("INVALID_DID_UPDATE", "Root capability 'controller' " + rootCapability.getInvocationTarget() + " does not match contemporary DID document 'id': " + current_document.getId());
+        }
+
+        // The resolver must locate publicKeyMultibase in current_document.verificationMethod
+        // whose id matches update.proof.verificationMethod. Otherwise raise INVALID_DID_UPDATE.
+
+        VerificationMethod verificationMethod = VerificationMethod.fromJsonLDObject(JsonLDDereferencer.findByIdInJsonLdObject(current_document, proof.getVerificationMethod(), null));
+        if (verificationMethod == null) {
+            throw new ResolutionException("INVALID_DID_UPDATE", "Cannot find verification method whose id matches update.proof.verificationMethod: " + proof.getVerificationMethod());
+        }
+        byte[] publicKeyBytes = MulticodecDecoder.getInstance().decode(Multibase.decode(verificationMethod.getPublicKeyMultibase()));
+        if (log.isDebugEnabled()) log.debug("Public key bytes for verification method {}: {}", proof.getVerificationMethod(), Hex.encodeHexString(publicKeyBytes));
+
+        // Raise the same error if current_document.capabilityInvocation does not contain update.proof.verificationMethod.
+
+        List<VerificationMethod> capabilityInvocationVerificationMethod = current_document.getCapabilityInvocationVerificationMethodsDereferenced();
+        if (! capabilityInvocationVerificationMethod.contains(verificationMethod)) {
+            throw new ResolutionException("INVALID_DID_UPDATE", "current_document.capabilityInvocation does not contain update.proof.verificationMethod " + proof.getVerificationMethod());
+        }
+
+        // Use a BIP340 Cryptosuite [BIP340-Cryptosuite] instance with publicKeyMultibase
+        // and the "bip340-jcs-2025" cryptosuite to verify update. Raise INVALID_DID_UPDATE
+        // if verification fails.
+
+        DataIntegrityProofLdVerifier dataIntegrityProofLdVerifier = (DataIntegrityProofLdVerifier) LdVerifierRegistry.getLdVerifierByDataIntegritySuiteTerm(proof.getType());
+        dataIntegrityProofLdVerifier.setVerifier(new secp256k1_ES256KS_PublicKeyVerifier(ECKey.fromPublicOnly(publicKeyBytes)));
+        try {
+            dataIntegrityProofLdVerifier.verify(update, proof);
+        } catch (IOException | GeneralSecurityException | JsonLDException ex) {
+            throw new ResolutionException("INVALID_DID_UPDATE", "Cannot verify update " + update + ": " + ex.getMessage(), ex);
+        }
     }
 
     /*
