@@ -31,9 +31,7 @@ import uniresolver.driver.did.btcr2.Network;
 import uniresolver.driver.did.btcr2.algorithms.JSONDocumentHashing;
 import uniresolver.driver.did.btcr2.algorithms.SMTProofVerification;
 import uniresolver.driver.did.btcr2.appendix.RootDidBtcr2UpdateCapabilities;
-import uniresolver.driver.did.btcr2.beacons.CASBeacon;
-import uniresolver.driver.did.btcr2.beacons.SMTBeacon;
-import uniresolver.driver.did.btcr2.beacons.SingletonBeacon;
+import uniresolver.driver.did.btcr2.beacons.BeaconTypes;
 import uniresolver.driver.did.btcr2.connections.bitcoin.BitcoinConnection;
 import uniresolver.driver.did.btcr2.connections.bitcoin.BitcoinConnector;
 import uniresolver.driver.did.btcr2.connections.bitcoin.records.Block;
@@ -263,7 +261,7 @@ public class Resolve {
             if (beaconServices == null) {
                 if (log.isWarnEnabled()) log.warn("No services found in current_document: {}", current_document);
             } else {
-                beaconServices = beaconServices.stream().filter(service -> Arrays.asList(SingletonBeacon.TYPE, CASBeacon.TYPE, SMTBeacon.TYPE).contains(service.getType())).toList();
+                beaconServices = beaconServices.stream().filter(service -> Arrays.asList(BeaconTypes.SINGLETON_BEACON_TYPE, BeaconTypes.CAS_BEACON_TYPE, BeaconTypes.SMT_BEACON_TYPE).contains(service.getType())).toList();
                 if (beaconServices.isEmpty()) {
                     if (log.isWarnEnabled()) log.warn("No beacon services found in current_document: {}", current_document);
                 }
@@ -329,15 +327,15 @@ public class Resolve {
 
                 byte[] update_hash = switch (beaconServiceType) {
 
-                    case SingletonBeacon.TYPE ->
+                    case BeaconTypes.SINGLETON_BEACON_TYPE ->
                             // update_hash is the Signal Bytes.
                             beaconSignalBytes;
 
-                    case CASBeacon.TYPE ->
+                    case BeaconTypes.CAS_BEACON_TYPE ->
                             // use Process CAS Beacon.
                             processCASBeacon(beaconSignalBytes, identifier, cas_lookup_table);
 
-                    case SMTBeacon.TYPE ->
+                    case BeaconTypes.SMT_BEACON_TYPE ->
                             // use Process SMT Beacon.
                             processSMTBeacon(beaconSignalBytes, smt_lookup_table);
 
