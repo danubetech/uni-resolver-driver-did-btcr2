@@ -1,7 +1,6 @@
 package uniresolver.driver.did.btcr2.syntax;
 
 import foundation.identity.did.DID;
-import org.apache.commons.codec.binary.Hex;
 import org.bitcoinj.base.Bech32;
 import org.bitcoinj.base.exceptions.AddressFormatException;
 import org.bouncycastle.util.Arrays;
@@ -77,44 +76,5 @@ public class DidBtcr2IdentifierDecoding {
         IdentifierComponents identifierComponents = new IdentifierComponents(version_number, network_name, key_or_hash, genesisBytesType);
         if (log.isDebugEnabled()) log.debug("didBtcr2IdentifierDecoding: " + identifierComponents);
         return identifierComponents;
-    }
-
-    /*
-     * Helper methods
-     */
-
-    private static class NibbleStream {
-
-        final private byte[] dataBytes;
-        byte nextByteIndex = 0;
-        boolean nextHighNibble = true;
-
-        public NibbleStream(byte[] dataBytes) {
-            this.dataBytes = dataBytes;
-        }
-
-        public byte nextNibble() throws ResolutionException {
-            byte nextNibble = this.nextHighNibble ? higherNibble(this.dataBytes[this.nextByteIndex]) : lowerNibble(this.dataBytes[this.nextByteIndex]);
-            this.nextHighNibble = ! this.nextHighNibble;
-            if (this.nextHighNibble) this.nextByteIndex++;
-            if (this.nextByteIndex >= this.dataBytes.length) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Mot enough bytes left at index " + this.nextByteIndex + ": " + Hex.encodeHexString(this.dataBytes));
-            return nextNibble;
-        }
-
-        public boolean isOdd() {
-            return ! this.nextHighNibble;
-        }
-
-        public byte[] remainingDataBytes() {
-            return Arrays.copyOfRange(this.dataBytes, this.nextByteIndex, this.dataBytes.length);
-        }
-
-        private static byte higherNibble(byte b) {
-            return (byte) (b >> 4);
-        }
-
-        private static byte lowerNibble(byte b) {
-            return (byte) (b & 15);
-        }
     }
 }
