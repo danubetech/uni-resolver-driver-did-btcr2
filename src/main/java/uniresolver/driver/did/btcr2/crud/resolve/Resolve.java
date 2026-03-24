@@ -17,6 +17,8 @@ import foundation.identity.jsonld.JsonLDUtils;
 import fr.acinq.bitcoin.BlockHash;
 import fr.acinq.bitcoin.PublicKey;
 import io.ipfs.multibase.Multibase;
+import jakarta.json.Json;
+import jakarta.json.JsonPatch;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.bitcoinj.base.Address;
@@ -433,10 +435,13 @@ public class Resolve {
             }
         } while (false);
 
-        // done
+        // DID RESOLUTION METADATA
 
         Map<String, Object> didResolutionMetadata = new LinkedHashMap<>();
         didResolutionMetadata.put("contentType", Representations.DEFAULT_MEDIA_TYPE);
+
+        // DID DOCUMENT METADATA
+
         Map<String, Object> didDocumentMetadata = new LinkedHashMap<>();
         didDocumentMetadata.put("versionId", Integer.toString(current_version_id));
         didDocumentMetadata.put("confirmations", (block_confirmations == null ? null : block_confirmations.toString()));
@@ -446,6 +451,8 @@ public class Resolve {
                 "network", identifierComponents.network().toString(),
                 "genesisBytes", Hex.encodeHexString(identifierComponents.genesisBytes()),
                 "genesisBytesTypes", identifierComponents.genesisBytesType()));
+
+        // done
 
         ResolveResult resolveResult = ResolveResult.build(didResolutionMetadata, current_document, didDocumentMetadata);
         if (log.isDebugEnabled()) log.debug("resolveResult: {}", resolveResult);
@@ -594,7 +601,8 @@ public class Resolve {
 
         // Apply the update.patch JSON Patch [RFC6902] to current_document.
 
-        current_document = JSONPatchUtil.apply(current_document, update.getPatch());
+        JsonPatch jsonPatch = Json.createPatch(Json.createArrayBuilder(update.getPatch()).build());
+        current_document = JSONPatchUtil.apply(current_document, jsonPatch);
 
         // Verify that current_document conforms to DID Core v1.1 [DID-CORE]
         // and that current_document.id equals did. Otherwise raise INVALID_DID_UPDATE.

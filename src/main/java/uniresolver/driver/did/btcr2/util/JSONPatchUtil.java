@@ -11,8 +11,7 @@ import java.util.Map;
 
 public class JSONPatchUtil {
 
-    public static DIDDocumentV1_1 apply(DIDDocumentV1_1 didDocument, List<Map<String, Object>> patch) {
-        JsonPatch jsonPatch = Json.createPatch(Json.createArrayBuilder(patch).build());
+    public static DIDDocumentV1_1 apply(DIDDocumentV1_1 didDocument, JsonPatch jsonPatch) {
         JsonObject didDocumentObject = Json.createObjectBuilder(didDocument.toMap()).build();
         JsonObject patchedDidDocumentObject = jsonPatch.apply(didDocumentObject);
         StringWriter stringWriter = new StringWriter();
