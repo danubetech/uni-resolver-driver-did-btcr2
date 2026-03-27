@@ -146,6 +146,7 @@ public class Resolve {
         // The did MUST be parsed with the DID-BTCR2 Identifier Decoding algorithm to retrieve version, network, and genesis_bytes.
 
         IdentifierComponents identifierComponents = DidBtcr2IdentifierDecoding.didBtcr2IdentifierDecoding(identifier);
+        BitcoinConnection bitcoinConnection = this.getBitcoinConnector().getBitcoinConnection(identifierComponents.network());
 
         /*
          * Process Sidecar Data
@@ -291,7 +292,6 @@ public class Resolve {
             Map<Tx, String> beaconsServiceTypes = new LinkedHashMap<>();
             Map<Tx, byte[]> beaconsSignalBytes = new LinkedHashMap<>();
 
-            BitcoinConnection bitcoinConnection = this.getBitcoinConnector().getBitcoinConnection(identifierComponents.network());
             for (Map.Entry<Address, String> beaconAddressEntry : beaconsAddresses.entrySet()) {
                 Address beaconAddress = beaconAddressEntry.getKey();
                 String beaconServiceType = beaconAddressEntry.getValue();
@@ -439,6 +439,7 @@ public class Resolve {
 
         Map<String, Object> didResolutionMetadata = new LinkedHashMap<>();
         didResolutionMetadata.put("contentType", Representations.DEFAULT_MEDIA_TYPE);
+        didResolutionMetadata.putAll(bitcoinConnection.getMetadata());
 
         // DID DOCUMENT METADATA
 

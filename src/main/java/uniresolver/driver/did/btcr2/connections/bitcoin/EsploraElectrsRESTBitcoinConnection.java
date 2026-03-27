@@ -76,6 +76,12 @@ public class EsploraElectrsRESTBitcoinConnection extends AbstractBitcoinConnecti
 		return block;
 	}
 
+	@Override
+	public Map<String, Object> getMetadata() {
+		return Map.of(
+				"apiEndpointBase", "" + this.getApiEndpointBase());
+	}
+
 	/*
 	 * Helper methods
 	 */

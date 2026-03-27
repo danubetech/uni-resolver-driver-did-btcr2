@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btcr2.Network;
 
 import java.io.File;
+import java.util.Map;
 
 public class BitcoinjSPVBitcoinConnection extends AbstractBitcoinConnection implements BitcoinConnection {
 
@@ -21,6 +22,13 @@ public class BitcoinjSPVBitcoinConnection extends AbstractBitcoinConnection impl
 	public static BitcoinjSPVBitcoinConnection create(Network network) {
 		if (log.isDebugEnabled()) log.debug("Creating BitcoindRPCBitcoinConnection: " + network);
 		return new BitcoinjSPVBitcoinConnection(WalletAppKit.launch(network.toBitcoinjNetwork(), new File("."), network.name()));
+	}
+
+	@Override
+	public Map<String, Object> getMetadata() {
+		return Map.of(
+				"chain", "" +this.getWalletAppKit().chain(),
+				"network", "" + this.getWalletAppKit().network());
 	}
 
 	/*

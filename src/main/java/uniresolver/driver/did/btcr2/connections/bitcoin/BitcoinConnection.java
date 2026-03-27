@@ -5,6 +5,7 @@ import uniresolver.driver.did.btcr2.connections.bitcoin.records.Block;
 import uniresolver.driver.did.btcr2.connections.bitcoin.records.Tx;
 
 import java.util.List;
+import java.util.Map;
 
 public interface BitcoinConnection {
 
@@ -14,4 +15,5 @@ public interface BitcoinConnection {
     Block getBlockByMinConfirmations(Integer confirmations);
     List<Tx> getAddressTransactions(Address address);
     Block getBlockByTransaction(Tx tx);
+    Map<String, Object> getMetadata();
 }

@@ -10,6 +10,7 @@ import wf.bitcoin.javabitcoindrpcclient.BitcoinJSONRPCClient;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 public class BitcoindRPCBitcoinConnection extends AbstractBitcoinConnection implements BitcoinConnection {
 
@@ -75,6 +76,12 @@ public class BitcoindRPCBitcoinConnection extends AbstractBitcoinConnection impl
 		}
 		if (log.isDebugEnabled()) log.debug("getBlockByMinConfirmations for {}: {}", minConfirmations, block);
 		return block;
+	}
+
+	@Override
+	public Map<String, Object> getMetadata() {
+		return Map.of(
+				"rpcURL", this.getBitcoinJsonRpcClient().rpcURL);
 	}
 
 	/*
