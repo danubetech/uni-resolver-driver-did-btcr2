@@ -42,7 +42,7 @@ public class TestUtil {
     public static BitcoinConnector testBitcoinConnections() throws MalformedURLException {
         return BitcoinConnector.create(
                 Map.of(
-                        Network.regtest, EsploraElectrsRESTBitcoinConnection.create(URI.create("http://localhost:3000/"))),
+                        Network.regtest, EsploraElectrsRESTBitcoinConnection.create(Network.regtest, URI.create("http://localhost:3000/"))),
                 Map.of(
                         Network.regtest, "06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f")
         );

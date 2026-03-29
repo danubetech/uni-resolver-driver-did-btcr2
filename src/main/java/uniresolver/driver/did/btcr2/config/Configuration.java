@@ -7,8 +7,8 @@ import com.danubetech.btc.connection.impl.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btcr2.DidBtcr2Driver;
-import uniresolver.driver.did.btcr2.ipfs.IPFSConnection;
 import uniresolver.driver.did.btcr2.crud.resolve.Resolve;
+import uniresolver.driver.did.btcr2.ipfs.IPFSConnection;
 
 import java.net.URI;
 import java.util.*;
@@ -85,16 +85,17 @@ public class Configuration {
                 String bitcoinConnectionUrl = bitcoinConnectionsUrlsMap.get(networkName);
                 String bitcoinConnectionCert = bitcoinConnectionsCertsMap.get(networkName);
                 String genesisHash = genesisHashesMap.get(networkName);
+                Network network = Network.valueOf(networkName);
                 BitcoinConnection bitcoinConnection = switch(bitcoinConnectionType) {
-                    case "bitcoind" -> BitcoindRPCBitcoinConnection.create(URI.create(bitcoinConnectionUrl).toURL());
-                    case "btcd" -> BTCDRPCBitcoinConnection.create(URI.create(bitcoinConnectionUrl).toURL());
-                    case "bitcoinj" -> BitcoinjSPVBitcoinConnection.create(Network.valueOf(networkName));
-                    case "blockcypherapi" -> BlockcypherAPIBitcoinConnection.create();
-                    case "esploraelectrsrest" -> EsploraElectrsRESTBitcoinConnection.create(URI.create(bitcoinConnectionUrl));
+                    case "bitcoind" -> BitcoindRPCBitcoinConnection.create(network, URI.create(bitcoinConnectionUrl).toURL());
+                    case "btcd" -> BTCDRPCBitcoinConnection.create(network, URI.create(bitcoinConnectionUrl).toURL());
+                    case "bitcoinj" -> BitcoinjSPVBitcoinConnection.create(network);
+                    case "blockcypherapi" -> BlockcypherAPIBitcoinConnection.create(network);
+                    case "esploraelectrsrest" -> EsploraElectrsRESTBitcoinConnection.create(network, URI.create(bitcoinConnectionUrl));
                     default -> throw new IllegalArgumentException("Invalid bitcoinConnectionType: " + bitcoinConnectionType);
                 };
-                bitcoinConnections.put(Network.valueOf(networkName), bitcoinConnection);
-                genesisHashes.put(Network.valueOf(networkName), genesisHash);
+                bitcoinConnections.put(network, bitcoinConnection);
+                genesisHashes.put(network, genesisHash);
             }
 
             BitcoinConnector bitcoinConnector = BitcoinConnector.create(bitcoinConnections, genesisHashes);

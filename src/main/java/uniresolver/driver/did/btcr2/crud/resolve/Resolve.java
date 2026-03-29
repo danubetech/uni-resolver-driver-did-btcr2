@@ -1,7 +1,11 @@
 package uniresolver.driver.did.btcr2.crud.resolve;
 
 import com.apicatalog.multicodec.MulticodecDecoder;
-import com.danubetech.btc.connection.*;
+import com.danubetech.btc.connection.BitcoinConnection;
+import com.danubetech.btc.connection.BitcoinConnector;
+import com.danubetech.btc.connection.Network;
+import com.danubetech.btc.connection.records.Block;
+import com.danubetech.btc.connection.records.Tx;
 import com.danubetech.btc.syntax.GenesisBytesType;
 import com.danubetech.btc.syntax.IdentifierComponents;
 import com.danubetech.btc.util.AddressUtil;
@@ -273,7 +277,7 @@ public class Resolve {
             if (beaconServices != null) {
                 for (Service beaconService : beaconServices) {
                     try {
-                        String beaconAddress = AddressUtil.bitcoinUriToAddress((URI) beaconService.getServiceEndpoint());
+                        String beaconAddress = AddressUtil.bitcoinUriToAddressString((URI) beaconService.getServiceEndpoint());
                         String beaconServiceType = beaconService.getType();
                         if (log.isDebugEnabled()) log.debug("Adding beacon address {} for service type {}", beaconAddress, beaconServiceType);
                         beaconsAddresses.put(beaconAddress, beaconServiceType);
