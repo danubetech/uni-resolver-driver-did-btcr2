@@ -1,12 +1,10 @@
 package uniresolver.driver.did.btcr2.crud.resolve;
 
 import com.apicatalog.multicodec.MulticodecDecoder;
-import com.danubetech.btc.connection.BitcoinConnection;
-import com.danubetech.btc.connection.BitcoinConnector;
-import com.danubetech.btc.connection.Block;
-import com.danubetech.btc.connection.Tx;
+import com.danubetech.btc.connection.*;
 import com.danubetech.btc.syntax.GenesisBytesType;
 import com.danubetech.btc.syntax.IdentifierComponents;
+import com.danubetech.btc.util.AddressUtil;
 import com.danubetech.dataintegrity.DataIntegrityProof;
 import com.danubetech.dataintegrity.jsonld.DataIntegrityKeywords;
 import com.danubetech.dataintegrity.verifier.DataIntegrityProofLdVerifier;
@@ -38,17 +36,18 @@ import uniresolver.driver.did.btcr2.algorithms.JSONDocumentHashing;
 import uniresolver.driver.did.btcr2.algorithms.SMTProofVerification;
 import uniresolver.driver.did.btcr2.appendix.RootDidBtcr2UpdateCapabilities;
 import uniresolver.driver.did.btcr2.beacons.BeaconTypes;
-import uniresolver.driver.did.btcr2.ipfs.IPFSConnection;
 import uniresolver.driver.did.btcr2.data.json.CASAnnouncement;
 import uniresolver.driver.did.btcr2.data.json.SMTProof;
 import uniresolver.driver.did.btcr2.data.json.SidecarData;
 import uniresolver.driver.did.btcr2.data.jsonld.BTCR2Update;
 import uniresolver.driver.did.btcr2.data.jsonld.RootCapability;
+import uniresolver.driver.did.btcr2.ipfs.IPFSConnection;
 import uniresolver.driver.did.btcr2.syntax.DidBtcr2IdentifierDecoding;
 import uniresolver.driver.did.btcr2.util.JSONPatchUtil;
 import uniresolver.result.ResolveResult;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.util.*;
@@ -131,7 +130,6 @@ public class Resolve {
         // Resolution maintains the following state while building the DID document:
 
         List<Map.Entry<Block, BTCR2Update>> updates = new ArrayList<>();
-        DIDDocumentV1_1 current_document;
         int current_version_id = 1;
         List<ByteBuffer> update_hash_history = new ArrayList<>();
         Integer block_confirmations = null;
@@ -195,7 +193,7 @@ public class Resolve {
 
         // Choose how to establish current_document based on the type of genesis_bytes retrieved from the decoded did:
 
-        current_document = switch (identifierComponents.genesisBytesType()) {
+        DIDDocumentV1_1 current_document = switch (identifierComponents.genesisBytesType()) {
 
             /*
              * If genesis_bytes is a SHA-256 Hash
@@ -208,7 +206,8 @@ public class Resolve {
                 // placeholder ("did:btcr2:_") with the did.
 
                 DIDDocument genesisDocument = sidecar == null ? null : sidecar.getGenesisDocument();
-                if (genesisDocument == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "Missing genesis document in sidecar data");
+                if (genesisDocument == null)
+                    throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "Missing genesis document in sidecar data");
                 yield DIDDocumentV1_1.fromJson(sidecar.getGenesisDocument().toJson().replace("did:btcr2:_", identifier.getDidString()));
             }
 
@@ -274,7 +273,7 @@ public class Resolve {
             if (beaconServices != null) {
                 for (Service beaconService : beaconServices) {
                     try {
-                        String beaconAddress = BitcoinURI.of(beaconService.getServiceEndpoint().toString()).getAddress();
+                        String beaconAddress = AddressUtil.bitcoinUriToAddress((URI) beaconService.getServiceEndpoint());
                         String beaconServiceType = beaconService.getType();
                         if (log.isDebugEnabled()) log.debug("Adding beacon address {} for service type {}", beaconAddress, beaconServiceType);
                         beaconsAddresses.put(beaconAddress, beaconServiceType);

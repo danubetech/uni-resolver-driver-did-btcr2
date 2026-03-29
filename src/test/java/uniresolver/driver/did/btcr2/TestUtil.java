@@ -1,11 +1,12 @@
 package uniresolver.driver.did.btcr2;
 
+import com.danubetech.btc.connection.BitcoinConnector;
+import com.danubetech.btc.connection.Network;
+import com.danubetech.btc.connection.impl.EsploraElectrsRESTBitcoinConnection;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import foundation.identity.did.DIDDocument;
-import uniresolver.driver.did.btcr2.connections.bitcoin.BitcoinConnector;
-import uniresolver.driver.did.btcr2.connections.bitcoin.EsploraElectrsRESTBitcoinConnection;
 import uniresolver.driver.did.btcr2.ipfs.IPFSConnection;
 
 import java.io.IOException;
