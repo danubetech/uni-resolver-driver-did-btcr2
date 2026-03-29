@@ -1,16 +1,15 @@
 package uniresolver.driver.did.btcr2.syntax;
 
+import com.danubetech.btc.connection.Network;
+import com.danubetech.btc.syntax.GenesisBytesType;
+import com.danubetech.btc.syntax.IdentifierComponents;
 import foundation.identity.did.DID;
 import foundation.identity.did.parser.ParserException;
 import org.apache.commons.codec.binary.Hex;
-import org.bitcoinj.crypto.ECKey;
+import org.bitcoinj.base.Bech32;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
-import uniresolver.driver.did.btcr2.Network;
-import uniresolver.driver.did.btcr2.appendix.Bech32mEncoding;
-import uniresolver.driver.did.btcr2.data.records.GenesisBytesType;
-import uniresolver.driver.did.btcr2.data.records.IdentifierComponents;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -117,7 +116,7 @@ public class DidBtcr2IdentifierEncoding {
 
         // Pass hrp and dataBytes to the Bech32m Encoding algorithm, retrieving encodedString.
 
-        String encodedString = Bech32mEncoding.bech32Encode(hrp, dataBytes.toByteArray());
+        String encodedString = Bech32.encodeBytes(Bech32.Encoding.BECH32M, hrp, dataBytes.toByteArray());
 
         // Append encodedString to identifier.
 

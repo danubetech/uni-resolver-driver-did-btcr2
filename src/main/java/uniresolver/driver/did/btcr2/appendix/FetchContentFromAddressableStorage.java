@@ -7,7 +7,7 @@ import io.ipfs.multihash.Multihash;
 import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uniresolver.driver.did.btcr2.connections.ipfs.IPFSConnection;
+import uniresolver.driver.did.btcr2.ipfs.IPFSConnection;
 
 import java.io.IOException;
 

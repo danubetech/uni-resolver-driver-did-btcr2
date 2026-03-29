@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import foundation.identity.did.DIDDocument;
 import uniresolver.driver.did.btcr2.connections.bitcoin.BitcoinConnector;
 import uniresolver.driver.did.btcr2.connections.bitcoin.EsploraElectrsRESTBitcoinConnection;
-import uniresolver.driver.did.btcr2.connections.ipfs.IPFSConnection;
+import uniresolver.driver.did.btcr2.ipfs.IPFSConnection;
 
 import java.io.IOException;
 import java.io.InputStreamReader;

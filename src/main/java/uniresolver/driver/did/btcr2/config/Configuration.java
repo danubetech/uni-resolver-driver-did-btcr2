@@ -1,11 +1,13 @@
 package uniresolver.driver.did.btcr2.config;
 
+import com.danubetech.btc.connection.BitcoinConnection;
+import com.danubetech.btc.connection.BitcoinConnector;
+import com.danubetech.btc.connection.Network;
+import com.danubetech.btc.connection.impl.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.driver.did.btcr2.DidBtcr2Driver;
-import uniresolver.driver.did.btcr2.Network;
-import uniresolver.driver.did.btcr2.connections.bitcoin.*;
-import uniresolver.driver.did.btcr2.connections.ipfs.IPFSConnection;
+import uniresolver.driver.did.btcr2.ipfs.IPFSConnection;
 import uniresolver.driver.did.btcr2.crud.resolve.Resolve;
 
 import java.net.URI;

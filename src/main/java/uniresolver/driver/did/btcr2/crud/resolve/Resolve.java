@@ -1,6 +1,12 @@
 package uniresolver.driver.did.btcr2.crud.resolve;
 
 import com.apicatalog.multicodec.MulticodecDecoder;
+import com.danubetech.btc.connection.BitcoinConnection;
+import com.danubetech.btc.connection.BitcoinConnector;
+import com.danubetech.btc.connection.Block;
+import com.danubetech.btc.connection.Tx;
+import com.danubetech.btc.syntax.GenesisBytesType;
+import com.danubetech.btc.syntax.IdentifierComponents;
 import com.danubetech.dataintegrity.DataIntegrityProof;
 import com.danubetech.dataintegrity.jsonld.DataIntegrityKeywords;
 import com.danubetech.dataintegrity.verifier.DataIntegrityProofLdVerifier;
@@ -21,7 +27,6 @@ import jakarta.json.Json;
 import jakarta.json.JsonPatch;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
-import org.bitcoinj.base.Address;
 import org.bitcoinj.base.AddressParser;
 import org.bitcoinj.crypto.ECKey;
 import org.bitcoinj.uri.BitcoinURI;
@@ -29,23 +34,16 @@ import org.bitcoinj.uri.BitcoinURIParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uniresolver.ResolutionException;
-import uniresolver.driver.did.btcr2.Network;
 import uniresolver.driver.did.btcr2.algorithms.JSONDocumentHashing;
 import uniresolver.driver.did.btcr2.algorithms.SMTProofVerification;
 import uniresolver.driver.did.btcr2.appendix.RootDidBtcr2UpdateCapabilities;
 import uniresolver.driver.did.btcr2.beacons.BeaconTypes;
-import uniresolver.driver.did.btcr2.connections.bitcoin.BitcoinConnection;
-import uniresolver.driver.did.btcr2.connections.bitcoin.BitcoinConnector;
-import uniresolver.driver.did.btcr2.connections.bitcoin.records.Block;
-import uniresolver.driver.did.btcr2.connections.bitcoin.records.Tx;
-import uniresolver.driver.did.btcr2.connections.ipfs.IPFSConnection;
+import uniresolver.driver.did.btcr2.ipfs.IPFSConnection;
 import uniresolver.driver.did.btcr2.data.json.CASAnnouncement;
 import uniresolver.driver.did.btcr2.data.json.SMTProof;
 import uniresolver.driver.did.btcr2.data.json.SidecarData;
 import uniresolver.driver.did.btcr2.data.jsonld.BTCR2Update;
 import uniresolver.driver.did.btcr2.data.jsonld.RootCapability;
-import uniresolver.driver.did.btcr2.data.records.GenesisBytesType;
-import uniresolver.driver.did.btcr2.data.records.IdentifierComponents;
 import uniresolver.driver.did.btcr2.syntax.DidBtcr2IdentifierDecoding;
 import uniresolver.driver.did.btcr2.util.JSONPatchUtil;
 import uniresolver.result.ResolveResult;
@@ -272,11 +270,11 @@ public class Resolve {
 
             // Parse each beacon serviceEndpoint as a Beacon Address
 
-            Map<Address, String> beaconsAddresses = new LinkedHashMap<>();
+            Map<String, String> beaconsAddresses = new LinkedHashMap<>();
             if (beaconServices != null) {
                 for (Service beaconService : beaconServices) {
                     try {
-                        Address beaconAddress = BitcoinURI.of((beaconService.getServiceEndpoint()).toString()).getAddress();
+                        String beaconAddress = BitcoinURI.of(beaconService.getServiceEndpoint().toString()).getAddress();
                         String beaconServiceType = beaconService.getType();
                         if (log.isDebugEnabled()) log.debug("Adding beacon address {} for service type {}", beaconAddress, beaconServiceType);
                         beaconsAddresses.put(beaconAddress, beaconServiceType);
@@ -292,8 +290,8 @@ public class Resolve {
             Map<Tx, String> beaconsServiceTypes = new LinkedHashMap<>();
             Map<Tx, byte[]> beaconsSignalBytes = new LinkedHashMap<>();
 
-            for (Map.Entry<Address, String> beaconAddressEntry : beaconsAddresses.entrySet()) {
-                Address beaconAddress = beaconAddressEntry.getKey();
+            for (Map.Entry<String, String> beaconAddressEntry : beaconsAddresses.entrySet()) {
+                String beaconAddress = beaconAddressEntry.getKey();
                 String beaconServiceType = beaconAddressEntry.getValue();
                 for (Tx beaconTransaction : bitcoinConnection.getAddressTransactions(beaconAddress)) {
                     Block beaconBlock = bitcoinConnection.getBlockByTransaction(beaconTransaction);

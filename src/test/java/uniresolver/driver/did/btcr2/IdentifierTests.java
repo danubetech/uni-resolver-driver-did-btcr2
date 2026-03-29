@@ -1,11 +1,12 @@
 package uniresolver.driver.did.btcr2;
 
+import com.danubetech.btc.connection.Network;
+import com.danubetech.btc.syntax.GenesisBytesType;
+import com.danubetech.btc.syntax.IdentifierComponents;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import foundation.identity.did.DID;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.jupiter.api.Test;
-import uniresolver.driver.did.btcr2.data.records.GenesisBytesType;
-import uniresolver.driver.did.btcr2.data.records.IdentifierComponents;
 import uniresolver.driver.did.btcr2.syntax.DidBtcr2IdentifierDecoding;
 import uniresolver.driver.did.btcr2.syntax.DidBtcr2IdentifierEncoding;
 

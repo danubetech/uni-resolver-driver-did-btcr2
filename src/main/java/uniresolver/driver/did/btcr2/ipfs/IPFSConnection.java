@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btcr2.connections.ipfs;
+package uniresolver.driver.did.btcr2.ipfs;
 
 import io.ipfs.api.IPFS;
 import io.ipfs.multiaddr.MultiAddress;
