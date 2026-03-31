@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>decentralized-identity</groupId>
 		<artifactId>uni-resolver</artifactId>
-		<version>1.2.0</version>
+		<version>1.3.0</version>
 	</parent>
 
 	<scm>
@@ -39,7 +39,7 @@
 		<!-- Dependency Versions -->
 
 		<jcl-over-slf4j.version>2.0.17</jcl-over-slf4j.version>
-		<log4j-slf4j2-impl.version>2.25.3</log4j-slf4j2-impl.version>
+		<log4j-slf4j2-impl.version>2.25.4</log4j-slf4j2-impl.version>
 	</properties>
 
 	<profiles>
@@ -60,7 +60,7 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-enforcer-plugin</artifactId>
-						<version>3.0.0</version>
+						<version>3.6.2</version>
 						<executions>
 							<execution>
 								<id>enforce-no-snapshots</id>
@@ -91,11 +91,12 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-war-plugin</artifactId>
+						<version>3.5.1</version>
 					</plugin>
 					<plugin>
 						<groupId>org.eclipse.jetty</groupId>
 						<artifactId>jetty-maven-plugin</artifactId>
-						<version>11.0.25</version>
+						<version>11.0.26</version>
 						<configuration>
 							<jettyXmls>
 								${basedir}/src/test/resources/jetty.xml
@@ -171,7 +172,7 @@
 		<dependency>
 			<groupId>decentralized-identity</groupId>
 			<artifactId>did-common-java</artifactId>
-			<version>1.24.0</version>
+			<version>1.26.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.danubetech</groupId>
@@ -201,7 +202,7 @@
 		<dependency>
 			<groupId>com.github.multiformats</groupId>
 			<artifactId>java-multibase</artifactId>
-			<version>v1.1.1</version>
+			<version>1.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-codec</groupId>
