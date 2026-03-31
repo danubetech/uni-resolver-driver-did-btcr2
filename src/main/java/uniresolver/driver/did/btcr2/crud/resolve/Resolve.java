@@ -298,7 +298,7 @@ public class Resolve {
                 String beaconServiceType = beaconAddressEntry.getValue();
                 for (Tx beaconTransaction : bitcoinConnection.getAddressTransactions(beaconAddress)) {
                     Block beaconBlock = bitcoinConnection.getBlockByTransaction(beaconTransaction);
-                    Matcher matcher = PATTERN_TX_SIGNALBYTES.matcher(beaconTransaction.txOuts().getLast().asm());
+                    Matcher matcher = PATTERN_TX_SIGNALBYTES.matcher(beaconTransaction.txOuts().getLast().scriptPubKeyAsm());
                     if (! matcher.matches()) {
                         if (log.isDebugEnabled()) log.debug("Transaction {} does not have signal bytes. Skipping.", beaconTransaction);
                         continue;
