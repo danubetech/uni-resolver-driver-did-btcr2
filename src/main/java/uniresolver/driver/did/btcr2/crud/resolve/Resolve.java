@@ -183,7 +183,7 @@ public class Resolve {
             if (genesisDocument != null) {
                 byte[] genesisDocumentHash = JSONDocumentHashing.jsonDocumentHashing(genesisDocument);
                 if (! Arrays.equals(genesisDocumentHash, identifierComponents.genesisBytes())) {
-                    throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Computed hash " + Base64.getUrlEncoder().encodeToString(genesisDocumentHash) + " does not match genesis_bytes " + Base64.getUrlEncoder().encodeToString(identifierComponents.genesisBytes()));
+                    throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Computed hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(genesisDocumentHash) + " does not match genesis_bytes " + Base64.getUrlEncoder().withoutPadding().encodeToString(identifierComponents.genesisBytes()));
                 }
             }
         }
@@ -357,7 +357,7 @@ public class Resolve {
                 if (update_lookup_table == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "No update_lookup_table provided");
 
                 BTCR2Update update = update_lookup_table.get(ByteBuffer.wrap(update_hash));
-                if (update == null) throw new ResolutionException("MISSING_UPDATE_DATA", "No update found for update_hash " + Base64.getUrlEncoder().encodeToString(update_hash));
+                if (update == null) throw new ResolutionException("MISSING_UPDATE_DATA", "No update found for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash));
 
                 Map.Entry<Block, BTCR2Update> updateTuple = Map.entry(beaconBlock, update);
 
@@ -476,17 +476,17 @@ public class Resolve {
         // Look up map_update_hash in cas_lookup_table to retrieve a CAS Announcement (data structure)
 
         CASAnnouncement casAnnouncement = cas_lookup_table.get(ByteBuffer.wrap(map_update_hash));
-        if (casAnnouncement == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No CAS Announcement found for map_update_hash " + Base64.getUrlEncoder().encodeToString(map_update_hash));
+        if (casAnnouncement == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No CAS Announcement found for map_update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash));
 
         // and read update_hash from the announcement entry keyed by did.
 
         String update_hash_string = casAnnouncement.get(did.getDidString());
-        if (update_hash_string == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No update_hash found for DID " + did + " and map_update_hash " + Base64.getUrlEncoder().encodeToString(map_update_hash));
+        if (update_hash_string == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No update_hash found for DID " + did + " and map_update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash));
 
         // done
 
         byte[] update_hash = Base64.getUrlDecoder().decode(update_hash_string);
-        if (log.isDebugEnabled()) log.debug("For did {} and map_update_hash {} found update_hash: {}", did, Base64.getUrlEncoder().encodeToString(map_update_hash), Base64.getUrlEncoder().encodeToString(update_hash));
+        if (log.isDebugEnabled()) log.debug("For did {} and map_update_hash {} found update_hash: {}", did, Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash), Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash));
         return update_hash;
     }
 
@@ -505,7 +505,7 @@ public class Resolve {
         // Look up smt_root in smt_lookup_table to retrieve an SMT Proof (data structure).
 
         SMTProof smtProof = smt_lookup_table.get(ByteBuffer.wrap(smt_root));
-        if (smtProof == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No SMT Proof found for smt_root " + Base64.getUrlEncoder().encodeToString(smt_root));
+        if (smtProof == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No SMT Proof found for smt_root " + Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root));
 
         // Validate the proof with the SMT Proof Verification algorithm.
 
@@ -514,7 +514,7 @@ public class Resolve {
         // Use smt_proof.updateId as update_hash.
 
         byte[] update_hash = Base64.getUrlDecoder().decode(smtProof.getUpdateId());
-        if (log.isDebugEnabled()) log.debug("For smt_root {} found update_hash: {}", Base64.getUrlEncoder().encodeToString(smt_root), Base64.getUrlEncoder().encodeToString(update_hash));
+        if (log.isDebugEnabled()) log.debug("For smt_root {} found update_hash: {}", Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root), Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash));
         return update_hash;
     }
 
@@ -591,7 +591,7 @@ public class Resolve {
         try {
             byte[] decodedSourceHash = Base64.getUrlDecoder().decode(update.getSourceHash());
             if (! Arrays.equals(currentDocumentHash, decodedSourceHash)) {
-                throw new ResolutionException("INVALID_DID_UPDATE", "current_document hash (" + Base64.getUrlEncoder().encodeToString(currentDocumentHash) + ") differs from decoded update.sourceHash (" + Base64.getUrlEncoder().encodeToString(decodedSourceHash) + " decoded from " + update.getSourceHash() + ")");
+                throw new ResolutionException("INVALID_DID_UPDATE", "current_document hash (" + Base64.getUrlEncoder().withoutPadding().encodeToString(currentDocumentHash) + ") differs from decoded update.sourceHash (" + Base64.getUrlEncoder().withoutPadding().encodeToString(decodedSourceHash) + " decoded from " + update.getSourceHash() + ")");
             }
         } catch (IllegalArgumentException ex) {
             throw new ResolutionException("INVALID_DID_UPDATE", "Cannot decode update.sourceHash " + update.getSourceHash() + ": " + ex.getMessage(), ex);
@@ -627,7 +627,7 @@ public class Resolve {
         try {
             byte[] decodedTargetHash = Base64.getUrlDecoder().decode(update.getTargetHash());
             if (! Arrays.equals(currentDocumentHash, decodedTargetHash)) {
-                throw new ResolutionException("INVALID_DID_UPDATE", "current_document hash (" + Base64.getUrlEncoder().encodeToString(currentDocumentHash) + ") differs from decoded update.targetHash (" + Base64.getUrlEncoder().encodeToString(decodedTargetHash) + " decoded from " + update.getTargetHash() + ")");
+                throw new ResolutionException("INVALID_DID_UPDATE", "current_document hash (" + Base64.getUrlEncoder().withoutPadding().encodeToString(currentDocumentHash) + ") differs from decoded update.targetHash (" + Base64.getUrlEncoder().withoutPadding().encodeToString(decodedTargetHash) + " decoded from " + update.getTargetHash() + ")");
             }
         } catch (IllegalArgumentException ex) {
             throw new ResolutionException("INVALID_DID_UPDATE", "Cannot decode update.targetHash " + update.getTargetHash() + ": " + ex.getMessage(), ex);
