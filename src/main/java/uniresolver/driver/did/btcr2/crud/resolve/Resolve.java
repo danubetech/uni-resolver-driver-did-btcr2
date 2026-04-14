@@ -446,6 +446,7 @@ public class Resolve {
 
         Map<String, Object> didDocumentMetadata = new LinkedHashMap<>();
         didDocumentMetadata.put("versionId", Integer.toString(current_version_id));
+        didDocumentMetadata.put("nextVersionId", Integer.toString(current_version_id + 1)); // NOT IN SPEC
         didDocumentMetadata.put("confirmations", (block_confirmations == null ? null : block_confirmations.toString()));
         didDocumentMetadata.put("deactivated", current_document.getJsonObject().get("deactivated"));
         didDocumentMetadata.put("identifierComponents", Map.of(
