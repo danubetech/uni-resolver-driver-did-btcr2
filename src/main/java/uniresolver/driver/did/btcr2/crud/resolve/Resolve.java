@@ -354,7 +354,7 @@ public class Resolve {
                 // The BTCR2 Signed Update (data structure) retrieved from update_lookup_table[update_hash].
                 // If the update is not in update_lookup_table, raise a MISSING_UPDATE_DATA error.
 
-                if (update_lookup_table == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "No update_lookup_table provided");
+                if (update_lookup_table == null) throw new ResolutionException("MISSING_UPDATE_DATA", "No update_lookup_table provided");
 
                 BTCR2Update update = update_lookup_table.get(ByteBuffer.wrap(update_hash));
                 if (update == null) throw new ResolutionException("MISSING_UPDATE_DATA", "No update found for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash));
