@@ -25,6 +25,7 @@ import foundation.identity.jsonld.JsonLDUtils;
 import fr.acinq.bitcoin.BlockHash;
 import fr.acinq.bitcoin.PublicKey;
 import io.ipfs.multibase.Multibase;
+import io.ipfs.multihash.Multihash;
 import jakarta.json.Json;
 import jakarta.json.JsonPatch;
 import org.apache.commons.codec.DecoderException;
@@ -50,9 +51,12 @@ import uniresolver.driver.did.btcr2.syntax.DidBtcr2IdentifierDecoding;
 import uniresolver.driver.did.btcr2.util.JSONPatchUtil;
 import uniresolver.result.ResolveResult;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -352,12 +356,26 @@ public class Resolve {
 
                 // Build a tuple with: The transaction’s block metadata (height, time, and confirmations).
                 // The BTCR2 Signed Update (data structure) retrieved from update_lookup_table[update_hash].
-                // If the update is not in update_lookup_table, raise a MISSING_UPDATE_DATA error.
 
-                if (update_lookup_table == null) throw new ResolutionException("MISSING_UPDATE_DATA", "No update_lookup_table provided");
+                BTCR2Update update = update_lookup_table == null ? null : update_lookup_table.get(ByteBuffer.wrap(update_hash));
+                if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in update_lookup_table: " + update);
 
-                BTCR2Update update = update_lookup_table.get(ByteBuffer.wrap(update_hash));
-                if (update == null) throw new ResolutionException("MISSING_UPDATE_DATA", "No update found for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash));
+                // If the update is not in update_lookup_table, retrieve it from CAS.
+
+                Multihash updateMultihash = new Multihash(Multihash.Type.id, update_hash);
+                if (update == null && this.getIpfsConnection() != null) {
+                    try {
+                        byte[] updateBytes = this.getIpfsConnection().getIpfs().get(updateMultihash);
+                        update = updateBytes == null ? null : BTCR2Update.fromJson(new InputStreamReader(new ByteArrayInputStream(updateBytes), StandardCharsets.UTF_8));
+                        if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in CAS (IPFS): " + update);
+                    } catch (IOException ex) {
+                        throw new ResolutionException("Cannot get update from CAS (IPFS) at " + updateMultihash + ": " + ex.getMessage(), ex);
+                    }
+                }
+
+                // Raise a MISSING_UPDATE_DATA error if the update is not available from either source.
+
+                if (update == null) throw new ResolutionException("MISSING_UPDATE_DATA", "No update found for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " from either update_lookup_table or CAS (IPFS).");
 
                 Map.Entry<Block, BTCR2Update> updateTuple = Map.entry(beaconBlock, update);
 
