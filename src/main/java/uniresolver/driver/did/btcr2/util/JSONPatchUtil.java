@@ -6,8 +6,6 @@ import jakarta.json.JsonObject;
 import jakarta.json.JsonPatch;
 
 import java.io.StringWriter;
-import java.util.List;
-import java.util.Map;
 
 public class JSONPatchUtil {
 

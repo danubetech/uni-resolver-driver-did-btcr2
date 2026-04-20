@@ -1,7 +1,6 @@
 package uniresolver.driver.did.btcr2.data.json;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
 import foundation.identity.did.DIDDocument;
 import uniresolver.driver.did.btcr2.data.jsonld.BTCR2Update;
 
