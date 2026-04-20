@@ -365,7 +365,7 @@ public class Resolve {
                 Multihash updateMultihash = new Multihash(Multihash.Type.id, update_hash);
                 if (update == null && this.getIpfsConnection() != null) {
                     try {
-                        byte[] updateBytes = this.getIpfsConnection().getIpfs().get(updateMultihash);
+                        byte[] updateBytes = this.getIpfsConnection().getIpfs().cat(updateMultihash);
                         update = updateBytes == null ? null : BTCR2Update.fromJson(new InputStreamReader(new ByteArrayInputStream(updateBytes), StandardCharsets.UTF_8));
                         if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in CAS (IPFS): " + update);
                     } catch (IOException ex) {
