@@ -161,6 +161,7 @@ public class Resolve {
 
         Map<String, Object> sidecarMap = resolutionOptions == null ? null : (Map<String, Object>) resolutionOptions.get("sidecar");
         SidecarData sidecar = sidecarMap == null ? null : jsonMapper.convertValue(sidecarMap, SidecarData.class);
+        if (log.isDebugEnabled()) log.debug("Sidecar data: " + sidecar);
 
         // Hash each BTCR2 Signed Update (data structure) in sidecar.updates with the JSON Document Hashing algorithm
         // and build a map from hash to update (update_lookup_table).
