@@ -16,9 +16,28 @@ docker compose up
 
 ## Example Requests
 
+Public Key-based did:btcr2 on Mutinynet without Update:
+
 ```
 curl -X GET 'http://localhost:8080/1.0/identifiers/did:btcr2:k1q5ppmnfjqp0qe5klmnll9tazz9jd5ds43x5xfsr3hu9jdgaldu0d3jgs0vj4r'
-curl -X GET 'http://localhost:8080/1.0/identifiers/did%3Abtcr2%3Ak1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h?%7B%22sidecarData%22%3A%7B%22did%22%3A%22did%3Abtcr2%3Ak1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h%22%2C%22signalsMetadata%22%3A%7B%222910c61eff717307e13f2f150156f566bacb96dccbad5f8959874c4d7ac94faf%22%3A%7B%22didUpdate%22%3A%7B%22%40context%22%3A%5B%22https%3A%2F%2Fw3id.org%2Fsecurity%2Fv2%22%2C%22https%3A%2F%2Fw3id.org%2Fzcap%2Fv1%22%2C%22https%3A%2F%2Fw3id.org%2Fjson-ld-patch%2Fv1%22%5D%2C%22patch%22%3A%5B%7B%22op%22%3A%22add%22%2C%22path%22%3A%22%2Fservice%2F3%22%2C%22value%22%3A%7B%22type%22%3A%22SingletonBeacon%22%2C%22id%22%3A%22did%3Abtcr2%3Ak1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h%23initialP2PKH%22%2C%22serviceEndpoint%22%3A%22bitcoin%3Amx1d72m2yzbJiTCdjrJKJNDtANURL3BGDD%22%7D%7D%5D%2C%22targetHash%22%3A%222Lj51vMAcfaXWF6Hfm8gTac4PPUzT1m45AadqLeVbF5W%22%2C%22targetVersionId%22%3A2%2C%22sourceHash%22%3A%2234LDxujTRru6QRHZFEnN1i9sFvPiCexFSdCucVauEyFH%22%2C%22proof%22%3A%7B%22cryptosuite%22%3A%22bip340-jcs-2025%22%2C%22type%22%3A%22DataIntegrityProof%22%2C%22verificationMethod%22%3A%22did%3Abtcr2%3Ak1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h%23initialKey%22%2C%22proofPurpose%22%3A%22capabilityInvocation%22%2C%22capability%22%3A%22urn%3Azcap%3Aroot%3Adid%253Abtcr2%253Ak1q5pua0p3syhn3p3kpvuqkx7sxd9ndv6uffwvuv008n4nq6fdwv22x5q4qfp5h%22%2C%22capabilityAction%22%3A%22Write%22%2C%22%40context%22%3A%5B%22https%3A%2F%2Fw3id.org%2Fsecurity%2Fv2%22%2C%22https%3A%2F%2Fw3id.org%2Fzcap%2Fv1%22%2C%22https%3A%2F%2Fw3id.org%2Fjson-ld-patch%2Fv1%22%5D%2C%22proofValue%22%3A%22z5BPFwuLAjnJmY7h2nPNFCneXHzxyusufNSfmw7a8SiwbiHxUyXVXaJyV5fL6ZPd397uuAVVF8f7F9syX2aYyXsQR%22%7D%7D%7D%7D%7D%7D'
+```
+
+Public Key-based did:btcr2 on Mutinynet with 1 Update (from Sidecar):
+
+```
+curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:k1q5p7drc8y5hhmvs2nncyuq73ts98arnqv5ce446vwydafuu2mp9rp6szethjk' -d '{"sidecar":{"updates":[{"@context":["https://btcr2.dev/context/v1","https://w3id.org/json-ld-patch/v1","https://w3id.org/zcap/v1","https://w3id.org/security/data-integrity/v2"],"patch":[{"op":"add","path":"/service/3","value":{"id":"#didcomm","type":"DIDCommMessaging","serviceEndpoint":"http://example.com/didcomm/"}}],"sourceHash":"osaUrsl3XhLlm-J4hKrqmxP6G0y9sfqseaF4HPPUe_8","targetHash":"eS9wA7p1qiQHGEuyz4swjnZNnFz9VkBSPff6i6XeP_M","targetVersionId":2,"proof":{"type":"DataIntegrityProof","cryptosuite":"bip340-jcs-2025","verificationMethod":"did:btcr2:k1q5p7drc8y5hhmvs2nncyuq73ts98arnqv5ce446vwydafuu2mp9rp6szethjk#initialKey","proofPurpose":"capabilityInvocation","capability":"urn:zcap:root:did%3Abtcr2%3Ak1q5p7drc8y5hhmvs2nncyuq73ts98arnqv5ce446vwydafuu2mp9rp6szethjk","capabilityAction":"Write","proofValue":"z5DhhjMk8gXULWNKRwqJqGbqZF94ov7zjKS6YkaCGxoDa2f3WT3zprMUc1p62w2cRRdkNAhR4rfGJpxZZFfHsdrJB"}}]}}'
+```
+
+Genesis document-based did:btcr2 on Mutinynet without Update:
+
+```
+curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q48psqn0s2fd03nu35ccwsfur6fhx7qwa42uxtf4gch592w45lkdumq73zt' -d '{"sidecar":{"genesisDocument":{"verificationMethod":[{"type":"Multikey","id":"#initialKey","publicKeyMultibase":"zQ3shjzRm1832EuqTXGQ8EyPuGePQCjUvRPekwxWFaX5qg5oG"}],"service":[{"id":"#didcomm","type":"DIDCommMessaging","serviceEndpoint":"http://localhost/"}],"assertionMethod":["#initialKey"],"capabilityDelegation":["#initialKey"],"capabilityInvocation":["#initialKey"],"@context":["https://www.w3.org/ns/did/v1.1","https://btcr2.dev/context/v1"],"authentication":["#initialKey"],"id":"did:btcr2:_"}}}'
+```
+
+Genesis document-based did:btcr2 on Mutinynet with 1 Update (from Sidecar):
+
+```
+curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q5d4fqz7fp6e7dlyc9yeeepytzdqhegs8quzjfj3zyn5nx62zqsfsrf77dk' -d '{"sidecar":{"genesisDocument":{"verificationMethod":[{"type":"Multikey","id":"#initialKey","publicKeyMultibase":"zQ3shukJPNjyebn1ougtYiYmBeBvSV79WJ7SJwGU1PdNvpfoT"}],"service":[{"id":"#didcomm","type":"DIDCommMessaging","serviceEndpoint":"https://test.example.com/didcomm"},{"type":"SingletonBeacon","id":"#initialP2PKH","serviceEndpoint":"bitcoin:mkDXg7GBwyJsBxVFznjnuZSHCzBNymaMHM"},{"type":"SingletonBeacon","id":"#initialP2WPKH","serviceEndpoint":"bitcoin:tb1qxwxsrz75yttwnvtrq63d60m0wtwtylv7pdlnaw"},{"type":"SingletonBeacon","id":"#initialP2TR","serviceEndpoint":"bitcoin:tb1penz0flulv59cnp96nw60a4wmw56nkj877t8vc26fwjstyjtv7z8qr6h46l"}],"assertionMethod":["#initialKey"],"capabilityDelegation":["#initialKey"],"capabilityInvocation":["#initialKey"],"@context":["https://www.w3.org/ns/did/v1.1","https://btcr2.dev/context/v1"],"authentication":["#initialKey"],"id":"did:btcr2:_"},"updates":[{"@context":["https://btcr2.dev/context/v1","https://w3id.org/json-ld-patch/v1","https://w3id.org/zcap/v1","https://w3id.org/security/data-integrity/v2"],"patch":[{"op":"add","path":"/service/4","value":{"id":"#dwn","type":"DecentralizedWebNode","serviceEndpoint":"http://my.service.com/dwn"}}],"sourceHash":"XQkK_8IWFKTQIPNW_9G-f1KhgpYCK0jbkISZ53JBJpg","targetHash":"UhsASA4PPlthQUkCbsAv_dFQBtPhrZ4binAJwfmqQIc","targetVersionId":2,"proof":{"type":"DataIntegrityProof","cryptosuite":"bip340-jcs-2025","verificationMethod":"#initialKey","proofPurpose":"capabilityInvocation","capability":"urn:zcap:root:did%3Abtcr2%3Ax1q5d4fqz7fp6e7dlyc9yeeepytzdqhegs8quzjfj3zyn5nx62zqsfsrf77dk","capabilityAction":"Write","proofValue":"z4PCo1d9mwp1ND9V1e36kJFdzbpzYGYTqU2KAS2ZTWkb7284wz5A9zXqzmzuEr2HLH29xsHLzFny5bpMzj85cFMtL"}}]}}'
 ```
 
 ## Driver Environment Variables
