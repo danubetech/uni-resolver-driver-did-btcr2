@@ -468,6 +468,13 @@ public class Resolve {
         didDocumentMetadata.put("nextVersionId", Integer.toString(current_version_id + 1)); // NOT IN SPEC
         didDocumentMetadata.put("confirmations", (block_confirmations == null ? null : block_confirmations.toString()));
         didDocumentMetadata.put("deactivated", current_document.getJsonObject().get("deactivated"));
+        didDocumentMetadata.put("updates", updates.stream().map(x -> Map.of(x.getKey().blockHeight(), Map.of(
+                "blockHash", x.getKey().blockHash(),
+                "blockTime", x.getKey().blockTime(),
+                "targetVersionId", x.getValue().getTargetVersionId(),
+                "sourceHash", x.getValue().getSourceHash(),
+                "targetHash", x.getValue().getTargetHash()
+                ))).toList());
         didDocumentMetadata.put("identifierComponents", Map.of(
                 "version", identifierComponents.version(),
                 "network", identifierComponents.network().toString(),
