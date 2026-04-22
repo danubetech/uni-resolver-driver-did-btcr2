@@ -459,7 +459,8 @@ public class Resolve {
 
         Map<String, Object> didResolutionMetadata = new LinkedHashMap<>();
         didResolutionMetadata.put("contentType", Representations.DEFAULT_MEDIA_TYPE);
-        didResolutionMetadata.putAll(bitcoinConnection.getMetadata());
+        if (bitcoinConnection != null) didResolutionMetadata.putAll(bitcoinConnection.getMetadata());
+        if (this.getIpfsConnection() != null) didResolutionMetadata.putAll(this.getIpfsConnection().getMetadata());
 
         // DID DOCUMENT METADATA
 
