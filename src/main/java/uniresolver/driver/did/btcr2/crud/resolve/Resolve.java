@@ -24,8 +24,8 @@ import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDUtils;
 import fr.acinq.bitcoin.BlockHash;
 import fr.acinq.bitcoin.PublicKey;
+import io.ipfs.cid.Cid;
 import io.ipfs.multibase.Multibase;
-import io.ipfs.multihash.Multihash;
 import jakarta.json.Json;
 import jakarta.json.JsonPatch;
 import org.apache.commons.codec.DecoderException;
@@ -48,6 +48,7 @@ import uniresolver.driver.did.btcr2.data.jsonld.BTCR2Update;
 import uniresolver.driver.did.btcr2.data.jsonld.RootCapability;
 import uniresolver.driver.did.btcr2.ipfs.IPFSConnection;
 import uniresolver.driver.did.btcr2.syntax.DidBtcr2IdentifierDecoding;
+import uniresolver.driver.did.btcr2.util.IPFSCIDUtil;
 import uniresolver.driver.did.btcr2.util.JSONPatchUtil;
 import uniresolver.result.ResolveResult;
 
@@ -183,6 +184,7 @@ public class Resolve {
         // If genesis_bytes is a SHA-256 hash, hash sidecar.genesisDocument with the JSON Document Hashing algorithm.
         // Raise an INVALID_DID error if the computed hash does not match genesis_bytes.
 
+        Cid genesisDocumentCid = null;
         DIDDocument genesisDocument = null;
 
         if (GenesisBytesType.SHA256HASH == identifierComponents.genesisBytesType()) {
@@ -198,13 +200,13 @@ public class Resolve {
             // If sidecar.genesisDocument is not provided, retrieve it from CAS using genesis_bytes
 
             if (genesisDocument == null && this.getIpfsConnection() != null) {
-                Multihash genesisDocumentMultihash = new Multihash(Multihash.Type.sha2_256, identifierComponents.genesisBytes());
                 try {
-                    byte[] genesisDocumentBytes = this.getIpfsConnection().getIpfs().cat(genesisDocumentMultihash);
+                    genesisDocumentCid = IPFSCIDUtil.createCid(identifierComponents.genesisBytes());
+                    byte[] genesisDocumentBytes = this.getIpfsConnection().getIpfs().cat(genesisDocumentCid);
                     genesisDocument = genesisDocumentBytes == null ? null : DIDDocument.fromJson(new InputStreamReader(new ByteArrayInputStream(genesisDocumentBytes), StandardCharsets.UTF_8));
-                    if (log.isDebugEnabled()) log.debug("Found genesisDocument for genesis_bytes " + Base64.getUrlEncoder().withoutPadding().encodeToString(identifierComponents.genesisBytes()) + " in CAS (IPFS) at " + genesisDocumentMultihash + ": " + genesisDocument);
+                    if (log.isDebugEnabled()) log.debug("Found genesisDocument for genesis_bytes " + Base64.getUrlEncoder().withoutPadding().encodeToString(identifierComponents.genesisBytes()) + " in CAS (IPFS) at " + genesisDocumentCid + ": " + genesisDocument);
                 } catch (Exception ex) {
-                    throw new ResolutionException("Cannot get genesisDocument for genesis_bytes " + Base64.getUrlEncoder().withoutPadding().encodeToString(identifierComponents.genesisBytes()) + " from CAS (IPFS) at " + genesisDocumentMultihash + ": " + ex.getMessage(), ex);
+                    throw new ResolutionException("Cannot get genesisDocument for genesis_bytes " + Base64.getUrlEncoder().withoutPadding().encodeToString(identifierComponents.genesisBytes()) + " from CAS (IPFS) at " + genesisDocumentCid + ": " + ex.getMessage(), ex);
                 }
             }
         }
@@ -230,9 +232,10 @@ public class Resolve {
                 // Process the Genesis Document provided in sidecar.genesisDocument by replacing the identifier
                 // placeholder ("did:btcr2:_") with the did.
 
-                if (genesisDocument == null)
+                if (genesisDocument == null) {
                     throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "Missing genesis document in sidecar data and CAS");
-                yield DIDDocumentV1_1.fromJson(sidecar.getGenesisDocument().toJson().replace("did:btcr2:_", identifier.getDidString()));
+                }
+                yield DIDDocumentV1_1.fromJson(genesisDocument.toJson().replace("did:btcr2:_", identifier.getDidString()));
             }
 
             /*
@@ -378,14 +381,15 @@ public class Resolve {
 
                 // If the update is not in update_lookup_table, retrieve it from CAS.
 
+                Cid updateCid = null;
                 if (update == null && this.getIpfsConnection() != null) {
-                    Multihash updateMultihash = new Multihash(Multihash.Type.sha2_256, update_hash);
                     try {
-                        byte[] updateBytes = this.getIpfsConnection().getIpfs().cat(updateMultihash);
+                        updateCid = IPFSCIDUtil.createCid(0, update_hash);
+                        byte[] updateBytes = this.getIpfsConnection().getIpfs().cat(updateCid);
                         update = updateBytes == null ? null : BTCR2Update.fromJson(new InputStreamReader(new ByteArrayInputStream(updateBytes), StandardCharsets.UTF_8));
-                        if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in CAS (IPFS) at " + updateMultihash + ": " + update);
+                        if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in CAS (IPFS) at " + updateCid + ": " + update);
                     } catch (Exception ex) {
-                        throw new ResolutionException("Cannot get update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " from CAS (IPFS) at " + updateMultihash + ": " + ex.getMessage(), ex);
+                        throw new ResolutionException("Cannot get update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " from CAS (IPFS) at " + updateCid + ": " + ex.getMessage(), ex);
                     }
                 }
 
@@ -484,18 +488,19 @@ public class Resolve {
         didDocumentMetadata.put("nextVersionId", Integer.toString(current_version_id + 1)); // NOT IN SPEC
         didDocumentMetadata.put("confirmations", (block_confirmations == null ? null : block_confirmations.toString()));
         didDocumentMetadata.put("deactivated", current_document.getJsonObject().get("deactivated"));
+        didDocumentMetadata.put("identifierComponents", Map.of(
+                "version", identifierComponents.version(),
+                "network", identifierComponents.network().toString(),
+                "genesisBytes", Hex.encodeHexString(identifierComponents.genesisBytes()),
+                "genesisBytesTypes", identifierComponents.genesisBytesType()));
+        if (genesisDocumentCid != null) didDocumentMetadata.put("genesisDocumentCid", genesisDocumentCid.toString());
         didDocumentMetadata.put("updates", updates.stream().map(x -> Map.of(x.getKey().blockHeight(), Map.of(
                 "blockHash", x.getKey().blockHash(),
                 "blockTime", x.getKey().blockTime(),
                 "targetVersionId", x.getValue().getTargetVersionId(),
                 "sourceHash", x.getValue().getSourceHash(),
                 "targetHash", x.getValue().getTargetHash()
-                ))).toList());
-        didDocumentMetadata.put("identifierComponents", Map.of(
-                "version", identifierComponents.version(),
-                "network", identifierComponents.network().toString(),
-                "genesisBytes", Hex.encodeHexString(identifierComponents.genesisBytes()),
-                "genesisBytesTypes", identifierComponents.genesisBytesType()));
+        ))).toList());
 
         // done
 
