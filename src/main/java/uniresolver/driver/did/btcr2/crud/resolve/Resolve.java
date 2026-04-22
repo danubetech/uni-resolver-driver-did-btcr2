@@ -183,12 +183,28 @@ public class Resolve {
         // If genesis_bytes is a SHA-256 hash, hash sidecar.genesisDocument with the JSON Document Hashing algorithm.
         // Raise an INVALID_DID error if the computed hash does not match genesis_bytes.
 
+        DIDDocument genesisDocument = null;
+
         if (GenesisBytesType.SHA256HASH == identifierComponents.genesisBytesType()) {
-            DIDDocument genesisDocument = sidecar == null ? null : sidecar.getGenesisDocument();
+
+            genesisDocument = sidecar == null ? null : sidecar.getGenesisDocument();
             if (genesisDocument != null) {
                 byte[] genesisDocumentHash = JSONDocumentHashing.jsonDocumentHashing(genesisDocument);
                 if (! Arrays.equals(genesisDocumentHash, identifierComponents.genesisBytes())) {
                     throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Computed hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(genesisDocumentHash) + " does not match genesis_bytes " + Base64.getUrlEncoder().withoutPadding().encodeToString(identifierComponents.genesisBytes()));
+                }
+            }
+
+            // If sidecar.genesisDocument is not provided, retrieve it from CAS using genesis_bytes
+
+            if (genesisDocument == null && this.getIpfsConnection() != null) {
+                Multihash genesisDocumentMultihash = new Multihash(Multihash.Type.id, identifierComponents.genesisBytes());
+                try {
+                    byte[] genesisDocumentBytes = this.getIpfsConnection().getIpfs().cat(genesisDocumentMultihash);
+                    genesisDocument = genesisDocumentBytes == null ? null : DIDDocument.fromJson(new InputStreamReader(new ByteArrayInputStream(genesisDocumentBytes), StandardCharsets.UTF_8));
+                    if (log.isDebugEnabled()) log.debug("Found genesisDocument for genesis_bytes " + Base64.getUrlEncoder().withoutPadding().encodeToString(identifierComponents.genesisBytes()) + " in CAS (IPFS) at " + genesisDocumentMultihash + ": " + genesisDocument);
+                } catch (IOException ex) {
+                    throw new ResolutionException("Cannot get genesisDocument for genesis_bytes " + Base64.getUrlEncoder().withoutPadding().encodeToString(identifierComponents.genesisBytes()) + " from CAS (IPFS) at " + genesisDocumentMultihash + ": " + ex.getMessage(), ex);
                 }
             }
         }
@@ -214,9 +230,8 @@ public class Resolve {
                 // Process the Genesis Document provided in sidecar.genesisDocument by replacing the identifier
                 // placeholder ("did:btcr2:_") with the did.
 
-                DIDDocument genesisDocument = sidecar == null ? null : sidecar.getGenesisDocument();
                 if (genesisDocument == null)
-                    throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "Missing genesis document in sidecar data");
+                    throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "Missing genesis document in sidecar data and CAS");
                 yield DIDDocumentV1_1.fromJson(sidecar.getGenesisDocument().toJson().replace("did:btcr2:_", identifier.getDidString()));
             }
 
@@ -363,14 +378,14 @@ public class Resolve {
 
                 // If the update is not in update_lookup_table, retrieve it from CAS.
 
-                Multihash updateMultihash = new Multihash(Multihash.Type.id, update_hash);
                 if (update == null && this.getIpfsConnection() != null) {
+                    Multihash updateMultihash = new Multihash(Multihash.Type.id, update_hash);
                     try {
                         byte[] updateBytes = this.getIpfsConnection().getIpfs().cat(updateMultihash);
                         update = updateBytes == null ? null : BTCR2Update.fromJson(new InputStreamReader(new ByteArrayInputStream(updateBytes), StandardCharsets.UTF_8));
-                        if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in CAS (IPFS): " + update);
+                        if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in CAS (IPFS) at " + updateMultihash + ": " + update);
                     } catch (IOException ex) {
-                        throw new ResolutionException("Cannot get update from CAS (IPFS) at " + updateMultihash + ": " + ex.getMessage(), ex);
+                        throw new ResolutionException("Cannot get update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " from CAS (IPFS) at " + updateMultihash + ": " + ex.getMessage(), ex);
                     }
                 }
 
