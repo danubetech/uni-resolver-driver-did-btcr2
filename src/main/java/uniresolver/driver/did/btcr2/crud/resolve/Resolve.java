@@ -498,7 +498,7 @@ public class Resolve {
                 "genesisBytes", Hex.encodeHexString(identifierComponents.genesisBytes()),
                 "genesisBytesTypes", identifierComponents.genesisBytesType()));
         if (genesisDocumentCid != null) didDocumentMetadata.put("genesisDocumentCid", genesisDocumentCid.toString());
-        if (! updateCids.isEmpty()) didDocumentMetadata.put("updateCids", updateCids.stream().map(x -> Map.of(x.getKey().blockHeight(), x.getValue().toString())));
+        if (! updateCids.isEmpty()) didDocumentMetadata.put("updateCids", updateCids.stream().map(x -> Map.of(x.getKey().blockHeight(), x.getValue().toString())).toList());
         didDocumentMetadata.put("updates", updates.stream().map(x -> Map.of(x.getKey().blockHeight(), Map.of(
                 "blockHash", x.getKey().blockHash(),
                 "blockTime", x.getKey().blockTime(),
