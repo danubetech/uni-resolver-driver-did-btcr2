@@ -198,7 +198,7 @@ public class Resolve {
             // If sidecar.genesisDocument is not provided, retrieve it from CAS using genesis_bytes
 
             if (genesisDocument == null && this.getIpfsConnection() != null) {
-                Multihash genesisDocumentMultihash = new Multihash(Multihash.Type.id, identifierComponents.genesisBytes());
+                Multihash genesisDocumentMultihash = new Multihash(Multihash.Type.sha2_256, identifierComponents.genesisBytes());
                 try {
                     byte[] genesisDocumentBytes = this.getIpfsConnection().getIpfs().get(genesisDocumentMultihash);
                     genesisDocument = genesisDocumentBytes == null ? null : DIDDocument.fromJson(new InputStreamReader(new ByteArrayInputStream(genesisDocumentBytes), StandardCharsets.UTF_8));
@@ -379,7 +379,7 @@ public class Resolve {
                 // If the update is not in update_lookup_table, retrieve it from CAS.
 
                 if (update == null && this.getIpfsConnection() != null) {
-                    Multihash updateMultihash = new Multihash(Multihash.Type.id, update_hash);
+                    Multihash updateMultihash = new Multihash(Multihash.Type.sha2_256, update_hash);
                     try {
                         byte[] updateBytes = this.getIpfsConnection().getIpfs().get(updateMultihash);
                         update = updateBytes == null ? null : BTCR2Update.fromJson(new InputStreamReader(new ByteArrayInputStream(updateBytes), StandardCharsets.UTF_8));
