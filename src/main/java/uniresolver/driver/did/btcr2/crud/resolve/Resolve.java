@@ -203,7 +203,7 @@ public class Resolve {
                     byte[] genesisDocumentBytes = this.getIpfsConnection().getIpfs().get(genesisDocumentMultihash);
                     genesisDocument = genesisDocumentBytes == null ? null : DIDDocument.fromJson(new InputStreamReader(new ByteArrayInputStream(genesisDocumentBytes), StandardCharsets.UTF_8));
                     if (log.isDebugEnabled()) log.debug("Found genesisDocument for genesis_bytes " + Base64.getUrlEncoder().withoutPadding().encodeToString(identifierComponents.genesisBytes()) + " in CAS (IPFS) at " + genesisDocumentMultihash + ": " + genesisDocument);
-                } catch (IOException ex) {
+                } catch (Exception ex) {
                     throw new ResolutionException("Cannot get genesisDocument for genesis_bytes " + Base64.getUrlEncoder().withoutPadding().encodeToString(identifierComponents.genesisBytes()) + " from CAS (IPFS) at " + genesisDocumentMultihash + ": " + ex.getMessage(), ex);
                 }
             }
@@ -384,7 +384,7 @@ public class Resolve {
                         byte[] updateBytes = this.getIpfsConnection().getIpfs().get(updateMultihash);
                         update = updateBytes == null ? null : BTCR2Update.fromJson(new InputStreamReader(new ByteArrayInputStream(updateBytes), StandardCharsets.UTF_8));
                         if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in CAS (IPFS) at " + updateMultihash + ": " + update);
-                    } catch (IOException ex) {
+                    } catch (Exception ex) {
                         throw new ResolutionException("Cannot get update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " from CAS (IPFS) at " + updateMultihash + ": " + ex.getMessage(), ex);
                     }
                 }
