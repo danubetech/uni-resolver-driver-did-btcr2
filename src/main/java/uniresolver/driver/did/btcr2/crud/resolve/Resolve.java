@@ -26,6 +26,7 @@ import fr.acinq.bitcoin.BlockHash;
 import fr.acinq.bitcoin.PublicKey;
 import io.ipfs.cid.Cid;
 import io.ipfs.multibase.Multibase;
+import io.ipfs.multihash.Multihash;
 import jakarta.json.Json;
 import jakarta.json.JsonPatch;
 import org.apache.commons.codec.DecoderException;
@@ -48,7 +49,6 @@ import uniresolver.driver.did.btcr2.data.jsonld.BTCR2Update;
 import uniresolver.driver.did.btcr2.data.jsonld.RootCapability;
 import uniresolver.driver.did.btcr2.ipfs.IPFSConnection;
 import uniresolver.driver.did.btcr2.syntax.DidBtcr2IdentifierDecoding;
-import uniresolver.driver.did.btcr2.util.IPFSCIDUtil;
 import uniresolver.driver.did.btcr2.util.JSONPatchUtil;
 import uniresolver.result.ResolveResult;
 
@@ -201,7 +201,7 @@ public class Resolve {
 
             if (genesisDocument == null && this.getIpfsConnection() != null) {
                 try {
-                    genesisDocumentCid = IPFSCIDUtil.createCid(0, identifierComponents.genesisBytes());
+                    genesisDocumentCid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.sha2_256, identifierComponents.genesisBytes());
                     byte[] genesisDocumentBytes = this.getIpfsConnection().getIpfs().cat(genesisDocumentCid);
                     genesisDocument = genesisDocumentBytes == null ? null : DIDDocument.fromJson(new InputStreamReader(new ByteArrayInputStream(genesisDocumentBytes), StandardCharsets.UTF_8));
                     if (log.isDebugEnabled()) log.debug("Found genesisDocument for genesis_bytes " + Base64.getUrlEncoder().withoutPadding().encodeToString(identifierComponents.genesisBytes()) + " in CAS (IPFS) at " + genesisDocumentCid + ": " + genesisDocument);
@@ -384,7 +384,7 @@ public class Resolve {
                 Cid updateCid = null;
                 if (update == null && this.getIpfsConnection() != null) {
                     try {
-                        updateCid = IPFSCIDUtil.createCid(0, update_hash);
+                        updateCid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.sha2_256, update_hash);
                         byte[] updateBytes = this.getIpfsConnection().getIpfs().cat(updateCid);
                         update = updateBytes == null ? null : BTCR2Update.fromJson(new InputStreamReader(new ByteArrayInputStream(updateBytes), StandardCharsets.UTF_8));
                         if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in CAS (IPFS) at " + updateCid + ": " + update);
