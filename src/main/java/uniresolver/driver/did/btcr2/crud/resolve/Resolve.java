@@ -200,7 +200,7 @@ public class Resolve {
             if (genesisDocument == null && this.getIpfsConnection() != null) {
                 Multihash genesisDocumentMultihash = new Multihash(Multihash.Type.id, identifierComponents.genesisBytes());
                 try {
-                    byte[] genesisDocumentBytes = this.getIpfsConnection().getIpfs().cat(genesisDocumentMultihash);
+                    byte[] genesisDocumentBytes = this.getIpfsConnection().getIpfs().get(genesisDocumentMultihash);
                     genesisDocument = genesisDocumentBytes == null ? null : DIDDocument.fromJson(new InputStreamReader(new ByteArrayInputStream(genesisDocumentBytes), StandardCharsets.UTF_8));
                     if (log.isDebugEnabled()) log.debug("Found genesisDocument for genesis_bytes " + Base64.getUrlEncoder().withoutPadding().encodeToString(identifierComponents.genesisBytes()) + " in CAS (IPFS) at " + genesisDocumentMultihash + ": " + genesisDocument);
                 } catch (IOException ex) {
@@ -381,7 +381,7 @@ public class Resolve {
                 if (update == null && this.getIpfsConnection() != null) {
                     Multihash updateMultihash = new Multihash(Multihash.Type.id, update_hash);
                     try {
-                        byte[] updateBytes = this.getIpfsConnection().getIpfs().cat(updateMultihash);
+                        byte[] updateBytes = this.getIpfsConnection().getIpfs().get(updateMultihash);
                         update = updateBytes == null ? null : BTCR2Update.fromJson(new InputStreamReader(new ByteArrayInputStream(updateBytes), StandardCharsets.UTF_8));
                         if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in CAS (IPFS) at " + updateMultihash + ": " + update);
                     } catch (IOException ex) {
