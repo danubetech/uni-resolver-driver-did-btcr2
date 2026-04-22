@@ -201,7 +201,7 @@ public class Resolve {
 
             if (genesisDocument == null && this.getIpfsConnection() != null) {
                 try {
-                    genesisDocumentCid = IPFSCIDUtil.createCid(identifierComponents.genesisBytes());
+                    genesisDocumentCid = IPFSCIDUtil.createCid(0, identifierComponents.genesisBytes());
                     byte[] genesisDocumentBytes = this.getIpfsConnection().getIpfs().cat(genesisDocumentCid);
                     genesisDocument = genesisDocumentBytes == null ? null : DIDDocument.fromJson(new InputStreamReader(new ByteArrayInputStream(genesisDocumentBytes), StandardCharsets.UTF_8));
                     if (log.isDebugEnabled()) log.debug("Found genesisDocument for genesis_bytes " + Base64.getUrlEncoder().withoutPadding().encodeToString(identifierComponents.genesisBytes()) + " in CAS (IPFS) at " + genesisDocumentCid + ": " + genesisDocument);
