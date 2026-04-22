@@ -138,7 +138,7 @@ public class Resolve {
 
         // Resolution maintains the following state while building the DID document:
 
-        List<Map.Entry<Block, BTCR2Update>> updates = new ArrayList<>();
+        List<Map.Entry<Block, Map.Entry<Tx, BTCR2Update>>> updates = new ArrayList<>();
         int current_version_id = 1;
         List<ByteBuffer> update_hash_history = new ArrayList<>();
         Integer block_confirmations = null;
@@ -401,7 +401,7 @@ public class Resolve {
 
                 if (update == null) throw new ResolutionException("MISSING_UPDATE_DATA", "No update found for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " from either update_lookup_table or CAS (IPFS).");
 
-                Map.Entry<Block, BTCR2Update> updateTuple = Map.entry(beaconBlock, update);
+                Map.Entry<Block, Map.Entry<Tx, BTCR2Update>> updateTuple = Map.entry(beaconBlock, Map.entry(beaconTransaction, update));
 
                 // Append the tuple to updates.
 
@@ -424,12 +424,15 @@ public class Resolve {
             // with the tuple’s block height as a tiebreaker.
 
             updates.sort(Comparator
-                    .comparingInt((Map.Entry<Block, BTCR2Update> a) -> a.getValue().getTargetVersionId())
+                    .comparingInt((Map.Entry<Block, Map.Entry<Tx, BTCR2Update>> a) -> a.getValue().getValue().getTargetVersionId())
                     .thenComparingInt(a -> a.getKey().blockHeight()));
+
+            updateCids.sort(Comparator
+                    .comparingInt((Map.Entry<Block, Cid> a) -> a.getKey().blockHeight()));
 
             // Take the first tuple.
 
-            tuples: for (Map.Entry<Block, BTCR2Update> tuple : updates) {
+            tuples: for (Map.Entry<Block, Map.Entry<Tx, BTCR2Update>> tuple : updates) {
 
                 // 2. Set block_confirmations to the tuple’s block confirmations.
 
@@ -438,7 +441,7 @@ public class Resolve {
                 // 3. If resolutionOptions.versionTime is provided and the tuple’s block time is more recent,
                 // resolve current_document as didDocument.
 
-                if (resolutionOptions.containsKey("versionTime")) {
+                if (resolutionOptions != null && resolutionOptions.containsKey("versionTime")) {
                     long versionTime = (long) resolutionOptions.get("versionTime");
                     if (tuple.getKey().blockTime() > versionTime) {
                         if (log.isDebugEnabled()) log.debug("Block time {} is more recent than resolutionOptions.versionTime {}. Returning current_document.", tuple.getKey().blockTime(), versionTime);
@@ -448,7 +451,7 @@ public class Resolve {
 
                 // 4. Set update to the tuple’s BTCR2 Signed Update (data structure) and check update.targetVersionId.
 
-                BTCR2Update update = tuple.getValue();
+                BTCR2Update update = tuple.getValue().getValue();
                 current_document = checkUpdateTargetVersionId(current_document, update, identifier, current_version_id, update_hash_history);
 
                 // 5. Increment current_version_id.
@@ -459,7 +462,7 @@ public class Resolve {
                 // 6. If current_version_id is greater than or equal to the integer form of resolutionOptions.versionId,
                 // resolve current_document as didDocument.
 
-                if (resolutionOptions.containsKey("versionId")) {
+                if (resolutionOptions != null && resolutionOptions.containsKey("versionId")) {
                     long versionId = (long) resolutionOptions.get("versionId");
                     if (current_version_id >= versionId) {
                         if (log.isDebugEnabled()) log.debug("current_version_id {} is greater than or equal to resolutionOptions.versionId {}. Returning current_document.", current_version_id, versionId);
@@ -498,14 +501,18 @@ public class Resolve {
                 "genesisBytes", Hex.encodeHexString(identifierComponents.genesisBytes()),
                 "genesisBytesTypes", identifierComponents.genesisBytesType()));
         if (genesisDocumentCid != null) didDocumentMetadata.put("genesisDocumentCid", genesisDocumentCid.toString());
-        if (! updateCids.isEmpty()) didDocumentMetadata.put("updateCids", updateCids.stream().map(x -> Map.of(x.getKey().blockHeight(), x.getValue().toString())).toList());
-        didDocumentMetadata.put("updates", updates.stream().map(x -> Map.of(x.getKey().blockHeight(), Map.of(
+        if (! updateCids.isEmpty()) didDocumentMetadata.put("updateCids", updateCids.stream().map(x -> Map.of(
+                x.getKey().blockHeight(), x.getValue().toString()
+        )).toList());
+        didDocumentMetadata.put("updates", updates.stream().map(x -> Map.of(
+                "blockHeight", x.getKey().blockHeight(),
                 "blockHash", x.getKey().blockHash(),
                 "blockTime", x.getKey().blockTime(),
-                "targetVersionId", x.getValue().getTargetVersionId(),
-                "sourceHash", x.getValue().getSourceHash(),
-                "targetHash", x.getValue().getTargetHash()
-        ))).toList());
+                "txId", x.getValue().getKey().txId(),
+                "targetVersionId", x.getValue().getValue().getTargetVersionId(),
+                "sourceHash", x.getValue().getValue().getSourceHash(),
+                "targetHash", x.getValue().getValue().getTargetHash()
+        )).toList());
 
         // done
 
