@@ -28,16 +28,28 @@ Public Key-based did:btcr2 on Mutinynet with 1 Update (from Sidecar):
 curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:k1q5p7drc8y5hhmvs2nncyuq73ts98arnqv5ce446vwydafuu2mp9rp6szethjk' -d '{"sidecar":{"updates":[{"@context":["https://btcr2.dev/context/v1","https://w3id.org/json-ld-patch/v1","https://w3id.org/zcap/v1","https://w3id.org/security/data-integrity/v2"],"patch":[{"op":"add","path":"/service/3","value":{"id":"#didcomm","type":"DIDCommMessaging","serviceEndpoint":"http://example.com/didcomm/"}}],"sourceHash":"osaUrsl3XhLlm-J4hKrqmxP6G0y9sfqseaF4HPPUe_8","targetHash":"eS9wA7p1qiQHGEuyz4swjnZNnFz9VkBSPff6i6XeP_M","targetVersionId":2,"proof":{"type":"DataIntegrityProof","cryptosuite":"bip340-jcs-2025","verificationMethod":"did:btcr2:k1q5p7drc8y5hhmvs2nncyuq73ts98arnqv5ce446vwydafuu2mp9rp6szethjk#initialKey","proofPurpose":"capabilityInvocation","capability":"urn:zcap:root:did%3Abtcr2%3Ak1q5p7drc8y5hhmvs2nncyuq73ts98arnqv5ce446vwydafuu2mp9rp6szethjk","capabilityAction":"Write","proofValue":"z5DhhjMk8gXULWNKRwqJqGbqZF94ov7zjKS6YkaCGxoDa2f3WT3zprMUc1p62w2cRRdkNAhR4rfGJpxZZFfHsdrJB"}}]}}'
 ```
 
-Genesis document-based did:btcr2 on Mutinynet without Update:
+Genesis document-based (from Sidecar) did:btcr2 on Mutinynet without Update:
 
 ```
 curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q48psqn0s2fd03nu35ccwsfur6fhx7qwa42uxtf4gch592w45lkdumq73zt' -d '{"sidecar":{"genesisDocument":{"verificationMethod":[{"type":"Multikey","id":"#initialKey","publicKeyMultibase":"zQ3shjzRm1832EuqTXGQ8EyPuGePQCjUvRPekwxWFaX5qg5oG"}],"service":[{"id":"#didcomm","type":"DIDCommMessaging","serviceEndpoint":"http://localhost/"}],"assertionMethod":["#initialKey"],"capabilityDelegation":["#initialKey"],"capabilityInvocation":["#initialKey"],"@context":["https://www.w3.org/ns/did/v1.1","https://btcr2.dev/context/v1"],"authentication":["#initialKey"],"id":"did:btcr2:_"}}}'
 ```
 
-Genesis document-based did:btcr2 on Mutinynet with 1 Update (from Sidecar):
+Genesis document-based (from Sidecar) did:btcr2 on Mutinynet with 1 Update (from Sidecar):
 
 ```
 curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q5d4fqz7fp6e7dlyc9yeeepytzdqhegs8quzjfj3zyn5nx62zqsfsrf77dk' -d '{"sidecar":{"genesisDocument":{"verificationMethod":[{"type":"Multikey","id":"#initialKey","publicKeyMultibase":"zQ3shukJPNjyebn1ougtYiYmBeBvSV79WJ7SJwGU1PdNvpfoT"}],"service":[{"id":"#didcomm","type":"DIDCommMessaging","serviceEndpoint":"https://test.example.com/didcomm"},{"type":"SingletonBeacon","id":"#initialP2PKH","serviceEndpoint":"bitcoin:mkDXg7GBwyJsBxVFznjnuZSHCzBNymaMHM"},{"type":"SingletonBeacon","id":"#initialP2WPKH","serviceEndpoint":"bitcoin:tb1qxwxsrz75yttwnvtrq63d60m0wtwtylv7pdlnaw"},{"type":"SingletonBeacon","id":"#initialP2TR","serviceEndpoint":"bitcoin:tb1penz0flulv59cnp96nw60a4wmw56nkj877t8vc26fwjstyjtv7z8qr6h46l"}],"assertionMethod":["#initialKey"],"capabilityDelegation":["#initialKey"],"capabilityInvocation":["#initialKey"],"@context":["https://www.w3.org/ns/did/v1.1","https://btcr2.dev/context/v1"],"authentication":["#initialKey"],"id":"did:btcr2:_"},"updates":[{"@context":["https://btcr2.dev/context/v1","https://w3id.org/json-ld-patch/v1","https://w3id.org/zcap/v1","https://w3id.org/security/data-integrity/v2"],"patch":[{"op":"add","path":"/service/4","value":{"id":"#dwn","type":"DecentralizedWebNode","serviceEndpoint":"http://my.service.com/dwn"}}],"sourceHash":"XQkK_8IWFKTQIPNW_9G-f1KhgpYCK0jbkISZ53JBJpg","targetHash":"UhsASA4PPlthQUkCbsAv_dFQBtPhrZ4binAJwfmqQIc","targetVersionId":2,"proof":{"type":"DataIntegrityProof","cryptosuite":"bip340-jcs-2025","verificationMethod":"#initialKey","proofPurpose":"capabilityInvocation","capability":"urn:zcap:root:did%3Abtcr2%3Ax1q5d4fqz7fp6e7dlyc9yeeepytzdqhegs8quzjfj3zyn5nx62zqsfsrf77dk","capabilityAction":"Write","proofValue":"z4PCo1d9mwp1ND9V1e36kJFdzbpzYGYTqU2KAS2ZTWkb7284wz5A9zXqzmzuEr2HLH29xsHLzFny5bpMzj85cFMtL"}}]}}'
+```
+
+Genesis document-based (from CAS) did:btcr2 on Mutinynet without Update:
+
+```
+curl -X GET 'http://localhost:8080/1.0/identifiers/did:btcr2:x1qhez4hxq9zk2fqz4j0cmn09y3f50pzydtpagu044yxlests8lwnac20570g'
+```
+
+Genesis document-based (from CAS) did:btcr2 on Mutinynet with 3 Updates (from CAS):
+
+```
+curl -X GET 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q5ts37haxpv0fwu00hpn2k5ghfdhjyw3zg9stu85xf4wm852hgzv5jp43mv'
 ```
 
 ## Driver Environment Variables
