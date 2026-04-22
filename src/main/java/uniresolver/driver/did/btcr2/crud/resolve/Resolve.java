@@ -274,6 +274,8 @@ public class Resolve {
 
         // 2. Repeats the following loop:
 
+        List<Map.Entry<Block, Cid>> updateCids = new ArrayList<>();
+
         process: do {
 
             /*
@@ -393,6 +395,8 @@ public class Resolve {
                     }
                 }
 
+                if (updateCid != null) updateCids.add(Map.entry(beaconBlock, updateCid));
+
                 // Raise a MISSING_UPDATE_DATA error if the update is not available from either source.
 
                 if (update == null) throw new ResolutionException("MISSING_UPDATE_DATA", "No update found for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " from either update_lookup_table or CAS (IPFS).");
@@ -494,6 +498,7 @@ public class Resolve {
                 "genesisBytes", Hex.encodeHexString(identifierComponents.genesisBytes()),
                 "genesisBytesTypes", identifierComponents.genesisBytesType()));
         if (genesisDocumentCid != null) didDocumentMetadata.put("genesisDocumentCid", genesisDocumentCid.toString());
+        if (! updateCids.isEmpty()) didDocumentMetadata.put("updateCids", updateCids.stream().map(x -> Map.of(x.getKey().blockHeight(), x.getValue().toString())));
         didDocumentMetadata.put("updates", updates.stream().map(x -> Map.of(x.getKey().blockHeight(), Map.of(
                 "blockHash", x.getKey().blockHash(),
                 "blockTime", x.getKey().blockTime(),
