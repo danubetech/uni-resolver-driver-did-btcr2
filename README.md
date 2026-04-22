@@ -52,6 +52,18 @@ Genesis document-based (from CAS) did:btcr2 on Mutinynet with 3 Updates (from CA
 curl -X GET 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q5ts37haxpv0fwu00hpn2k5ghfdhjyw3zg9stu85xf4wm852hgzv5jp43mv'
 ```
 
+Public Key-based did:btcr2 on Mutinynet with Deactivate (from Sidecar):
+
+```
+curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:k1q5pxw39eu64u7usxptl2juvegejkt4ktan85zy46aezdwzzhamuv2ngw9hdav' -d '{"sidecar":{"updates":[{"@context":["https://btcr2.dev/context/v1","https://w3id.org/json-ld-patch/v1","https://w3id.org/zcap/v1","https://w3id.org/security/data-integrity/v2"],"patch":[{"op":"add","path":"/deactivated","value":true}],"sourceHash":"WWcSOWcAREdKXt138UG8OP-JPrU0qWf7DIg608t90lA","targetHash":"Beb4NQ7ecXKIdszZuhu1bnS0JU72LjRqDt-ZuuHwRQI","targetVersionId":2,"proof":{"type":"DataIntegrityProof","cryptosuite":"bip340-jcs-2025","verificationMethod":"did:btcr2:k1q5pxw39eu64u7usxptl2juvegejkt4ktan85zy46aezdwzzhamuv2ngw9hdav#initialKey","proofPurpose":"capabilityInvocation","capability":"urn:zcap:root:did%3Abtcr2%3Ak1q5pxw39eu64u7usxptl2juvegejkt4ktan85zy46aezdwzzhamuv2ngw9hdav","capabilityAction":"Write","proofValue":"z3xgT95QtFZV49nNoY6bsmyAu1WiimHH4t6qKj1tzeUV4PYkbaCkTV1PXEaJBwrzLKHyD7Ry8XhEgLZaWE8R2aeAV"}}]}}'
+```
+
+Genesis document-based (from CAS) did:btcr2 on Mutinynet with 1 Update (from CAS) and Deactivate (from CAS):
+
+```
+curl -X GET 'http://localhost:8080/1.0/identifiers/did:btcr2:x1qhn592f9v7pfzvdsh4gsaq548jny6lplxzd87x02vh0vavdm3vc9g6lzuu0'
+```
+
 ## Driver Environment Variables
 
 The driver recognizes the following environment variables:
