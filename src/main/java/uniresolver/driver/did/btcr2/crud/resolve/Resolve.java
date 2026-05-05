@@ -230,12 +230,18 @@ public class Resolve {
             case SHA256HASH -> {
 
                 // Process the Genesis Document provided in sidecar.genesisDocument by replacing the identifier
-                // placeholder ("did:btcr2:_") with the did.
+                // placeholder ("did:btcr2:_") with the did. Parse the result as JSON to form current_document.
+                // A simple string replacement is sufficient.
 
                 if (genesisDocument == null) {
                     throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "Missing genesis document in sidecar data and CAS");
                 }
-                yield DIDDocumentV1_1.fromJson(genesisDocument.toJson().replace("did:btcr2:_", identifier.getDidString()));
+                DIDDocumentV1_1 didDocumentV1_1 = DIDDocumentV1_1.fromJson(genesisDocument.toJson().replace("did:btcr2:_", identifier.getDidString()));
+
+                // The resulting DID Document (data structure) MUST be conformant to DID Core v1.1
+
+                Validation.validate(didDocumentV1_1);
+                yield didDocumentV1_1;
             }
 
             /*
@@ -268,7 +274,12 @@ public class Resolve {
 
                 // Parse the rendered template as JSON to form current_document.
 
-                yield DIDDocumentV1_1.fromJson(initialDidDocumentString);
+                DIDDocumentV1_1 didDocumentV1_1 = DIDDocumentV1_1.fromJson(initialDidDocumentString);
+
+                // The resulting DID Document (data structure) MUST be conformant to DID Core v1.1
+
+                Validation.validate(didDocumentV1_1);
+                yield didDocumentV1_1;
             }
         };
 
