@@ -21,6 +21,7 @@ import foundation.identity.did.representations.Representations;
 import foundation.identity.did.validation.Validation;
 import foundation.identity.jsonld.JsonLDDereferencer;
 import foundation.identity.jsonld.JsonLDException;
+import foundation.identity.jsonld.JsonLDObject;
 import foundation.identity.jsonld.JsonLDUtils;
 import fr.acinq.bitcoin.BlockHash;
 import fr.acinq.bitcoin.PublicKey;
@@ -761,7 +762,8 @@ public class Resolve {
         // The resolver must locate publicKeyMultibase in current_document.verificationMethod
         // whose id matches update.proof.verificationMethod. Otherwise raise INVALID_DID_UPDATE.
 
-        VerificationMethod verificationMethod = VerificationMethod.fromJsonLDObject(JsonLDDereferencer.findByIdInJsonLdObject(current_document, proof.getVerificationMethod(), null));
+        JsonLDObject verificationMethodJsonLDObject = JsonLDDereferencer.findByIdInJsonLdObject(current_document, proof.getVerificationMethod(), null);
+        VerificationMethod verificationMethod = verificationMethodJsonLDObject == null ? null : VerificationMethod.fromJsonObject(verificationMethodJsonLDObject.getJsonObject());
         if (verificationMethod == null) {
             throw new ResolutionException("INVALID_DID_UPDATE", "Cannot find verification method whose id matches update.proof.verificationMethod: " + proof.getVerificationMethod());
         }
