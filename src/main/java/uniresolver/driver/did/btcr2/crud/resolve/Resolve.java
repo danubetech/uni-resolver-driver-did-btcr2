@@ -259,22 +259,23 @@ public class Resolve {
                 // (Bitcoin addresses MUST use the Bitcoin URI Scheme [BIP321]):
 
                 byte[] publicKeyBytes = identifierComponents.genesisBytes();
-                AddressParser addressParser = AddressParser.getDefault();
                 Network network = identifierComponents.network();
+
+                AddressParser addressParser = AddressParser.getDefault();
                 PublicKey initialPublicKey = PublicKey.parse(publicKeyBytes);
 
                 String did = identifier.getDidString();
-                String public_key_multikey = publicKeyMultikey(publicKeyBytes);
-                String p2pkh_bitcoin_address = BitcoinURI.convertToBitcoinURI(network.toBitcoinjNetwork(), addressParser.parseAddress(initialPublicKey.p2pkhAddress(new BlockHash(this.getBitcoinConnector().getGensisHash(network)))).toString(), null, null, null);
-                String p2wpkh_bitcoin_address = BitcoinURI.convertToBitcoinURI(network.toBitcoinjNetwork(), addressParser.parseAddress(initialPublicKey.p2wpkhAddress(new BlockHash(this.getBitcoinConnector().getGensisHash(network)))).toString(), null, null, null);
-                String p2tr_bitcoin_address = BitcoinURI.convertToBitcoinURI(network.toBitcoinjNetwork(), addressParser.parseAddress(initialPublicKey.p2trAddress(new BlockHash(this.getBitcoinConnector().getGensisHash(network)))).toString(), null, null, null);
+                String publicKeyMultikey = publicKeyMultikey(publicKeyBytes);
+                URI p2pkhServiceEndpoint = URI.create(BitcoinURI.convertToBitcoinURI(addressParser.parseAddress(initialPublicKey.p2pkhAddress(new BlockHash(bitcoinConnector.getGensisHash(network)))), null, null, null));
+                URI p2wpkhServiceEndpoint = URI.create(BitcoinURI.convertToBitcoinURI(addressParser.parseAddress(initialPublicKey.p2wpkhAddress(new BlockHash(bitcoinConnector.getGensisHash(network)))), null, null, null));
+                URI p2trServiceEndpoint = URI.create(BitcoinURI.convertToBitcoinURI(addressParser.parseAddress(initialPublicKey.p2trAddress(new BlockHash(bitcoinConnector.getGensisHash(network)))), null, null, null));
 
                 String initialDidDocumentString = INITIAL_DID_DOCUMENT_TEMPLATE
                         .replace("{{did}}", did)
-                        .replace("{{public-key-multikey}}", public_key_multikey)
-                        .replace("{{p2pkh-bitcoin-address}}", p2pkh_bitcoin_address)
-                        .replace("{{p2wpkh-bitcoin-address}}", p2wpkh_bitcoin_address)
-                        .replace("{{p2tr-bitcoin-address}}", p2tr_bitcoin_address);
+                        .replace("{{public-key-multikey}}", publicKeyMultikey)
+                        .replace("{{p2pkh-bitcoin-address}}", p2pkhServiceEndpoint.toString())
+                        .replace("{{p2wpkh-bitcoin-address}}", p2wpkhServiceEndpoint.toString())
+                        .replace("{{p2tr-bitcoin-address}}", p2trServiceEndpoint.toString());
 
                 // Parse the rendered template as JSON to form current_document.
 
