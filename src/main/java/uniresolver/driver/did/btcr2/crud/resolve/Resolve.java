@@ -240,7 +240,11 @@ public class Resolve {
 
                 // The resulting DID Document (data structure) MUST be conformant to DID Core v1.1
 
-                Validation.validate(didDocumentV1_1);
+                try {
+                    Validation.validate(didDocumentV1_1);
+                } catch (IllegalStateException ex) {
+                    throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "Invalid DID document: " + ex.getMessage(), ex);
+                }
                 yield didDocumentV1_1;
             }
 
@@ -278,7 +282,11 @@ public class Resolve {
 
                 // The resulting DID Document (data structure) MUST be conformant to DID Core v1.1
 
-                Validation.validate(didDocumentV1_1);
+                try {
+                    Validation.validate(didDocumentV1_1);
+                } catch (IllegalStateException ex) {
+                    throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "Invalid DID document: " + ex.getMessage(), ex);
+                }
                 yield didDocumentV1_1;
             }
         };
