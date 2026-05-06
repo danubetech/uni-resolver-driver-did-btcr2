@@ -32,12 +32,14 @@ public class Configuration {
             String env_bitcoinConnectionsCerts = System.getenv("uniresolver_driver_did_btcr2_bitcoinConnectionsCerts");
             String env_genesisHashes = System.getenv("uniresolver_driver_did_btcr2_genesisHashes");
             String env_ipfs = System.getenv("uniresolver_driver_did_btcr2_ipfs");
+            String env_ipfsTimeout = System.getenv("uniresolver_driver_did_btcr2_ipfsTimeout");
 
             if (env_bitcoinConnections != null) properties.put("bitcoinConnections", env_bitcoinConnections);
             if (env_bitcoinConnectionsUrls != null) properties.put("bitcoinConnectionsUrls", env_bitcoinConnectionsUrls);
             if (env_bitcoinConnectionsCerts != null) properties.put("bitcoinConnectionsCerts", env_bitcoinConnectionsCerts);
             if (env_genesisHashes != null) properties.put("genesisHashes", env_genesisHashes);
             if (env_ipfs != null) properties.put("ipfs", env_ipfs);
+            if (env_ipfsTimeout != null) properties.put("ipfsTimeout", env_ipfsTimeout);
         } catch (Exception ex) {
             throw new IllegalArgumentException(ex.getMessage(), ex);
         }
@@ -56,8 +58,9 @@ public class Configuration {
             IPFSConnection ipfsConnection;
 
             String prop_ipfs = (String) properties.get("ipfs");
+            Integer prop_ipfsTimeout = properties.get("ipfsTimeout") == null ? null : Integer.parseInt((String) properties.get("ipfsTimeout"));
 
-            ipfsConnection = IPFSConnection.create(prop_ipfs);
+            ipfsConnection = IPFSConnection.create(prop_ipfs, prop_ipfsTimeout);
 
             // parse bitcoinConnection
 
