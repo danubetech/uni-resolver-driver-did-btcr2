@@ -60,7 +60,11 @@ public class Configuration {
             String prop_ipfs = (String) properties.get("ipfs");
             Integer prop_ipfsTimeout = properties.get("ipfsTimeout") == null ? null : Integer.parseInt((String) properties.get("ipfsTimeout"));
 
-            ipfsConnection = IPFSConnection.create(prop_ipfs, prop_ipfsTimeout);
+            if (prop_ipfs == null || prop_ipfs.isBlank()) {
+                ipfsConnection = null;
+            } else {
+                ipfsConnection = IPFSConnection.create(prop_ipfs, prop_ipfsTimeout);
+            }
 
             // parse bitcoinConnection
 
