@@ -762,7 +762,7 @@ public class Resolve {
         // The resolver must locate publicKeyMultibase in current_document.verificationMethod
         // whose id matches update.proof.verificationMethod. Otherwise raise INVALID_DID_UPDATE.
 
-        JsonLDObject verificationMethodJsonLDObject = JsonLDDereferencer.findByIdInJsonLdObject(current_document, proof.getVerificationMethod(), null);
+        JsonLDObject verificationMethodJsonLDObject = JsonLDDereferencer.findByIdInJsonLdObject(current_document, proof.getVerificationMethod(), current_document.getId());
         VerificationMethod verificationMethod = verificationMethodJsonLDObject == null ? null : VerificationMethod.fromJsonObject(verificationMethodJsonLDObject.getJsonObject());
         if (verificationMethod == null) {
             throw new ResolutionException("INVALID_DID_UPDATE", "Cannot find verification method whose id matches update.proof.verificationMethod: " + proof.getVerificationMethod());
