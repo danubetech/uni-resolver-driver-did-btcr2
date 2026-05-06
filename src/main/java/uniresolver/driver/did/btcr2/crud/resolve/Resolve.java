@@ -343,6 +343,10 @@ public class Resolve {
                 String beaconServiceType = beaconAddressEntry.getValue();
                 for (Tx beaconTransaction : bitcoinConnection.getAddressTransactions(beaconAddress)) {
                     Block beaconBlock = bitcoinConnection.getBlockByTransaction(beaconTransaction);
+                    if (beaconBlock.confirmations() < 1 || beaconBlock.blockHeight() == null || beaconBlock.blockHash() == null || beaconBlock.blockTime() == null) {
+                        if (log.isDebugEnabled()) log.debug("Block {} is not complete. Skipping.", beaconBlock);
+                        continue;
+                    }
                     Matcher matcher = PATTERN_TX_SIGNALBYTES.matcher(beaconTransaction.txOuts().getLast().scriptPubKeyAsm());
                     if (! matcher.matches()) {
                         if (log.isDebugEnabled()) log.debug("Transaction {} does not have signal bytes. Skipping.", beaconTransaction);
@@ -386,8 +390,6 @@ public class Resolve {
                     case BeaconType.SMT ->
                             // use Process SMT Beacon.
                             processSMTBeacon(beaconSignalBytes, smt_lookup_table);
-
-                    default -> null;
                 };
 
                 if (update_hash == null) {
