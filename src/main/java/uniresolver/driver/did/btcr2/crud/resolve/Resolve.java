@@ -50,6 +50,7 @@ import uniresolver.driver.did.btcr2.data.jsonld.BTCR2Update;
 import uniresolver.driver.did.btcr2.data.jsonld.RootCapability;
 import uniresolver.driver.did.btcr2.ipfs.IPFSConnection;
 import uniresolver.driver.did.btcr2.syntax.DidBtcr2IdentifierDecoding;
+import uniresolver.driver.did.btcr2.util.BytesUtil;
 import uniresolver.driver.did.btcr2.util.JSONPatchUtil;
 import uniresolver.result.ResolveResult;
 
@@ -169,18 +170,18 @@ public class Resolve {
         // and build a map from hash to update (update_lookup_table).
 
         List<BTCR2Update> sidecarUpdates = sidecar == null ? null : sidecar.getUpdates();
-        Map<ByteBuffer, BTCR2Update> update_lookup_table = sidecarUpdates == null ? null : sidecarUpdates.stream().collect(Collectors.toMap(update -> ByteBuffer.wrap(JSONDocumentHashing.jsonDocumentHashing(update)), update -> update));
+        Map<ByteBuffer, BTCR2Update> update_lookup_table = sidecarUpdates == null ? null : sidecarUpdates.stream().collect(Collectors.toMap(update -> BytesUtil.byteBuffer(JSONDocumentHashing.jsonDocumentHashing(update)), update -> update));
 
         // Hash each CAS Announcement (data structure) in sidecar.casUpdates with the JSON Document Hashing algorithm
         // and build a map from hash to announcement (cas_lookup_table).
 
         List<CASAnnouncement> sidecarCasUpdates = sidecar == null ? null : sidecar.getCasUpdates();
-        Map<ByteBuffer, CASAnnouncement> cas_lookup_table = sidecarCasUpdates == null ? null : sidecarCasUpdates.stream().collect(Collectors.toMap(casAnnouncement -> ByteBuffer.wrap(JSONDocumentHashing.jsonDocumentHashing(casAnnouncement)), casAnnouncement -> casAnnouncement));
+        Map<ByteBuffer, CASAnnouncement> cas_lookup_table = sidecarCasUpdates == null ? null : sidecarCasUpdates.stream().collect(Collectors.toMap(casAnnouncement -> BytesUtil.byteBuffer(JSONDocumentHashing.jsonDocumentHashing(casAnnouncement)), casAnnouncement -> casAnnouncement));
 
         // Build a map from sidecar.smtProofs keyed by proof id (smt_lookup_table).
 
         List<SMTProof> smtProofs = sidecar == null ? null : sidecar.getSmtProofs();
-        Map<ByteBuffer, SMTProof> smt_lookup_table = smtProofs == null ? null : smtProofs.stream().collect(Collectors.toMap(smtProof -> ByteBuffer.wrap(Base64.getUrlDecoder().decode(smtProof.getId())), smtProof -> smtProof));
+        Map<ByteBuffer, SMTProof> smt_lookup_table = smtProofs == null ? null : smtProofs.stream().collect(Collectors.toMap(smtProof -> BytesUtil.byteBuffer(Base64.getUrlDecoder().decode(smtProof.getId())), smtProof -> smtProof));
 
         // If genesis_bytes is a SHA-256 hash, hash sidecar.genesisDocument with the JSON Document Hashing algorithm.
         // Raise an INVALID_DID error if the computed hash does not match genesis_bytes.
@@ -401,7 +402,7 @@ public class Resolve {
                 // Build a tuple with: The transaction’s block metadata (height, time, and confirmations).
                 // The BTCR2 Signed Update (data structure) retrieved from update_lookup_table[update_hash].
 
-                BTCR2Update update = update_lookup_table == null ? null : update_lookup_table.get(ByteBuffer.wrap(update_hash));
+                BTCR2Update update = update_lookup_table == null ? null : update_lookup_table.get(BytesUtil.byteBuffer(update_hash));
                 if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in update_lookup_table: " + update);
 
                 // If the update is not in update_lookup_table, retrieve it from CAS.
@@ -558,7 +559,7 @@ public class Resolve {
 
         // Look up map_update_hash in cas_lookup_table to retrieve a CAS Announcement (data structure)
 
-        CASAnnouncement casAnnouncement = cas_lookup_table.get(ByteBuffer.wrap(map_update_hash));
+        CASAnnouncement casAnnouncement = cas_lookup_table.get(BytesUtil.byteBuffer(map_update_hash));
         if (casAnnouncement == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No CAS Announcement found for map_update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash));
 
         // and read update_hash from the announcement entry keyed by did.
@@ -587,7 +588,7 @@ public class Resolve {
 
         // Look up smt_root in smt_lookup_table to retrieve an SMT Proof (data structure).
 
-        SMTProof smtProof = smt_lookup_table.get(ByteBuffer.wrap(smt_root));
+        SMTProof smtProof = smt_lookup_table.get(BytesUtil.byteBuffer(smt_root));
         if (smtProof == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No SMT Proof found for smt_root " + Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root));
 
         // Validate the proof with the SMT Proof Verification algorithm.
@@ -654,8 +655,8 @@ public class Resolve {
         // and compare it to update_hash_history[update.targetVersionId - 2].
         // Raise a LATE_PUBLISHING error if the hashes differ.
 
-        if (! ByteBuffer.wrap(unsignedUpdateHash).equals(update_hash_history.get(update.getTargetVersionId() - 2))) {
-            throw new ResolutionException("LATE_PUBLISHING", "unsigned_update hash (" + Hex.encodeHexString(unsignedUpdateHash) + ") differs from update_hash_history[" + (update.getTargetVersionId()-2) + "] (" + Hex.encodeHexString(update_hash_history.get(update.getTargetVersionId() - 2)) + ")");
+        if (! BytesUtil.byteBuffer(unsignedUpdateHash).equals(update_hash_history.get(update.getTargetVersionId() - 2))) {
+            throw new ResolutionException("LATE_PUBLISHING", "unsigned_update hash (" + Hex.encodeHexString(unsignedUpdateHash) + ") differs from update_hash_history[" + (update.getTargetVersionId()-2) + "] (" + Hex.encodeHexString(update_hash_history.get(update.getTargetVersionId() - 2).duplicate()) + ")");
         }
     }
 
@@ -727,7 +728,7 @@ public class Resolve {
 
         // append the hash to update_hash_history.
 
-        update_hash_history.add(ByteBuffer.wrap(unsignedUpdateHash));
+        update_hash_history.add(BytesUtil.byteBuffer(unsignedUpdateHash));
 
         // done
 
