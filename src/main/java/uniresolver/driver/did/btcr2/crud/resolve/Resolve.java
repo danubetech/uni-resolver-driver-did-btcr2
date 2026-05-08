@@ -61,6 +61,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -296,6 +297,8 @@ public class Resolve {
         // 2. Repeats the following loop:
 
         List<Map.Entry<Block, Cid>> updateCids = new ArrayList<>();
+        List<Map.Entry<Block, Cid>> casAnnouncementCids = new ArrayList<>();
+        List<Map.Entry<Block, Cid>> smtProofCids = new ArrayList<>();
 
         process: do {
 
@@ -386,11 +389,11 @@ public class Resolve {
 
                     case BeaconType.CAS ->
                             // use Process CAS Beacon.
-                            processCASBeacon(beaconSignalBytes, identifier, cas_lookup_table);
+                            processCASBeacon(this.getIpfsConnection(), beaconSignalBytes, identifier, cas_lookup_table, casAnnouncementCid -> casAnnouncementCids.add(Map.entry(beaconBlock, casAnnouncementCid)));
 
                     case BeaconType.SMT ->
                             // use Process SMT Beacon.
-                            processSMTBeacon(beaconSignalBytes, smt_lookup_table);
+                            processSMTBeacon(this.getIpfsConnection(), beaconSignalBytes, smt_lookup_table, smtProofCid -> smtProofCids.add(Map.entry(beaconBlock, smtProofCid)));
                 };
 
                 if (update_hash == null) {
@@ -510,6 +513,16 @@ public class Resolve {
         didResolutionMetadata.put("contentType", Representations.DEFAULT_MEDIA_TYPE);
         if (bitcoinConnection != null) didResolutionMetadata.putAll(bitcoinConnection.getMetadata());
         if (this.getIpfsConnection() != null) didResolutionMetadata.putAll(this.getIpfsConnection().getMetadata());
+        if (genesisDocumentCid != null) didResolutionMetadata.put("genesisDocumentCid", genesisDocumentCid.toString());
+        if (! updateCids.isEmpty()) didResolutionMetadata.put("updateCids", updateCids.stream().map(x -> Map.of(
+                x.getKey().blockHeight(), x.getValue().toString()
+        )).toList());
+        if (! casAnnouncementCids.isEmpty()) didResolutionMetadata.put("casAnnouncementCids", casAnnouncementCids.stream().map(x -> Map.of(
+                x.getKey().blockHeight(), x.getValue().toString()
+        )).toList());
+        if (! smtProofCids.isEmpty()) didResolutionMetadata.put("smtProofCids", smtProofCids.stream().map(x -> Map.of(
+                x.getKey().blockHeight(), x.getValue().toString()
+        )).toList());
 
         // DID DOCUMENT METADATA
 
@@ -523,10 +536,6 @@ public class Resolve {
                 "network", identifierComponents.network().toString(),
                 "genesisBytes", Hex.encodeHexString(identifierComponents.genesisBytes()),
                 "genesisBytesTypes", identifierComponents.genesisBytesType()));
-        if (genesisDocumentCid != null) didDocumentMetadata.put("genesisDocumentCid", genesisDocumentCid.toString());
-        if (! updateCids.isEmpty()) didDocumentMetadata.put("updateCids", updateCids.stream().map(x -> Map.of(
-                x.getKey().blockHeight(), x.getValue().toString()
-        )).toList());
         didDocumentMetadata.put("updates", updates.stream().map(x -> Map.of(
                 "blockHeight", x.getKey().blockHeight(),
                 "blockHash", x.getKey().blockHash(),
@@ -548,7 +557,7 @@ public class Resolve {
      * Process CAS Beacon
      * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#process-cas-beacon
      */
-    private static byte[] processCASBeacon(byte[] signalBytes, DID did, Map<BytesArray, CASAnnouncement> cas_lookup_table) throws ResolutionException {
+    private static byte[] processCASBeacon(IPFSConnection ipfsConnection, byte[] signalBytes, DID did, Map<BytesArray, CASAnnouncement> cas_lookup_table, Consumer<Cid> casAnnouncementCidConsumer) throws ResolutionException {
 
         if (cas_lookup_table == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "No cas_lookup_table provided");
 
@@ -559,6 +568,22 @@ public class Resolve {
         // Look up map_update_hash in cas_lookup_table to retrieve a CAS Announcement (data structure)
 
         CASAnnouncement casAnnouncement = cas_lookup_table.get(BytesArray.bytesArray(map_update_hash));
+        if (log.isDebugEnabled()) log.debug("Found casAnnouncement for map_update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash) + " in cas_lookup_table: " + casAnnouncement);
+
+        Cid casAnnouncementCid = null;
+        if (casAnnouncement == null && ipfsConnection != null) {
+            try {
+                casAnnouncementCid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.sha2_256, map_update_hash);
+                byte[] casAnnouncementBytes = ipfsConnection.getIpfs().cat(casAnnouncementCid);
+                casAnnouncement = casAnnouncementBytes == null ? null : jsonMapper.readValue(new InputStreamReader(new ByteArrayInputStream(casAnnouncementBytes), StandardCharsets.UTF_8), CASAnnouncement.class);
+                if (log.isDebugEnabled()) log.debug("Found casAnnouncement for map_update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash) + " in CAS (IPFS) at " + casAnnouncementCid + ": " + casAnnouncement);
+            } catch (Exception ex) {
+                throw new ResolutionException("Cannot get casAnnouncement for map_update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash) + " from CAS (IPFS) at " + casAnnouncementCid + ": " + ex.getMessage(), ex);
+            }
+        }
+
+        if (casAnnouncementCid != null) casAnnouncementCidConsumer.accept(casAnnouncementCid);
+
         if (casAnnouncement == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No CAS Announcement found for map_update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash));
 
         // and read update_hash from the announcement entry keyed by did.
@@ -577,7 +602,7 @@ public class Resolve {
      * Process SMT Beacon
      * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#process-smt-beacon
      */
-    private static byte[] processSMTBeacon(byte[] signalBytes, Map<BytesArray, SMTProof> smt_lookup_table) throws ResolutionException {
+    private static byte[] processSMTBeacon(IPFSConnection ipfsConnection, byte[] signalBytes, Map<BytesArray, SMTProof> smt_lookup_table, Consumer<Cid> smtProofCidConsumer) throws ResolutionException {
 
         if (smt_lookup_table == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "No smt_lookup_table provided");
 
@@ -588,6 +613,22 @@ public class Resolve {
         // Look up smt_root in smt_lookup_table to retrieve an SMT Proof (data structure).
 
         SMTProof smtProof = smt_lookup_table.get(BytesArray.bytesArray(smt_root));
+        if (log.isDebugEnabled()) log.debug("Found smtProof for smt_root " + Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root) + " in smt_lookup_table: " + smtProof);
+
+        Cid smtProofCid = null;
+        if (smtProof == null && ipfsConnection != null) {
+            try {
+                smtProofCid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.sha2_256, smt_root);
+                byte[] smtProofBytes = ipfsConnection.getIpfs().cat(smtProofCid);
+                smtProof = smtProofBytes == null ? null : jsonMapper.readValue(new InputStreamReader(new ByteArrayInputStream(smtProofBytes), StandardCharsets.UTF_8), SMTProof.class);
+                if (log.isDebugEnabled()) log.debug("Found smtProof for smt_root " + Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root) + " in CAS (IPFS) at " + smtProofCid + ": " + smtProof);
+            } catch (Exception ex) {
+                throw new ResolutionException("Cannot get smtProof for smt_root " + Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root) + " from CAS (IPFS) at " + smtProofCid + ": " + ex.getMessage(), ex);
+            }
+        }
+
+        if (smtProofCid != null) smtProofCidConsumer.accept(smtProofCid);
+
         if (smtProof == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No SMT Proof found for smt_root " + Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root));
 
         // Validate the proof with the SMT Proof Verification algorithm.
