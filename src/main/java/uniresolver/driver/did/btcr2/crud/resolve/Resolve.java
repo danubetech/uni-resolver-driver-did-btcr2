@@ -267,9 +267,9 @@ public class Resolve {
 
                 String did = identifier.getDidString();
                 String publicKeyMultikey = publicKeyMultikey(publicKeyBytes);
-                URI p2pkhServiceEndpoint = URI.create(BitcoinURI.convertToBitcoinURI(addressParser.parseAddress(initialPublicKey.p2pkhAddress(new BlockHash(bitcoinConnector.getGensisHash(network)))), null, null, null));
-                URI p2wpkhServiceEndpoint = URI.create(BitcoinURI.convertToBitcoinURI(addressParser.parseAddress(initialPublicKey.p2wpkhAddress(new BlockHash(bitcoinConnector.getGensisHash(network)))), null, null, null));
-                URI p2trServiceEndpoint = URI.create(BitcoinURI.convertToBitcoinURI(addressParser.parseAddress(initialPublicKey.p2trAddress(new BlockHash(bitcoinConnector.getGensisHash(network)))), null, null, null));
+                URI p2pkhServiceEndpoint = URI.create(BitcoinURI.convertToBitcoinURI(addressParser.parseAddress(initialPublicKey.p2pkhAddress(new BlockHash(bitcoinConnector.getGenesisHash(network)))), null, null, null));
+                URI p2wpkhServiceEndpoint = URI.create(BitcoinURI.convertToBitcoinURI(addressParser.parseAddress(initialPublicKey.p2wpkhAddress(new BlockHash(bitcoinConnector.getGenesisHash(network)))), null, null, null));
+                URI p2trServiceEndpoint = URI.create(BitcoinURI.convertToBitcoinURI(addressParser.parseAddress(initialPublicKey.p2trAddress(new BlockHash(bitcoinConnector.getGenesisHash(network)))), null, null, null));
 
                 String initialDidDocumentString = INITIAL_DID_DOCUMENT_TEMPLATE
                         .replace("{{did}}", did)
