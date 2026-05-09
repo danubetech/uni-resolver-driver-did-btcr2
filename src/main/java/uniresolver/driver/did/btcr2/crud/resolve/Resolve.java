@@ -559,15 +559,13 @@ public class Resolve {
      */
     private static byte[] processCASBeacon(IPFSConnection ipfsConnection, byte[] signalBytes, DID did, Map<BytesArray, CASAnnouncement> cas_lookup_table, Consumer<Cid> casAnnouncementCidConsumer) throws ResolutionException {
 
-        if (cas_lookup_table == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "No cas_lookup_table provided");
-
         // Treat Signal Bytes as map_update_hash.
 
         byte[] map_update_hash = signalBytes;
 
         // Look up map_update_hash in cas_lookup_table to retrieve a CAS Announcement (data structure)
 
-        CASAnnouncement casAnnouncement = cas_lookup_table.get(BytesArray.bytesArray(map_update_hash));
+        CASAnnouncement casAnnouncement = cas_lookup_table == null ? null : cas_lookup_table.get(BytesArray.bytesArray(map_update_hash));
         if (log.isDebugEnabled()) log.debug("Found casAnnouncement for map_update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash) + " in cas_lookup_table: " + casAnnouncement);
 
         Cid casAnnouncementCid = null;
@@ -604,15 +602,13 @@ public class Resolve {
      */
     private static byte[] processSMTBeacon(IPFSConnection ipfsConnection, byte[] signalBytes, Map<BytesArray, SMTProof> smt_lookup_table, Consumer<Cid> smtProofCidConsumer) throws ResolutionException {
 
-        if (smt_lookup_table == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_OPTIONS, "No smt_lookup_table provided");
-
         // Treat Signal Bytes as smt_root.
 
         byte[] smt_root = signalBytes;
 
         // Look up smt_root in smt_lookup_table to retrieve an SMT Proof (data structure).
 
-        SMTProof smtProof = smt_lookup_table.get(BytesArray.bytesArray(smt_root));
+        SMTProof smtProof = smt_lookup_table == null ? null : smt_lookup_table.get(BytesArray.bytesArray(smt_root));
         if (log.isDebugEnabled()) log.debug("Found smtProof for smt_root " + Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root) + " in smt_lookup_table: " + smtProof);
 
         Cid smtProofCid = null;
