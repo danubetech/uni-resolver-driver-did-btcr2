@@ -296,9 +296,9 @@ public class Resolve {
 
         // 2. Repeats the following loop:
 
-        List<Map.Entry<Block, Cid>> updateCids = new ArrayList<>();
-        List<Map.Entry<Block, Cid>> casAnnouncementCids = new ArrayList<>();
-        List<Map.Entry<Block, Cid>> smtProofCids = new ArrayList<>();
+        Map<Block, Map<Tx, Cid>> updateCids = new LinkedHashMap<>();
+        Map<Block, Map<Tx, Cid>> casAnnouncementCids = new LinkedHashMap<>();
+        Map<Block, Map<Tx, Cid>> smtProofCids = new LinkedHashMap<>();
 
         process: do {
 
@@ -389,11 +389,11 @@ public class Resolve {
 
                     case BeaconType.CAS ->
                             // use Process CAS Beacon.
-                            processCASBeacon(this.getIpfsConnection(), beaconSignalBytes, identifier, cas_lookup_table, casAnnouncementCid -> casAnnouncementCids.add(Map.entry(beaconBlock, casAnnouncementCid)));
+                            processCASBeacon(this.getIpfsConnection(), beaconSignalBytes, identifier, cas_lookup_table, casAnnouncementCid -> casAnnouncementCids.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, casAnnouncementCid));
 
                     case BeaconType.SMT ->
                             // use Process SMT Beacon.
-                            processSMTBeacon(this.getIpfsConnection(), beaconSignalBytes, smt_lookup_table, smtProofCid -> smtProofCids.add(Map.entry(beaconBlock, smtProofCid)));
+                            processSMTBeacon(this.getIpfsConnection(), beaconSignalBytes, smt_lookup_table, smtProofCid -> smtProofCids.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, smtProofCid));
                 };
 
                 if (update_hash == null) {
@@ -421,7 +421,7 @@ public class Resolve {
                     }
                 }
 
-                if (updateCid != null) updateCids.add(Map.entry(beaconBlock, updateCid));
+                if (updateCid != null) updateCids.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, updateCid);
 
                 // Raise a MISSING_UPDATE_DATA error if the update is not available from either source.
 
@@ -452,9 +452,6 @@ public class Resolve {
             updates.sort(Comparator
                     .comparingInt((Map.Entry<Block, Map.Entry<Tx, BTCR2Update>> a) -> a.getValue().getValue().getTargetVersionId())
                     .thenComparingInt(a -> a.getKey().blockHeight()));
-
-            updateCids.sort(Comparator
-                    .comparingInt((Map.Entry<Block, Cid> a) -> a.getKey().blockHeight()));
 
             // Take the first tuple.
 
@@ -514,15 +511,21 @@ public class Resolve {
         if (bitcoinConnection != null) didResolutionMetadata.putAll(bitcoinConnection.getMetadata());
         if (this.getIpfsConnection() != null) didResolutionMetadata.putAll(this.getIpfsConnection().getMetadata());
         if (genesisDocumentCid != null) didResolutionMetadata.put("genesisDocumentCid", genesisDocumentCid.toString());
-        if (! updateCids.isEmpty()) didResolutionMetadata.put("updateCids", updateCids.stream().map(x -> Map.of(
-                x.getKey().blockHeight(), x.getValue().toString()
-        )).toList());
-        if (! casAnnouncementCids.isEmpty()) didResolutionMetadata.put("casAnnouncementCids", casAnnouncementCids.stream().map(x -> Map.of(
-                x.getKey().blockHeight(), x.getValue().toString()
-        )).toList());
-        if (! smtProofCids.isEmpty()) didResolutionMetadata.put("smtProofCids", smtProofCids.stream().map(x -> Map.of(
-                x.getKey().blockHeight(), x.getValue().toString()
-        )).toList());
+        if (! updateCids.isEmpty()) didResolutionMetadata.put("updateCids", updateCids.entrySet().stream().collect(Collectors.toMap(
+                x -> x.getKey().blockHeight(), x -> x.getValue().entrySet().stream().collect(Collectors.toMap(
+                        y -> y.getKey().txId(), y -> y.getValue().toString()
+                ))
+        )));
+        if (! casAnnouncementCids.isEmpty()) didResolutionMetadata.put("casAnnouncementCids", casAnnouncementCids.entrySet().stream().collect(Collectors.toMap(
+                x -> x.getKey().blockHeight(), x -> x.getValue().entrySet().stream().collect(Collectors.toMap(
+                        y -> y.getKey().txId(), y -> y.getValue().toString()
+                ))
+        )));
+        if (! smtProofCids.isEmpty()) didResolutionMetadata.put("smtProofCids", smtProofCids.entrySet().stream().collect(Collectors.toMap(
+                x -> x.getKey().blockHeight(), x -> x.getValue().entrySet().stream().collect(Collectors.toMap(
+                        y -> y.getKey().txId(), y -> y.getValue().toString()
+                ))
+        )));
 
         // DID DOCUMENT METADATA
 
