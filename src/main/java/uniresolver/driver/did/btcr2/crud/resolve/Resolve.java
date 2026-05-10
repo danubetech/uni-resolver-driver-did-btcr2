@@ -141,6 +141,8 @@ public class Resolve {
         // Resolution maintains the following state while building the DID document:
 
         List<Map.Entry<Block, Map.Entry<Tx, BTCR2Update>>> updates = new ArrayList<>();
+        Map<Block, Map<Tx, CASAnnouncement>> casAnnouncements = new LinkedHashMap<>();
+        Map<Block, Map<Tx, SMTProof>> smtProofs = new LinkedHashMap<>();
         int current_version_id = 1;
         List<BytesArray> update_hash_history = new ArrayList<>();
         Integer block_confirmations = null;
@@ -175,13 +177,13 @@ public class Resolve {
         // Hash each CAS Announcement (data structure) in sidecar.casUpdates with the JSON Document Hashing algorithm
         // and build a map from hash to announcement (cas_lookup_table).
 
-        List<CASAnnouncement> sidecarCasUpdates = sidecar == null ? null : sidecar.getCasUpdates();
-        Map<BytesArray, CASAnnouncement> cas_lookup_table = sidecarCasUpdates == null ? null : sidecarCasUpdates.stream().collect(Collectors.toMap(casAnnouncement -> BytesArray.bytesArray(JSONDocumentHashing.jsonDocumentHashing(casAnnouncement)), casAnnouncement -> casAnnouncement));
+        List<CASAnnouncement> sidecarCasAnnouncements = sidecar == null ? null : sidecar.getCasUpdates();
+        Map<BytesArray, CASAnnouncement> cas_lookup_table = sidecarCasAnnouncements == null ? null : sidecarCasAnnouncements.stream().collect(Collectors.toMap(casAnnouncement -> BytesArray.bytesArray(JSONDocumentHashing.jsonDocumentHashing(casAnnouncement)), casAnnouncement -> casAnnouncement));
 
         // Build a map from sidecar.smtProofs keyed by proof id (smt_lookup_table).
 
-        List<SMTProof> smtProofs = sidecar == null ? null : sidecar.getSmtProofs();
-        Map<BytesArray, SMTProof> smt_lookup_table = smtProofs == null ? null : smtProofs.stream().collect(Collectors.toMap(smtProof -> BytesArray.bytesArray(Base64.getUrlDecoder().decode(smtProof.getId())), smtProof -> smtProof));
+        List<SMTProof> sidecarSmtProofs = sidecar == null ? null : sidecar.getSmtProofs();
+        Map<BytesArray, SMTProof> smt_lookup_table = sidecarSmtProofs == null ? null : sidecarSmtProofs.stream().collect(Collectors.toMap(smtProof -> BytesArray.bytesArray(Base64.getUrlDecoder().decode(smtProof.getId())), smtProof -> smtProof));
 
         // If genesis_bytes is a SHA-256 hash, hash sidecar.genesisDocument with the JSON Document Hashing algorithm.
         // Raise an INVALID_DID error if the computed hash does not match genesis_bytes.
@@ -389,11 +391,15 @@ public class Resolve {
 
                     case BeaconType.CAS ->
                             // use Process CAS Beacon.
-                            processCASBeacon(this.getIpfsConnection(), beaconSignalBytes, identifier, cas_lookup_table, casAnnouncementCid -> casAnnouncementCids.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, casAnnouncementCid));
+                            processCASBeacon(this.getIpfsConnection(), beaconSignalBytes, identifier, cas_lookup_table,
+                                    casAnnouncement -> casAnnouncements.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, casAnnouncement),
+                                    casAnnouncementCid -> casAnnouncementCids.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, casAnnouncementCid));
 
                     case BeaconType.SMT ->
                             // use Process SMT Beacon.
-                            processSMTBeacon(this.getIpfsConnection(), beaconSignalBytes, smt_lookup_table, smtProofCid -> smtProofCids.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, smtProofCid));
+                            processSMTBeacon(this.getIpfsConnection(), beaconSignalBytes, smt_lookup_table,
+                                    smtProof -> smtProofs.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, smtProof),
+                                    smtProofCid -> smtProofCids.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, smtProofCid));
                 };
 
                 if (update_hash == null) {
@@ -546,8 +552,19 @@ public class Resolve {
                 "txId", x.getValue().getKey().txId(),
                 "targetVersionId", x.getValue().getValue().getTargetVersionId(),
                 "sourceHash", x.getValue().getValue().getSourceHash(),
-                "targetHash", x.getValue().getValue().getTargetHash()
+                "targetHash", x.getValue().getValue().getTargetHash(),
+                "updateHash", Base64.getUrlEncoder().withoutPadding().encodeToString(JSONDocumentHashing.jsonDocumentHashing(x.getValue().getValue()))
         )).toList());
+        if (! casAnnouncements.isEmpty()) didDocumentMetadata.put("casAnnouncements", casAnnouncements.entrySet().stream().collect(Collectors.toMap(
+                x -> x.getKey().blockHeight(), x -> x.getValue().entrySet().stream().collect(Collectors.toMap(
+                        y -> y.getKey().txId(), y -> y.getValue()
+                ))
+        )));
+        if (! smtProofCids.isEmpty()) didDocumentMetadata.put("smtProofs", smtProofs.entrySet().stream().collect(Collectors.toMap(
+                x -> x.getKey().blockHeight(), x -> x.getValue().entrySet().stream().collect(Collectors.toMap(
+                        y -> y.getKey().txId(), y -> jsonMapper.convertValue(y.getValue(), Map.class)
+                ))
+        )));
 
         // done
 
@@ -560,7 +577,7 @@ public class Resolve {
      * Process CAS Beacon
      * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#process-cas-beacon
      */
-    private static byte[] processCASBeacon(IPFSConnection ipfsConnection, byte[] signalBytes, DID did, Map<BytesArray, CASAnnouncement> cas_lookup_table, Consumer<Cid> casAnnouncementCidConsumer) throws ResolutionException {
+    private static byte[] processCASBeacon(IPFSConnection ipfsConnection, byte[] signalBytes, DID did, Map<BytesArray, CASAnnouncement> cas_lookup_table, Consumer<CASAnnouncement> casAnnouncementConsumer, Consumer<Cid> casAnnouncementCidConsumer) throws ResolutionException {
 
         // Treat Signal Bytes as map_update_hash.
 
@@ -586,6 +603,7 @@ public class Resolve {
         if (casAnnouncementCid != null) casAnnouncementCidConsumer.accept(casAnnouncementCid);
 
         if (casAnnouncement == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No CAS Announcement found for map_update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash));
+        casAnnouncementConsumer.accept(casAnnouncement);
 
         // and read update_hash from the announcement entry keyed by did.
 
@@ -603,7 +621,7 @@ public class Resolve {
      * Process SMT Beacon
      * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#process-smt-beacon
      */
-    private static byte[] processSMTBeacon(IPFSConnection ipfsConnection, byte[] signalBytes, Map<BytesArray, SMTProof> smt_lookup_table, Consumer<Cid> smtProofCidConsumer) throws ResolutionException {
+    private static byte[] processSMTBeacon(IPFSConnection ipfsConnection, byte[] signalBytes, Map<BytesArray, SMTProof> smt_lookup_table, Consumer<SMTProof> smtProofConsumer, Consumer<Cid> smtProofCidConsumer) throws ResolutionException {
 
         // Treat Signal Bytes as smt_root.
 
@@ -629,6 +647,7 @@ public class Resolve {
         if (smtProofCid != null) smtProofCidConsumer.accept(smtProofCid);
 
         if (smtProof == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No SMT Proof found for smt_root " + Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root));
+        smtProofConsumer.accept(smtProof);
 
         // Validate the proof with the SMT Proof Verification algorithm.
 
