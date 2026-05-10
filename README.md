@@ -64,6 +64,38 @@ curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:k1q5plamr904xqqdh9
 curl -X GET 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q465l26md3gu8y8fzxcae3wzx9q9qntrrzsu6p9elx68e2wu03flzemt2zq'
 ```
 
+**Example 9a:** Genesis document-based (from CAS) did:btcr2 on Mutinynet with 1 Update (from CAS) using CAS Announcement Map (from CAS):
+
+*Note: This example uses the same block, transaction, and CAS Announcement Map as Example 9b**.*
+
+```
+curl -X GET 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q5pxp24p923v36m8kfzfd3cwtpsgpl5ackq23uvph2qsrzjhsrq57gnv5yk'
+```
+
+**Example 9b:** Genesis document-based (from CAS) did:btcr2 on Mutinynet with 1 Update (from CAS) using CAS Announcement Map (from CAS):
+
+*Note: This example uses the same block, transaction, and CAS Announcement Map as Example 9a**.*
+
+```
+curl -X GET 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q587lk56v2rfnlpzerknx5tlht03c3j2gd27mvj7gqthjym9fn425rc9ygv'
+```
+
+**Example 10a:** Genesis document-based (from Sidecar) did:btcr2 on Mutinynet with 1 Update (from Sidecar) using CAS Announcement Map (from Sidecar):
+
+*Note: This example uses the same block, transaction, and CAS Announcement Map as Example 10b**.*
+
+```
+curl -X GET 'http://localhost:8080/1.0/identifiers/did:btcr2:x1qhn7xvy3lhau0jy3e9n5klayh2vcyv07txu553eckw6gezn8vfrayduehz8' -d '{"sidecar":{"genesisDocument":{"verificationMethod":[{"type":"Multikey","id":"#initialKey","publicKeyMultibase":"zQ3shaL4Nxb1u7ri88ba27o9jSknJV91Gbe6Cbebpyc87B635","controller":"did:btcr2:_"}],"assertionMethod":["#initialKey"],"capabilityDelegation":["#initialKey"],"capabilityInvocation":["#initialKey"],"authentication":["#initialKey"],"id":"did:btcr2:_","@context":["https://www.w3.org/ns/did/v1.1","https://btcr2.dev/context/v1"],"service":[{"type":"SingletonBeacon","id":"#initialP2PKH","serviceEndpoint":"bitcoin:mkiWTfbehzMpv7BvEb6ar64wEzo1ic3RKH"},{"type":"SingletonBeacon","id":"#initialP2WPKH","serviceEndpoint":"bitcoin:tb1q8yyquxkj90zmjpqu9wjmzwvx5ea709dkkgjzqg"},{"type":"SingletonBeacon","id":"#initialP2TR","serviceEndpoint":"bitcoin:tb1ph0z3j7k380hrm90x0z5afgz9yv79mmgs5ljel068c9dcrujdvensn2n6qz"},{"type":"CASBeacon","id":"#cohort-mutinynet-cas-2","serviceEndpoint":"bitcoin:tb1pd79gln669alnp86d3tcffqa77effk83v0exja368sa02fyxglxcqhwcj9l"}]},"updates":[{"@context":["https://btcr2.dev/context/v1","https://w3id.org/json-ld-patch/v1","https://w3id.org/zcap/v1","https://w3id.org/security/data-integrity/v2"],"patch":[{"op":"add","path":"/service/4","value":{"id":"#dwn","type":"DecentralizedWebNode","serviceEndpoint":"http://example.com/dwn"}}],"sourceHash":"gVAhXy63r_pYljv7ahQkNymdZW_Q1sQQ8UvNqTWEAKU","targetHash":"DRTduk6nIdcyEdmoVnPp_zN7tqTgeH6lPWRanYzcK9s","targetVersionId":2,"proof":{"type":"DataIntegrityProof","cryptosuite":"bip340-jcs-2025","verificationMethod":"did:btcr2:x1qhn7xvy3lhau0jy3e9n5klayh2vcyv07txu553eckw6gezn8vfrayduehz8#initialKey","proofPurpose":"capabilityInvocation","capability":"urn:zcap:root:did%3Abtcr2%3Ax1qhn7xvy3lhau0jy3e9n5klayh2vcyv07txu553eckw6gezn8vfrayduehz8","capabilityAction":"Write","proofValue":"zoYWD1syitvDRcbjT4UcAKyw6QJJ8DMkzDdAnt6CfcjyVsvp9A6r8kHKiPNaqFPe3iHxtQRDrQfS8wsAVja5qvGd"}}],"casUpdates":[{"did:btcr2:x1qkvj2tupjlsntl5c6he47h2gjhwr6c5ndvp3u92s4a6hs7qec5s97run2aw":"vfRTPYVzLD8CRnadTEMXkkagbrxIrmHZT3DKAvFruFA","did:btcr2:x1qhn7xvy3lhau0jy3e9n5klayh2vcyv07txu553eckw6gezn8vfrayduehz8":"RvFuBbfT57Y3xy4GbtWpSfJMfQ03IBs2Ksjdcxy1a0g"}]}}'
+```
+
+**Example 10b:** Genesis document-based (from Sidecar) did:btcr2 on Mutinynet with 1 Update (from Sidecar) using CAS Announcement Map (from Sidecar):
+
+*Note: This example uses the same block, transaction, and CAS Announcement Map as Example 10a**.*
+
+```
+curl -X GET 'http://localhost:8080/1.0/identifiers/did:btcr2:x1qkvj2tupjlsntl5c6he47h2gjhwr6c5ndvp3u92s4a6hs7qec5s97run2aw' -d '{"sidecar":{"genesisDocument":{"verificationMethod":[{"type":"Multikey","id":"#initialKey","publicKeyMultibase":"zQ3shsMVg4SAQNb561q2wLhuhQe3yv1WZXWx7zsm1k56iUsSB","controller":"did:btcr2:_"}],"assertionMethod":["#initialKey"],"capabilityDelegation":["#initialKey"],"capabilityInvocation":["#initialKey"],"authentication":["#initialKey"],"id":"did:btcr2:_","@context":["https://www.w3.org/ns/did/v1.1","https://btcr2.dev/context/v1"],"service":[{"type":"SingletonBeacon","id":"#initialP2PKH","serviceEndpoint":"bitcoin:my9vSV2TjCLhKGLLpXzYAfHexP5x51Kjdd"},{"type":"SingletonBeacon","id":"#initialP2WPKH","serviceEndpoint":"bitcoin:tb1qc9mlkyy6gtye4fxsrqts2m2erg0mpg0yxvc00j"},{"type":"SingletonBeacon","id":"#initialP2TR","serviceEndpoint":"bitcoin:tb1ps3g7sys25a443cx76cs4t6ekedzazt33f6qt25m965xskg3cwezqzyhu80"},{"type":"CASBeacon","id":"#cohort-mutinynet-cas-2","serviceEndpoint":"bitcoin:tb1pd79gln669alnp86d3tcffqa77effk83v0exja368sa02fyxglxcqhwcj9l"}]},"updates":[{"@context":["https://btcr2.dev/context/v1","https://w3id.org/json-ld-patch/v1","https://w3id.org/zcap/v1","https://w3id.org/security/data-integrity/v2"],"patch":[{"op":"add","path":"/service/4","value":{"id":"#didcomm","type":"DIDCommMessaging","serviceEndpoint":"http://example.com/didcomm"}}],"sourceHash":"5a5xJPNsPT7KEWu5mWEw8dAISSCdMFOwylrbIfTUL94","targetHash":"QtUyma1MgFeHMRerJDejRQ2PrzK2IFYYAwGNC8sDvlE","targetVersionId":2,"proof":{"type":"DataIntegrityProof","cryptosuite":"bip340-jcs-2025","verificationMethod":"did:btcr2:x1qkvj2tupjlsntl5c6he47h2gjhwr6c5ndvp3u92s4a6hs7qec5s97run2aw#initialKey","proofPurpose":"capabilityInvocation","capability":"urn:zcap:root:did%3Abtcr2%3Ax1qkvj2tupjlsntl5c6he47h2gjhwr6c5ndvp3u92s4a6hs7qec5s97run2aw","capabilityAction":"Write","proofValue":"z21oPYfxPK92FDFjLimot8AVPrrACVWcVPYABFhVWxmxxg6nUNmqresnqVdBQHjL9dVLt9eQL6XYdh9net9rVbP3N"}}],"casUpdates":[{"did:btcr2:x1qkvj2tupjlsntl5c6he47h2gjhwr6c5ndvp3u92s4a6hs7qec5s97run2aw":"vfRTPYVzLD8CRnadTEMXkkagbrxIrmHZT3DKAvFruFA","did:btcr2:x1qhn7xvy3lhau0jy3e9n5klayh2vcyv07txu553eckw6gezn8vfrayduehz8":"RvFuBbfT57Y3xy4GbtWpSfJMfQ03IBs2Ksjdcxy1a0g"}]}}'
+```
+
 ## Driver Environment Variables
 
 The driver recognizes the following environment variables:
