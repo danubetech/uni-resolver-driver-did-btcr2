@@ -1,6 +1,6 @@
 package uniresolver.driver.did.btcr2.algorithms;
 
-import uniresolver.driver.did.btcr2.data.json.SMTProof;
+import uniresolver.driver.did.btcr2.data.SMTProof;
 
 /*
  * SMT Proof Verification

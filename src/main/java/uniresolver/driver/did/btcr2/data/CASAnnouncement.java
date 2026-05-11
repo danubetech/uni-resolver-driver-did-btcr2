@@ -1,4 +1,4 @@
-package uniresolver.driver.did.btcr2.data.json;
+package uniresolver.driver.did.btcr2.data;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

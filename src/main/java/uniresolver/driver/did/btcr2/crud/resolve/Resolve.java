@@ -43,9 +43,9 @@ import uniresolver.driver.did.btcr2.algorithms.JSONDocumentHashing;
 import uniresolver.driver.did.btcr2.algorithms.SMTProofVerification;
 import uniresolver.driver.did.btcr2.appendix.RootDidBtcr2UpdateCapabilities;
 import uniresolver.driver.did.btcr2.beacons.BeaconType;
-import uniresolver.driver.did.btcr2.data.json.CASAnnouncement;
-import uniresolver.driver.did.btcr2.data.json.SMTProof;
-import uniresolver.driver.did.btcr2.data.json.SidecarData;
+import uniresolver.driver.did.btcr2.data.CASAnnouncement;
+import uniresolver.driver.did.btcr2.data.SMTProof;
+import uniresolver.driver.did.btcr2.data.SidecarData;
 import uniresolver.driver.did.btcr2.data.jsonld.BTCR2Update;
 import uniresolver.driver.did.btcr2.data.jsonld.RootCapability;
 import uniresolver.driver.did.btcr2.ipfs.IPFSConnection;
@@ -165,7 +165,7 @@ public class Resolve {
         // resolutionOptions contains a sidecar property (Sidecar Data (data structure)) which SHOULD be prepared as lookup tables:
 
         Map<String, Object> sidecarMap = resolutionOptions == null ? null : (Map<String, Object>) resolutionOptions.get("sidecar");
-        SidecarData sidecar = sidecarMap == null ? null : jsonMapper.convertValue(sidecarMap, SidecarData.class);
+        SidecarData sidecar = sidecarMap == null ? null : SidecarData.fromJsonObject(sidecarMap);
         if (log.isDebugEnabled()) log.debug("Sidecar data: " + sidecar);
 
         // Hash each BTCR2 Signed Update (data structure) in sidecar.updates with the JSON Document Hashing algorithm
@@ -540,21 +540,23 @@ public class Resolve {
         didDocumentMetadata.put("nextVersionId", Integer.toString(current_version_id + 1)); // NOT IN SPEC
         didDocumentMetadata.put("confirmations", (block_confirmations == null ? null : block_confirmations.toString()));
         didDocumentMetadata.put("deactivated", current_document.getJsonObject().get("deactivated"));
-        didDocumentMetadata.put("identifierComponents", Map.of(
-                "version", identifierComponents.version(),
-                "network", identifierComponents.network().toString(),
-                "genesisBytes", Hex.encodeHexString(identifierComponents.genesisBytes()),
-                "genesisBytesTypes", identifierComponents.genesisBytesType()));
-        didDocumentMetadata.put("updates", updates.stream().map(x -> Map.of(
-                "blockHeight", x.getKey().blockHeight(),
-                "blockHash", x.getKey().blockHash(),
-                "blockTime", x.getKey().blockTime(),
-                "txId", x.getValue().getKey().txId(),
-                "targetVersionId", x.getValue().getValue().getTargetVersionId(),
-                "sourceHash", x.getValue().getValue().getSourceHash(),
-                "targetHash", x.getValue().getValue().getTargetHash(),
-                "updateHash", Base64.getUrlEncoder().withoutPadding().encodeToString(JSONDocumentHashing.jsonDocumentHashing(x.getValue().getValue()))
-        )).toList());
+        Map<String, Object> metadataIdentifierComponents = (Map<String, Object>) didDocumentMetadata.computeIfAbsent("identifierComponents", x -> new LinkedHashMap<>());
+        metadataIdentifierComponents.put("version", identifierComponents.version());
+        metadataIdentifierComponents.put("network", identifierComponents.network().toString());
+        metadataIdentifierComponents.put("genesisBytes", Hex.encodeHexString(identifierComponents.genesisBytes()));
+        metadataIdentifierComponents.put("genesisBytesTypes", identifierComponents.genesisBytesType());
+        didDocumentMetadata.put("updates", updates.stream().map(x -> {
+            Map<String, Object> metadataUpdate = new LinkedHashMap<>();
+            metadataUpdate.put("blockHeight", x.getKey().blockHeight());
+            metadataUpdate.put("blockHash", x.getKey().blockHash());
+            metadataUpdate.put("blockTime", x.getKey().blockTime());
+            metadataUpdate.put("txId", x.getValue().getKey().txId());
+            metadataUpdate.put("targetVersionId", x.getValue().getValue().getTargetVersionId());
+            metadataUpdate.put("sourceHash", x.getValue().getValue().getSourceHash());
+            metadataUpdate.put("targetHash", x.getValue().getValue().getTargetHash());
+            metadataUpdate.put("updateHash", Base64.getUrlEncoder().withoutPadding().encodeToString(JSONDocumentHashing.jsonDocumentHashing(x.getValue().getValue())));
+            return metadataUpdate;
+        }).toList());
         if (! casAnnouncements.isEmpty()) didDocumentMetadata.put("casAnnouncements", casAnnouncements.entrySet().stream().collect(Collectors.toMap(
                 x -> x.getKey().blockHeight(), x -> x.getValue().entrySet().stream().collect(Collectors.toMap(
                         y -> y.getKey().txId(), y -> y.getValue()
@@ -562,7 +564,7 @@ public class Resolve {
         )));
         if (! smtProofCids.isEmpty()) didDocumentMetadata.put("smtProofs", smtProofs.entrySet().stream().collect(Collectors.toMap(
                 x -> x.getKey().blockHeight(), x -> x.getValue().entrySet().stream().collect(Collectors.toMap(
-                        y -> y.getKey().txId(), y -> jsonMapper.convertValue(y.getValue(), Map.class)
+                        y -> y.getKey().txId(), y -> y.getValue().toMap()
                 ))
         )));
 
