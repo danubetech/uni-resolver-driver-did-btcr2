@@ -1,7 +1,7 @@
 package uniresolver.driver.did.btcr2.data;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import foundation.identity.did.DIDDocument;
 import uniresolver.driver.did.btcr2.data.jsonld.BTCR2Update;
@@ -13,7 +13,7 @@ import java.util.Objects;
 public class SidecarData {
 
     private static final JsonMapper jsonMapper = JsonMapper.builder()
-            .defaultPropertyInclusion(JsonInclude.Value.ALL_NON_NULL)
+            .configure(MapperFeature.USE_GETTERS_AS_SETTERS, false)
             .build();
 
     @JsonProperty("@context")
@@ -26,7 +26,7 @@ public class SidecarData {
     public SidecarData() {
     }
 
-    public static SidecarData fromJsonObject(Map<String, Object> map) {
+    public static SidecarData fromMap(Map<String, Object> map) {
         return jsonMapper.convertValue(map, SidecarData.class);
     }
 

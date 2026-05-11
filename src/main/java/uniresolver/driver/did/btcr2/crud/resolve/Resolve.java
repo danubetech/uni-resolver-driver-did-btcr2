@@ -14,8 +14,6 @@ import com.danubetech.dataintegrity.jsonld.DataIntegrityKeywords;
 import com.danubetech.dataintegrity.verifier.DataIntegrityProofLdVerifier;
 import com.danubetech.dataintegrity.verifier.LdVerifierRegistry;
 import com.danubetech.keyformats.crypto.impl.secp256k1_ES256KS_PublicKeyVerifier;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import foundation.identity.did.*;
 import foundation.identity.did.representations.Representations;
 import foundation.identity.did.validation.Validation;
@@ -119,10 +117,6 @@ public class Resolve {
 
     private static final Logger log = LoggerFactory.getLogger(Resolve.class);
 
-    private static final JsonMapper jsonMapper = JsonMapper.builder()
-            .configure(MapperFeature.USE_GETTERS_AS_SETTERS, false)
-            .build();
-
     private BitcoinConnector bitcoinConnector;
     private IPFSConnection ipfsConnection;
 
@@ -165,7 +159,7 @@ public class Resolve {
         // resolutionOptions contains a sidecar property (Sidecar Data (data structure)) which SHOULD be prepared as lookup tables:
 
         Map<String, Object> sidecarMap = resolutionOptions == null ? null : (Map<String, Object>) resolutionOptions.get("sidecar");
-        SidecarData sidecar = sidecarMap == null ? null : SidecarData.fromJsonObject(sidecarMap);
+        SidecarData sidecar = sidecarMap == null ? null : SidecarData.fromMap(sidecarMap);
         if (log.isDebugEnabled()) log.debug("Sidecar data: " + sidecar);
 
         // Hash each BTCR2 Signed Update (data structure) in sidecar.updates with the JSON Document Hashing algorithm
@@ -595,7 +589,7 @@ public class Resolve {
             try {
                 casAnnouncementCid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.sha2_256, map_update_hash);
                 byte[] casAnnouncementBytes = ipfsConnection.getIpfs().cat(casAnnouncementCid);
-                casAnnouncement = casAnnouncementBytes == null ? null : jsonMapper.readValue(new InputStreamReader(new ByteArrayInputStream(casAnnouncementBytes), StandardCharsets.UTF_8), CASAnnouncement.class);
+                casAnnouncement = casAnnouncementBytes == null ? null : CASAnnouncement.fromJson(new InputStreamReader(new ByteArrayInputStream(casAnnouncementBytes), StandardCharsets.UTF_8));
                 if (log.isDebugEnabled()) log.debug("Found casAnnouncement for map_update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash) + " in CAS (IPFS) at " + casAnnouncementCid + ": " + casAnnouncement);
             } catch (Exception ex) {
                 throw new ResolutionException("Cannot get casAnnouncement for map_update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash) + " from CAS (IPFS) at " + casAnnouncementCid + ": " + ex.getMessage(), ex);
@@ -639,7 +633,7 @@ public class Resolve {
             try {
                 smtProofCid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.sha2_256, smt_root);
                 byte[] smtProofBytes = ipfsConnection.getIpfs().cat(smtProofCid);
-                smtProof = smtProofBytes == null ? null : jsonMapper.readValue(new InputStreamReader(new ByteArrayInputStream(smtProofBytes), StandardCharsets.UTF_8), SMTProof.class);
+                smtProof = smtProofBytes == null ? null : SMTProof.fromJson(new InputStreamReader(new ByteArrayInputStream(smtProofBytes), StandardCharsets.UTF_8));
                 if (log.isDebugEnabled()) log.debug("Found smtProof for smt_root " + Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root) + " in CAS (IPFS) at " + smtProofCid + ": " + smtProof);
             } catch (Exception ex) {
                 throw new ResolutionException("Cannot get smtProof for smt_root " + Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root) + " from CAS (IPFS) at " + smtProofCid + ": " + ex.getMessage(), ex);
