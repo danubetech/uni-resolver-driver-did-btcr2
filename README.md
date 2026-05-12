@@ -16,6 +16,8 @@ docker compose up
 
 ## Example Requests
 
+Note: Additional data related to these examples is available under [./examples/](./examples/).
+
 **Example 1:** Public Key-based did:btcr2 on Mutinynet without Update:
 
 ```
