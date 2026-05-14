@@ -1,0 +1,20 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/activitystreams",
+    "https://w3id.org/security/data-integrity/v2"
+  ],
+  "type": "Create",
+  "actor": "did:btcr2:x1q5djgju2dtfesllraah3c465cnta3vt7rm7l8lgdr6d3zttn9mxyjwxqut8",
+  "object": {
+    "type": "Note",
+    "content": "Hello world"
+  },
+  "proof": {
+    "type": "DataIntegrityProof",
+    "cryptosuite": "eddsa-rdfc-2022",
+    "created": "2026-05-14T19:04:19Z",
+    "verificationMethod": "did:btcr2:x1q4tpp055sf94kskjdkvspsuw9nmf7wale7wrtc6yk2f7lhhtxmh92kmvw2r#signingKey",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z4CkkQ8nF1hDKLfmSmwRpCLZGKtRNHCDUDCLXbu8o6q8tr65L2GDVGbaqcXdpwghCeb1wgG14bZjfZT8sA8o87ZhW"
+  }
+}
