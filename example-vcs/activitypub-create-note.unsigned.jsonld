@@ -1,7 +1,6 @@
 {
   "@context": [
-    "https://www.w3.org/ns/activitystreams",
-    "https://w3id.org/security/data-integrity/v1"
+    "https://www.w3.org/ns/activitystreams"
   ],
   "type": "Create",
   "actor": "did:btcr2:x1q5djgju2dtfesllraah3c465cnta3vt7rm7l8lgdr6d3zttn9mxyjwxqut8",
