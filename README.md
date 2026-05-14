@@ -14,9 +14,9 @@ docker compose build
 docker compose up
 ```
 
-## Example Requests
+## Example DIDs
 
-Note: Additional data related to these examples is available under [./examples/](./examples/).
+*Note: Additional data related to these examples is available under [./example-dids/](./example-dids/).*
 
 **Example 1:** Public Key-based did:btcr2 on Mutinynet without Update:
 
