@@ -294,7 +294,6 @@ public class Resolve {
 
         Map<Block, Map<Tx, Cid>> updateCids = new LinkedHashMap<>();
         Map<Block, Map<Tx, Cid>> casAnnouncementCids = new LinkedHashMap<>();
-        Map<Block, Map<Tx, Cid>> smtProofCids = new LinkedHashMap<>();
 
         process: do {
 
@@ -392,8 +391,7 @@ public class Resolve {
                     case BeaconType.SMT ->
                             // use Process SMT Beacon.
                             processSMTBeacon(this.getIpfsConnection(), beaconSignalBytes, smt_lookup_table,
-                                    smtProof -> smtProofs.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, smtProof),
-                                    smtProofCid -> smtProofCids.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, smtProofCid));
+                                    smtProof -> smtProofs.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, smtProof));
                 };
 
                 if (update_hash == null) {
@@ -521,11 +519,6 @@ public class Resolve {
                         y -> y.getKey().txId(), y -> y.getValue().toString()
                 ))
         )));
-        if (! smtProofCids.isEmpty()) didResolutionMetadata.put("smtProofCids", smtProofCids.entrySet().stream().collect(Collectors.toMap(
-                x -> x.getKey().blockHeight(), x -> x.getValue().entrySet().stream().collect(Collectors.toMap(
-                        y -> y.getKey().txId(), y -> y.getValue().toString()
-                ))
-        )));
 
         // DID DOCUMENT METADATA
 
@@ -556,7 +549,7 @@ public class Resolve {
                         y -> y.getKey().txId(), y -> y.getValue()
                 ))
         )));
-        if (! smtProofCids.isEmpty()) didDocumentMetadata.put("smtProofs", smtProofs.entrySet().stream().collect(Collectors.toMap(
+        if (! smtProofs.isEmpty()) didDocumentMetadata.put("smtProofs", smtProofs.entrySet().stream().collect(Collectors.toMap(
                 x -> x.getKey().blockHeight(), x -> x.getValue().entrySet().stream().collect(Collectors.toMap(
                         y -> y.getKey().txId(), y -> y.getValue().toMap()
                 ))
@@ -617,7 +610,7 @@ public class Resolve {
      * Process SMT Beacon
      * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#process-smt-beacon
      */
-    private static byte[] processSMTBeacon(IPFSConnection ipfsConnection, byte[] signalBytes, Map<BytesArray, SMTProof> smt_lookup_table, Consumer<SMTProof> smtProofConsumer, Consumer<Cid> smtProofCidConsumer) throws ResolutionException {
+    private static byte[] processSMTBeacon(IPFSConnection ipfsConnection, byte[] signalBytes, Map<BytesArray, SMTProof> smt_lookup_table, Consumer<SMTProof> smtProofConsumer) throws ResolutionException {
 
         // Treat Signal Bytes as smt_root.
 
@@ -627,20 +620,6 @@ public class Resolve {
 
         SMTProof smtProof = smt_lookup_table == null ? null : smt_lookup_table.get(BytesArray.bytesArray(smt_root));
         if (log.isDebugEnabled()) log.debug("Found smtProof for smt_root " + Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root) + " in smt_lookup_table: " + smtProof);
-
-        Cid smtProofCid = null;
-        if (smtProof == null && ipfsConnection != null) {
-            try {
-                smtProofCid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.sha2_256, smt_root);
-                byte[] smtProofBytes = ipfsConnection.getIpfs().cat(smtProofCid);
-                smtProof = smtProofBytes == null ? null : SMTProof.fromJson(new InputStreamReader(new ByteArrayInputStream(smtProofBytes), StandardCharsets.UTF_8));
-                if (log.isDebugEnabled()) log.debug("Found smtProof for smt_root " + Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root) + " in CAS (IPFS) at " + smtProofCid + ": " + smtProof);
-            } catch (Exception ex) {
-                throw new ResolutionException("Cannot get smtProof for smt_root " + Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root) + " from CAS (IPFS) at " + smtProofCid + ": " + ex.getMessage(), ex);
-            }
-        }
-
-        if (smtProofCid != null) smtProofCidConsumer.accept(smtProofCid);
 
         if (smtProof == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No SMT Proof found for smt_root " + Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root));
         smtProofConsumer.accept(smtProof);
