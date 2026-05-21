@@ -374,6 +374,8 @@ public class Resolve {
                 String beaconServiceType = beaconsServiceTypes.get(beaconTransaction);
                 byte[] beaconSignalBytes = beaconsSignalBytes.get(beaconTransaction);
 
+                if (log.isDebugEnabled()) log.debug("Processing beacon transaction {} on block {} with beacon service type {}", beaconTransaction.txId(), beaconBlock.blockHash(), beaconServiceType);
+
                 // Derive update_hash from the transaction’s Signal Bytes based on the beacon type:
 
                 byte[] update_hash = switch (BeaconType.fromServiceType(beaconServiceType)) {
