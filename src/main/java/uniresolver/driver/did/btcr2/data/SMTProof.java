@@ -4,22 +4,34 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.math.BigInteger;
+import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
-public class SMTProof {
+public class SMTProof extends LinkedHashMap<String, Object> {
 
     private static final JsonMapper jsonMapper = JsonMapper.builder()
             .build();
 
-    private String id;
-    private String nonce;
-    private String updateId;
-    private String collapsed;
-    private List<String> hashes;
+    private static final Base64.Encoder base64UrlEncoder = Base64.getUrlEncoder().withoutPadding();
+    private static final Base64.Decoder base64UrlDecoder = Base64.getUrlDecoder();
 
     public SMTProof() {
+        super();
+    }
+
+    public SMTProof(Map<? extends String, ? extends String> m) {
+        super(m);
+    }
+
+    public SMTProof(byte[] id, BigInteger nonce, byte[] updateId, BigInteger collapsed, List<byte[]> hashes) {
+        if (id != null) this.put("id", base64UrlEncoder.encodeToString(id));
+        if (nonce != null) this.put("nonce", base64UrlEncoder.encodeToString(nonce.toByteArray()));
+        if (updateId != null) this.put("updateId", base64UrlEncoder.encodeToString(updateId));
+        if (collapsed != null) this.put("collapsed", base64UrlEncoder.encodeToString(collapsed.toByteArray()));
+        if (hashes != null) this.put("hashes", hashes.stream().map(base64UrlEncoder::encodeToString).toList());
     }
 
     public static SMTProof fromJson(Reader reader) throws IOException {
@@ -27,69 +39,26 @@ public class SMTProof {
     }
 
     public Map<String, Object> toMap() {
-        return jsonMapper.convertValue(this, Map.class);
+        return this;
     }
 
-    public String getId() {
-        return id;
+    public byte[] getId() {
+        return this.containsKey("id") ? base64UrlDecoder.decode((String) this.get("id")) : null;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public BigInteger getNonce() {
+        return this.containsKey("nonce") ? new BigInteger(1, base64UrlDecoder.decode((String) this.get("nonce"))) : null;
     }
 
-    public String getNonce() {
-        return nonce;
+    public byte[] getUpdateId() {
+        return this.containsKey("updateId") ? base64UrlDecoder.decode((String) this.get("updateId")) : null;
     }
 
-    public void setNonce(String nonce) {
-        this.nonce = nonce;
+    public BigInteger getCollapsed() {
+        return this.containsKey("collapsed") ? new BigInteger(1, base64UrlDecoder.decode((String) this.get("collapsed"))) : null;
     }
 
-    public String getUpdateId() {
-        return updateId;
-    }
-
-    public void setUpdateId(String updateId) {
-        this.updateId = updateId;
-    }
-
-    public String getCollapsed() {
-        return collapsed;
-    }
-
-    public void setCollapsed(String collapsed) {
-        this.collapsed = collapsed;
-    }
-
-    public List<String> getHashes() {
-        return hashes;
-    }
-
-    public void setHashes(List<String> hashes) {
-        this.hashes = hashes;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        SMTProof smtProof = (SMTProof) o;
-        return Objects.equals(id, smtProof.id) && Objects.equals(nonce, smtProof.nonce) && Objects.equals(updateId, smtProof.updateId) && Objects.equals(collapsed, smtProof.collapsed) && Objects.equals(hashes, smtProof.hashes);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, nonce, updateId, collapsed, hashes);
-    }
-
-    @Override
-    public String toString() {
-        return "SMTProof{" +
-                "id='" + id + '\'' +
-                ", nonce='" + nonce + '\'' +
-                ", updateId='" + updateId + '\'' +
-                ", collapsed='" + collapsed + '\'' +
-                ", hashes=" + hashes +
-                '}';
+    public List<byte[]> getHashes() {
+        return this.containsKey("hashes") ? ((List<String>) this.get("hashes")).stream().map(base64UrlDecoder::decode).toList() : null;
     }
 }

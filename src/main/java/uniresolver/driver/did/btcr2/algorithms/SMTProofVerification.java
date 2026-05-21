@@ -1,6 +1,7 @@
 package uniresolver.driver.did.btcr2.algorithms;
 
 import uniresolver.driver.did.btcr2.data.SMTProof;
+import uniresolver.driver.did.btcr2.data.SparseMerkleTree;
 
 /*
  * SMT Proof Verification
@@ -8,7 +9,7 @@ import uniresolver.driver.did.btcr2.data.SMTProof;
  */
 public class SMTProofVerification {
 
-    public static void smtProofVerification(SMTProof smtProof) {
-        // TODO
+    public static boolean smtProofVerification(SMTProof smtProof, byte[] rootHash) {
+        return SparseMerkleTree.verifyProof(smtProof, rootHash);
     }
 }

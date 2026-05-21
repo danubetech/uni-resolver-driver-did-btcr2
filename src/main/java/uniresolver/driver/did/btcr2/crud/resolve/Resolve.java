@@ -177,7 +177,7 @@ public class Resolve {
         // Build a map from sidecar.smtProofs keyed by proof id (smt_lookup_table).
 
         List<SMTProof> sidecarSmtProofs = sidecar == null ? null : sidecar.getSmtProofs();
-        Map<BytesArray, SMTProof> smt_lookup_table = sidecarSmtProofs == null ? null : sidecarSmtProofs.stream().collect(Collectors.toMap(smtProof -> BytesArray.bytesArray(Base64.getUrlDecoder().decode(smtProof.getId())), smtProof -> smtProof));
+        Map<BytesArray, SMTProof> smt_lookup_table = sidecarSmtProofs == null ? null : sidecarSmtProofs.stream().collect(Collectors.toMap(smtProof -> BytesArray.bytesArray(smtProof.getId()), smtProof -> smtProof));
 
         // If genesis_bytes is a SHA-256 hash, hash sidecar.genesisDocument with the JSON Document Hashing algorithm.
         // Raise an INVALID_DID error if the computed hash does not match genesis_bytes.
@@ -626,7 +626,9 @@ public class Resolve {
 
         // Validate the proof with the SMT Proof Verification algorithm.
 
-        SMTProofVerification.smtProofVerification(smtProof);
+        boolean smtProofVerified = SMTProofVerification.smtProofVerification(smtProof, smt_root);
+        if (log.isDebugEnabled()) log.debug("Verified smtProof {} --> {}", smtProof, smtProofVerified);
+        if (! smtProofVerified) throw new ResolutionException("INVALID_DID_UPDATE", "Cannot verify SMT Proof " + smtProof);
 
         // Use smt_proof.updateId as update_hash.
 
