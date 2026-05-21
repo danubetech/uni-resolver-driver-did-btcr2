@@ -634,7 +634,7 @@ public class Resolve {
 
         // Use smt_proof.updateId as update_hash.
 
-        byte[] update_hash = Base64.getUrlDecoder().decode(smtProof.getUpdateId());
+        byte[] update_hash = smtProof.getUpdateId();
         if (log.isDebugEnabled()) log.debug("For smt_root {} found update_hash: {}", Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root), Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash));
         return update_hash;
     }
