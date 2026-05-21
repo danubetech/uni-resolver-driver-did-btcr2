@@ -108,7 +108,7 @@ curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q4cytk3ae3y74w2q
 
 **Example 11b:** Genesis document-based (from CAS) did:btcr2 on Mutinynet with 1 Update (from CAS) using SMT Proof (from Sidecar):
 
-*Note: This example uses the same block, transaction, and Sparse Merkle Tree as Example 12a.*
+*Note: This example uses the same block, transaction, and Sparse Merkle Tree as Example 11a.*
 
 ```
 curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q4plmrumnc5638xr74w59zg6yavk5laevq8r0jzm0xr7v2v0au655gn9xr0' -d '{"sidecar":{"smtProofs":[{"id":"q1H_iaYG0Oq6gbrycYL-r7FjUsJLnIpHDn49TLeONNA","nonce":"AKiwPzZ5-HVp5MjJRABFqKGUmv2uvfIv3p4QVYxoCdU7","updateId":"8JWXL7chPKJXwg-i9O1EFTHan_oOO_RmglDpu_ugax0","collapsed":"AL__________________________________________","hashes":["njYNViJq2OmhSw1fLfARPCj12RY3VXKGWdS3-7OQ2BE"]}]}}'
@@ -124,7 +124,7 @@ curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q5h2tzafcundemvx
 
 **Example 12b:** Genesis document-based (from Sidecar) did:btcr2 on Mutinynet with 1 Update (from Sidecar) using SMT Proof (from Sidecar):
 
-*Note: This example uses the same block, transaction, and Sparse Merkle Tree as Example 11a.*
+*Note: This example uses the same block, transaction, and Sparse Merkle Tree as Example 12a.*
 
 ```
 curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:x1qhqkzp82h5266cyup4mthjfyrv27yasr7kn7l47escnplmw3vamyww8jqy8' -d '{"sidecar":{"genesisDocument":{"verificationMethod":[{"type":"Multikey","id":"#initialKey","publicKeyMultibase":"zQ3shnYBYKjtZABxhS9uqjB6bwA1cVFvWa2s14PHVDzs9xMvb","controller":"did:btcr2:_"}],"assertionMethod":["#initialKey"],"capabilityDelegation":["#initialKey"],"capabilityInvocation":["#initialKey"],"authentication":["#initialKey"],"id":"did:btcr2:_","@context":["https://www.w3.org/ns/did/v1.1","https://btcr2.dev/context/v1"],"service":[{"type":"SingletonBeacon","id":"#initialP2PKH","serviceEndpoint":"bitcoin:ms6T4tUcLRRvqpNF99s5NwEYyrdL33nEVf"},{"type":"SingletonBeacon","id":"#initialP2WPKH","serviceEndpoint":"bitcoin:tb1q0mljpl95qe7u8geje777ta3kze6uesjeyrpsh2"},{"type":"SingletonBeacon","id":"#initialP2TR","serviceEndpoint":"bitcoin:tb1p326w76c7v6hzzkq6dkl8u8vk67d7wry4vu92cgzcpwznu0hlefxqvmgt0v"},{"type":"SMTBeacon","id":"#cohort-mutinynet-smt-2","serviceEndpoint":"bitcoin:tb1pxhrv6jlmxjrh8hu80qfegkdwtsxg8n5ej3kzmag9zq0clz4nvqgqc8l7e7"}]},"updates":[{"@context":["https://btcr2.dev/context/v1","https://w3id.org/json-ld-patch/v1","https://w3id.org/zcap/v1","https://w3id.org/security/data-integrity/v2"],"patch":[{"op":"add","path":"/service/4","value":{"id":"#dwn","type":"DecentralizedWebNode","serviceEndpoint":"http://example.com/dwn"}}],"sourceHash":"Ilmr4EGhB-eM0K2OHTrOwlkqAECfpnvxLCltMYIiNic","targetHash":"2RyLIfzaJ3YQ9KX3OGUdCTTInWDfUj2ooqXWbFIuqaI","targetVersionId":2,"proof":{"type":"DataIntegrityProof","cryptosuite":"bip340-jcs-2025","verificationMethod":"did:btcr2:x1qhqkzp82h5266cyup4mthjfyrv27yasr7kn7l47escnplmw3vamyww8jqy8#initialKey","proofPurpose":"capabilityInvocation","capability":"urn:zcap:root:did%3Abtcr2%3Ax1qhqkzp82h5266cyup4mthjfyrv27yasr7kn7l47escnplmw3vamyww8jqy8","capabilityAction":"Write","proofValue":"z4cy7TZFu9cKR9mDHmHVMwNm4Xc8wVzmwRop8XZBswjquHRJtwuiTBHphvQwxkf1uZk9mbEUyArrJ8Bo1SS2qqwum"}}],"smtProofs":[{"id":"Zeuswi8sMNygdfuKjh9YGaUQOK4zPcirIJRwzIA7ZGU","nonce":"HZ6T_0Hrj463dlEhMPSJRzaZnFhOnNe0L-NFCeEidPk","updateId":"SAGvc3PNM_JeqGZ8QG2aJdExqHdvUnYL8UkIPm18a9I","collapsed":"f_________________________________________8","hashes":["QbPkfJIHH21IeMRyGiNg5NfKYt0TmCljg91evyo-MpU"]}]}}'
