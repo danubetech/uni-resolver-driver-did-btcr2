@@ -167,10 +167,3 @@ The driver recognizes the following environment variables:
 
 * Specifies a MultiAddress of an IPFS connection to be used as CAS.
 * Default value: `/ip4/127.0.0.1/tcp/5001`
-
-## Driver Metadata
-
-The driver returns the following metadata in addition to a DID document:
-
-* `blockHeight`: ...
-* `blockIndex`: ...
