@@ -103,7 +103,7 @@ curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:x1qkvj2tupjlsntl5c
 *Note: This example uses the same block, transaction, and Sparse Merkle Tree as Example 11b.*
 
 ```
-curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q4cytk3ae3y74w2q0k2ukf5hqdjvn7c33ajdu5dwmvk76h3k4sqrqmvw4hp' -d '{"sidecar":{"smtProofs":[{"id":"q1H_iaYG0Oq6gbrycYL-r7FjUsJLnIpHDn49TLeONNA","nonce":"99jndCBWHpZfmObXlIvRGHaPMgoQKXIETdD4H-XqryE","updateId":"njYNViJq2OmhSw1fLfARPCj12RY3VXKGWdS3-7OQ2BE","collapsed":"AL__________________________________________","hashes":["8JWXL7chPKJXwg-i9O1EFTHan_oOO_RmglDpu_ugax0"]}]}}'
+curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q4cytk3ae3y74w2q0k2ukf5hqdjvn7c33ajdu5dwmvk76h3k4sqrqmvw4hp' -d '{"sidecar":{"smtProofs":[{"id":"q1H_iaYG0Oq6gbrycYL-r7FjUsJLnIpHDn49TLeONNA","nonce":"99jndCBWHpZfmObXlIvRGHaPMgoQKXIETdD4H-XqryE","updateId":"njYNViJq2OmhSw1fLfARPCj12RY3VXKGWdS3-7OQ2BE","collapsed":"v_________________________________________8","hashes":["8JWXL7chPKJXwg-i9O1EFTHan_oOO_RmglDpu_ugax0"]}]}}'
 ```
 
 **Example 11b:** Genesis document-based (from CAS) did:btcr2 on Mutinynet with 1 Update (from CAS) using SMT Proof (from Sidecar):
@@ -111,7 +111,7 @@ curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q4cytk3ae3y74w2q
 *Note: This example uses the same block, transaction, and Sparse Merkle Tree as Example 11a.*
 
 ```
-curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q4plmrumnc5638xr74w59zg6yavk5laevq8r0jzm0xr7v2v0au655gn9xr0' -d '{"sidecar":{"smtProofs":[{"id":"q1H_iaYG0Oq6gbrycYL-r7FjUsJLnIpHDn49TLeONNA","nonce":"qLA_Nnn4dWnkyMlEAEWooZSa_a698i_enhBVjGgJ1Ts","updateId":"8JWXL7chPKJXwg-i9O1EFTHan_oOO_RmglDpu_ugax0","collapsed":"AL__________________________________________","hashes":["njYNViJq2OmhSw1fLfARPCj12RY3VXKGWdS3-7OQ2BE"]}]}}'
+curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:x1q4plmrumnc5638xr74w59zg6yavk5laevq8r0jzm0xr7v2v0au655gn9xr0' -d '{"sidecar":{"smtProofs":[{"id":"q1H_iaYG0Oq6gbrycYL-r7FjUsJLnIpHDn49TLeONNA","nonce":"qLA_Nnn4dWnkyMlEAEWooZSa_a698i_enhBVjGgJ1Ts","updateId":"8JWXL7chPKJXwg-i9O1EFTHan_oOO_RmglDpu_ugax0","collapsed":"v_________________________________________8","hashes":["njYNViJq2OmhSw1fLfARPCj12RY3VXKGWdS3-7OQ2BE"]}]}}'
 ```
 
 **Example 12a:** Genesis document-based (from Sidecar) did:btcr2 on Mutinynet with 1 Update (from Sidecar) using SMT Proof (from Sidecar):
