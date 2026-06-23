@@ -392,7 +392,7 @@ public class Resolve {
 
                     case BeaconType.SMT ->
                             // use Process SMT Beacon.
-                            processSMTBeacon(this.getIpfsConnection(), beaconSignalBytes, smt_lookup_table,
+                            processSMTBeacon(this.getIpfsConnection(), beaconSignalBytes, smt_lookup_table, identifier.getDidString(),
                                     smtProof -> smtProofs.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, smtProof));
                 };
 
@@ -612,7 +612,7 @@ public class Resolve {
      * Process SMT Beacon
      * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#process-smt-beacon
      */
-    private static byte[] processSMTBeacon(IPFSConnection ipfsConnection, byte[] signalBytes, Map<BytesArray, SMTProof> smt_lookup_table, Consumer<SMTProof> smtProofConsumer) throws ResolutionException {
+    private static byte[] processSMTBeacon(IPFSConnection ipfsConnection, byte[] signalBytes, Map<BytesArray, SMTProof> smt_lookup_table, String did, Consumer<SMTProof> smtProofConsumer) throws ResolutionException {
 
         // Treat Signal Bytes as smt_root.
 
@@ -628,7 +628,7 @@ public class Resolve {
 
         // Validate the proof with the SMT Proof Verification algorithm.
 
-        boolean smtProofVerified = SMTProofVerification.smtProofVerification(smtProof, smt_root);
+        boolean smtProofVerified = SMTProofVerification.smtProofVerification(smtProof, smt_root, did);
         if (log.isDebugEnabled()) log.debug("Verified smtProof {} --> {}", smtProof, smtProofVerified);
         if (! smtProofVerified) throw new ResolutionException("INVALID_DID_UPDATE", "Cannot verify SMT Proof " + smtProof);
 

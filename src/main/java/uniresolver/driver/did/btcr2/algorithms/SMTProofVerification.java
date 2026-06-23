@@ -9,7 +9,7 @@ import uniresolver.driver.did.btcr2.data.SparseMerkleTree;
  */
 public class SMTProofVerification {
 
-    public static boolean smtProofVerification(SMTProof smtProof, byte[] rootHash) {
-        return SparseMerkleTree.verifyProof(smtProof, rootHash);
+    public static boolean smtProofVerification(SMTProof smtProof, byte[] rootHash, String did) {
+        return SparseMerkleTree.verifyProof(smtProof, rootHash, did);
     }
 }
