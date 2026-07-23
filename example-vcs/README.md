@@ -1,4 +1,4 @@
-# Universal Resolver Driver: did:btcr2
+# VC data using did:btcr2
 
 This contains example Verifiable Credentials and other JSON-LD documents with Data Integrity Proofs, signed by `did:btcr2` DIDs.
 
