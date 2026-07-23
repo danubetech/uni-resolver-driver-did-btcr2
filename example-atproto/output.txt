@@ -1,0 +1,15 @@
+[1/1] DID: did:btcr2:k1qvp0knrg2gkp4xre8wtf76ktl7zxeqzs8vlylp68u3dvq23gnnd8ndsme053n (secp256k1)
+CID: bafyreigsrhxkk4wu5byqnzodhofk5srb2yoeau4rlf24yd4f3bh7qkf5cq
+HEX: a66364696478496469643a62746372323a6b31717670306b6e726732676b70347872653877746637366b746c377a7865717a7338766c796c70363875336476713233676e6e64386e64736d653035336e637265766d336d7263647979706e666b326c637369675840cd574c263a7621d168a7e42689cd95ea1ef2e204ece633c9e5e361ed1f8c49900f6196844d4456997b14a134855ea57a64d8daa1386485c4121c9fdbb4fe1a836464617461d82a5825000171122023e807ce8233397eaa4fcd81c8d8e6900ffbf07b929084a8d52444961f826e316470726576f66776657273696f6e03
+OBJ: {"did":"did:btcr2:k1qvp0knrg2gkp4xre8wtf76ktl7zxeqzs8vlylp68u3dvq23gnnd8ndsme053n","rev":"3mrcdyypnfk2l","sig":"cd574c263a7621d168a7e42689cd95ea1ef2e204ece633c9e5e361ed1f8c49900f6196844d4456997b14a134855ea57a64d8daa1386485c4121c9fdbb4fe1a83","data":{"/":"bafyreibd5ad45arthf7kut6nqhenrzuqb757a64sscckrvjeislb7atoge"},"prev":null,"version":3}
+
+
+All records:
+[did:btcr2:k1qvp0knrg2gkp4xre8wtf76ktl7zxeqzs8vlylp68u3dvq23gnnd8ndsme053n] -->  {
+  text: 'Record #1, signed by did:btcr2:k1qvp0knrg2gkp4xre8wtf76ktl7zxeqzs8vlylp68u3dvq23gnnd8ndsme053n',
+  '$type': 'app.bsky.feed.post',
+  createdAt: '2026-07-23T07:49:12.259Z'
+}
+Wrote block with CID: [bafyreiddwv2l3h5lsh26xyex3bn2mf76vnsfeff24izwblkuo46i3sqiwq], 163 bytes
+Wrote block with CID: [bafyreibd5ad45arthf7kut6nqhenrzuqb757a64sscckrvjeislb7atoge], 93 bytes
+Wrote block with CID: [bafyreigsrhxkk4wu5byqnzodhofk5srb2yoeau4rlf24yd4f3bh7qkf5cq], 229 bytes

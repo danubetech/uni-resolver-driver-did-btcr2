@@ -134,6 +134,10 @@ curl -X POST 'http://localhost:8080/1.0/identifiers/did:btcr2:x1qhqkzp82h5266cyu
 
 *Note: Examples Verifiable Credentials and other JSON-LD documents are available under [./example-vcs/](./example-vcs/).*
 
+## Example ATproto
+
+*Note: Examples ATproto data is available under [./example-atproto/](./example-atproto/).*
+
 ## Driver Environment Variables
 
 The driver recognizes the following environment variables:
