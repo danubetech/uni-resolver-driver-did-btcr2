@@ -38,6 +38,8 @@ services:
   ipfs:
     container_name: universalresolver_ipfs
     image: ipfs/kubo:release
+    environment:
+      IPFS_TELEMETRY: off
     networks:
       universalresolver_driver-did-btcr2:
         ipv4_address: 10.2.0.99
