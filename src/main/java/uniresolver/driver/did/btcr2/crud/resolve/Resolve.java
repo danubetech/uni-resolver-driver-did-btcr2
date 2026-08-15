@@ -135,11 +135,14 @@ public class Resolve {
         // Resolution maintains the following state while building the DID document:
 
         List<Map.Entry<Block, Map.Entry<Tx, BTCR2Update>>> updates = new ArrayList<>();
-        Map<Block, Map<Tx, CASAnnouncement>> casAnnouncements = new LinkedHashMap<>();
-        Map<Block, Map<Tx, SMTProof>> smtProofs = new LinkedHashMap<>();
+        DIDDocumentV1_1 current_document;
         int current_version_id = 1;
         List<BytesArray> update_hash_history = new ArrayList<>();
         Integer block_confirmations = null;
+
+        Map<Block, Map<Tx, CASAnnouncement>> casAnnouncements = new LinkedHashMap<>();
+        Map<Block, Map<Tx, SMTProof>> smtProofs = new LinkedHashMap<>();
+        Integer blockCount = null;
 
         /*
          * Decode the DID
@@ -218,7 +221,7 @@ public class Resolve {
 
         // Choose how to establish current_document based on the type of genesis_bytes retrieved from the decoded did:
 
-        DIDDocumentV1_1 current_document = switch (identifierComponents.genesisBytesType()) {
+        current_document = switch (identifierComponents.genesisBytesType()) {
 
             /*
              * If genesis_bytes is a SHA-256 Hash
@@ -342,7 +345,11 @@ public class Resolve {
                 String beaconServiceType = beaconAddressEntry.getValue();
                 for (Tx beaconTransaction : bitcoinConnection.getAddressTransactions(beaconAddress)) {
                     Block beaconBlock = bitcoinConnection.getBlockByTransaction(beaconTransaction);
-                    if (beaconBlock.confirmations() < 1 || beaconBlock.blockHeight() == null || beaconBlock.blockHash() == null || beaconBlock.blockTime() == null) {
+                    if (! beaconBlock.confirmed()) {
+                        if (log.isDebugEnabled()) log.debug("Block {} is not confirmed. Skipping.", beaconBlock);
+                        continue;
+                    }
+                    if (beaconBlock.blockHeight() == null || beaconBlock.blockHash() == null || beaconBlock.blockTime() == null) {
                         if (log.isDebugEnabled()) log.debug("Block {} is not complete. Skipping.", beaconBlock);
                         continue;
                     }
@@ -460,6 +467,10 @@ public class Resolve {
                 // 2. Set block_confirmations to the tuple’s block confirmations.
 
                 block_confirmations = tuple.getKey().confirmations();
+                if (block_confirmations == null) {
+                    if (blockCount == null) blockCount = bitcoinConnection.getBlockCount();
+                    block_confirmations = blockCount - tuple.getKey().blockHeight() + 1;
+                }
 
                 // 3. If resolutionOptions.versionTime is provided and the tuple’s block time is more recent,
                 // resolve current_document as didDocument.
@@ -527,8 +538,8 @@ public class Resolve {
         Map<String, Object> didDocumentMetadata = new LinkedHashMap<>();
         didDocumentMetadata.put("versionId", Integer.toString(current_version_id));
         didDocumentMetadata.put("nextVersionId", Integer.toString(current_version_id + 1)); // NOT IN SPEC
-        didDocumentMetadata.put("confirmations", (block_confirmations == null ? null : block_confirmations.toString()));
-        didDocumentMetadata.put("deactivated", current_document.getJsonObject().get("deactivated"));
+        didDocumentMetadata.put("confirmations", (block_confirmations == null ? null : block_confirmations));
+        if (current_document.getJsonObject().containsKey("deactivated")) didDocumentMetadata.put("deactivated", current_document.getJsonObject().get("deactivated"));
         Map<String, Object> metadataIdentifierComponents = (Map<String, Object>) didDocumentMetadata.computeIfAbsent("identifierComponents", x -> new LinkedHashMap<>());
         metadataIdentifierComponents.put("version", identifierComponents.version());
         metadataIdentifierComponents.put("network", identifierComponents.network().toString());
