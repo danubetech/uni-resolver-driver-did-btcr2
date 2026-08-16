@@ -171,13 +171,14 @@ public class SparseMerkleTree {
 
         List<byte[]> siblingHashes = new ArrayList<>(smtProof.getHashes());
         for (int level=TREE_DEPTH-1; level>=0; level--) {
+            int bit = TREE_DEPTH - 1 - level;
             byte[] siblingHash;
             if (collapsed.testBit(level)) {
                 siblingHash = ZERO_CACHE[level];
             } else {
                 siblingHash = siblingHashes.removeFirst();
             }
-            if (index.testBit(level)) {
+            if (index.testBit(bit)) {
                 candidateHash = SHA256Util.sha256(concat(siblingHash, candidateHash));
             } else {
                 candidateHash = SHA256Util.sha256(concat(candidateHash, siblingHash));

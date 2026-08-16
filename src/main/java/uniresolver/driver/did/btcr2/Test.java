@@ -13,7 +13,6 @@ public class Test {
 
     public static void main(String[] args) throws Exception {
 
-        // from bryan
         System.out.println(SMTProofVerification.smtProofVerification(
                 "did:btcr2:x1q5cfewepdtyw92pylcgf68k87dz97epx3a2040gayx3jygj2g45fs4peu2c",
                 SMTProof.fromJson(new StringReader(
@@ -31,7 +30,7 @@ public class Test {
         )),
         Base64.getUrlDecoder().decode("eZs-zcWMKf9OIGQ3zrjgoZS2o8zdjR1UpYfAzxp8cJ8")));
 
-        SparseMerkleTree sparseMerkleTree = new SparseMerkleTree();
+        SparseMerkleTree sparseMerkleTreeMy = new SparseMerkleTree();
         String did1 = "did:ex:12a3", did2 = "did:ex:s5efccwqer6", did3 = "did:ex:789";
         byte[] nonce1 = new byte[32], nonce2 = new byte[32], nonce3 = new byte[32];
         new Random().nextBytes(nonce1); new Random().nextBytes(nonce2); new Random().nextBytes(nonce3);
@@ -44,17 +43,17 @@ public class Test {
         System.out.println(Base64.getUrlEncoder().withoutPadding().encodeToString(updateId1));
         System.out.println(Base64.getUrlEncoder().withoutPadding().encodeToString(updateId2));
         System.out.println(Base64.getUrlEncoder().withoutPadding().encodeToString(updateId3));
-        sparseMerkleTree.insertUpdate(did1, nonce1, updateId1);
-        //sparseMerkleTree.insertUpdate(did2, nonce2, updateId2);
+        sparseMerkleTreeMy.insertUpdate(did1, nonce1, updateId1);
+        sparseMerkleTreeMy.insertUpdate(did2, nonce2, updateId2);
         //sparseMerkleTree.insertUpdate(did3, nonce3, updateId3);
-        SMTProof smtProof1 = sparseMerkleTree.generateProof(did1);
-        //SMTProof smtProof2 = sparseMerkleTree.generateProof(did2);
+        SMTProof smtProof1 = sparseMerkleTreeMy.generateProof(did1);
+        SMTProof smtProof2 = sparseMerkleTreeMy.generateProof(did2);
         //SMTProof smtProof3 = sparseMerkleTree.generateProof(did3);
         System.out.println(smtProof1);
-        //System.out.println(smtProof2);
+        System.out.println(smtProof2);
         //System.out.println(smtProof3);
         System.out.println(SMTProofVerification.smtProofVerification(did1, smtProof1, smtProof1.getId()));
-        //System.out.println(SMTProofVerification.smtProofVerification(did2, smtProof2, smtProof2.getId()));
+        System.out.println(SMTProofVerification.smtProofVerification(did2, smtProof2, smtProof2.getId()));
         //System.out.println(SMTProofVerification.smtProofVerification(did3, smtProof3, smtProof3.getId()));
     }
 }
