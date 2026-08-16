@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.math.BigInteger;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,11 +25,11 @@ public class SMTProof extends LinkedHashMap<String, Object> {
         super(m);
     }
 
-    public SMTProof(byte[] id, BigInteger nonce, byte[] updateId, BigInteger collapsed, List<byte[]> hashes) {
+    public SMTProof(byte[] id, byte[] nonce, byte[] updateId, byte[] collapsed, List<byte[]> hashes) {
         if (id != null) this.put("id", base64UrlEncoder.encodeToString(id));
-        if (nonce != null) this.put("nonce", base64UrlEncoder.encodeToString(nonce.toByteArray()));
+        if (nonce != null) this.put("nonce", base64UrlEncoder.encodeToString(nonce));
         if (updateId != null) this.put("updateId", base64UrlEncoder.encodeToString(updateId));
-        if (collapsed != null) this.put("collapsed", base64UrlEncoder.encodeToString(collapsed.toByteArray()));
+        if (collapsed != null) this.put("collapsed", base64UrlEncoder.encodeToString(collapsed));
         if (hashes != null) this.put("hashes", hashes.stream().map(base64UrlEncoder::encodeToString).toList());
     }
 
@@ -46,16 +45,16 @@ public class SMTProof extends LinkedHashMap<String, Object> {
         return this.containsKey("id") ? base64UrlDecoder.decode((String) this.get("id")) : null;
     }
 
-    public BigInteger getNonce() {
-        return this.containsKey("nonce") ? new BigInteger(1, base64UrlDecoder.decode((String) this.get("nonce"))) : null;
+    public byte[] getNonce() {
+        return this.containsKey("nonce") ? base64UrlDecoder.decode((String) this.get("nonce")) : null;
     }
 
     public byte[] getUpdateId() {
         return this.containsKey("updateId") ? base64UrlDecoder.decode((String) this.get("updateId")) : null;
     }
 
-    public BigInteger getCollapsed() {
-        return this.containsKey("collapsed") ? new BigInteger(1, base64UrlDecoder.decode((String) this.get("collapsed"))) : null;
+    public byte[] getCollapsed() {
+        return this.containsKey("collapsed") ? base64UrlDecoder.decode((String) this.get("collapsed")) : null;
     }
 
     public List<byte[]> getHashes() {
