@@ -300,6 +300,17 @@ public class Resolve {
 
         process: do {
 
+            // 6. If current_version_id is greater than or equal to the integer form of resolutionOptions.versionId,
+            // resolve current_document as didDocument.
+
+            if (resolutionOptions != null && resolutionOptions.containsKey("versionId")) {
+                long versionId = Long.parseLong((String) resolutionOptions.get("versionId"));
+                if (current_version_id >= versionId) {
+                    if (log.isDebugEnabled()) log.debug("current_version_id {} is greater than or equal to resolutionOptions.versionId {}. Returning current_document.", current_version_id, versionId);
+                    break process;
+                }
+            }
+
             /*
              * Process Beacon Signals
              * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#process-beacon-signals
