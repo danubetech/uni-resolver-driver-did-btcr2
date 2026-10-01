@@ -827,7 +827,7 @@ public class Resolve {
         if (verificationMethod == null) {
             throw new ResolutionException("INVALID_DID_UPDATE", "Cannot find verification method whose id matches update.proof.verificationMethod: " + proof.getVerificationMethod());
         }
-        byte[] publicKeyBytes = MulticodecDecoder.getInstance().decode(Multibase.decode(verificationMethod.getPublicKeyMultibase()));
+        byte[] publicKeyBytes = MulticodecDecoder.newInstance().decode(Multibase.decode(verificationMethod.getPublicKeyMultibase()));
         if (log.isDebugEnabled()) log.debug("Public key bytes for verification method {}: {}", proof.getVerificationMethod(), Hex.encodeHexString(publicKeyBytes));
 
         // Raise the same error if current_document.capabilityInvocation does not contain update.proof.verificationMethod.
