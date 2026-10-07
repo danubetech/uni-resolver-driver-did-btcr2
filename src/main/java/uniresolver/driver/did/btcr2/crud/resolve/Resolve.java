@@ -134,6 +134,7 @@ public class Resolve {
 
         // Resolution maintains the following state while building the DID document:
 
+        List<Map.Entry<Block, Map.Entry<Tx, BTCR2UpdateSupplier>>> updateSuppliers = new ArrayList<>();
         List<Map.Entry<Block, Map.Entry<Tx, BTCR2Update>>> updates = new ArrayList<>();
         DIDDocumentV1_1 current_document;
         int current_version_id = 1;
@@ -312,8 +313,8 @@ public class Resolve {
             }
 
             /*
-             * Process Beacon Signals
-             * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#process-beacon-signals
+             * Find Beacon Signals
+             * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#find-beacon-signals
              */
 
             // Scan the service entries in current_document (DID Document (data structure))
@@ -347,9 +348,10 @@ public class Resolve {
 
             // then use those Beacon Addresses to find Bitcoin transactions whose last output script contains Signal Bytes.
 
-            Map<Tx, Block> beaconsBlocks = new LinkedHashMap<>();
-            Map<Tx, String> beaconsServiceTypes = new LinkedHashMap<>();
-            Map<Tx, byte[]> beaconsSignalBytes = new LinkedHashMap<>();
+            List<Tx> beaconsTransactions = new LinkedList<>();
+            HashMap<Tx, Block> beaconsBlocks = new HashMap<>();
+            Map<Tx, String> beaconsServiceTypes = new HashMap<>();
+            Map<Tx, byte[]> beaconsSignalBytes = new HashMap<>();
 
             for (Map.Entry<String, String> beaconAddressEntry : beaconsAddresses.entrySet()) {
                 String beaconAddress = beaconAddressEntry.getKey();
@@ -377,79 +379,86 @@ public class Resolve {
                         if (log.isWarnEnabled()) log.warn("Transaction {} has invalid signal bytes: {}. Skipping.", beaconTransaction, beaconSignalBytesString);
                         continue;
                     }
-                    if (log.isDebugEnabled()) log.debug("Transaction {} has block {} and service type {} and signal bytes {}. Adding.", beaconTransaction, beaconBlock, beaconServiceType, beaconSignalBytesString);
+                    if (log.isDebugEnabled()) log.debug("Transaction {} has block {} and service type {} and signal bytes {}. Adding.", beaconTransaction, beaconBlock, beaconServiceType, Base64.getUrlEncoder().withoutPadding().encodeToString(beaconSignalBytes));
+                    beaconsTransactions.add(beaconTransaction);
                     beaconsBlocks.put(beaconTransaction, beaconBlock);
                     beaconsServiceTypes.put(beaconTransaction, beaconServiceType);
                     beaconsSignalBytes.put(beaconTransaction, beaconSignalBytes);
                 }
             }
 
+            Collections.reverse(beaconsTransactions);
+
             // For each transaction found:
 
-            for (Tx beaconTransaction : beaconsBlocks.keySet()) {
+            for (Tx beaconTransaction : beaconsTransactions) {
 
                 Block beaconBlock = beaconsBlocks.get(beaconTransaction);
                 String beaconServiceType = beaconsServiceTypes.get(beaconTransaction);
                 byte[] beaconSignalBytes = beaconsSignalBytes.get(beaconTransaction);
 
-                if (log.isDebugEnabled()) log.debug("Processing beacon transaction {} on block {} with beacon service type {}", beaconTransaction.txId(), beaconBlock.blockHash(), beaconServiceType);
+                if (log.isDebugEnabled()) log.debug("Processing beacon transaction {} on block {} with beacon service type {} and signal bytes {}", beaconTransaction.txId(), beaconBlock.blockHash(), beaconServiceType, Base64.getUrlEncoder().withoutPadding().encodeToString(beaconSignalBytes));
 
-                // Derive update_hash from the transaction’s Signal Bytes based on the beacon type:
+                BTCR2UpdateSupplier btcr2UpdateSupplier = () -> {
 
-                byte[] update_hash = switch (BeaconType.fromServiceType(beaconServiceType)) {
+                    // Derive update_hash from the transaction’s Signal Bytes based on the beacon type:
 
-                    case BeaconType.SINGLETON ->
+                    byte[] update_hash = switch (BeaconType.fromServiceType(beaconServiceType)) {
+
+                        case BeaconType.SINGLETON ->
                             // update_hash is the Signal Bytes.
                             beaconSignalBytes;
 
-                    case BeaconType.CAS ->
+                        case BeaconType.CAS ->
                             // use Process CAS Beacon.
-                            processCASBeacon(this.getIpfsConnection(), beaconSignalBytes, identifier, cas_lookup_table,
-                                    casAnnouncement -> casAnnouncements.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, casAnnouncement),
-                                    casAnnouncementCid -> casAnnouncementCids.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, casAnnouncementCid));
+                            processCASBeacon(Resolve.this.getIpfsConnection(), beaconSignalBytes, identifier, cas_lookup_table, casAnnouncement -> casAnnouncements.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, casAnnouncement), casAnnouncementCid -> casAnnouncementCids.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, casAnnouncementCid));
 
-                    case BeaconType.SMT ->
+                        case BeaconType.SMT ->
                             // use Process SMT Beacon.
-                            processSMTBeacon(this.getIpfsConnection(), beaconSignalBytes, identifier, smt_lookup_table,
-                                    smtProof -> smtProofs.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, smtProof));
+                            processSMTBeacon(Resolve.this.getIpfsConnection(), beaconSignalBytes, identifier, smt_lookup_table, smtProof -> smtProofs.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, smtProof));
+                    };
+
+                    if (update_hash == null) {
+                        if (log.isWarnEnabled()) log.warn("Transaction {} with service type {} has no update_hash. Skipping.", beaconTransaction, beaconServiceType);
+                        return null;
+                    }
+
+                    // Build a tuple with: The transaction’s block metadata (height, time, and confirmations).
+                    // The BTCR2 Signed Update (data structure) retrieved from update_lookup_table[update_hash].
+
+                    BTCR2Update update = update_lookup_table == null ? null : update_lookup_table.get(BytesArray.bytesArray(update_hash));
+                    if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in update_lookup_table: " + update);
+
+                    // If the update is not in update_lookup_table, retrieve it from CAS.
+
+                    Cid updateCid = null;
+                    if (update == null && Resolve.this.getIpfsConnection() != null) {
+                        try {
+                            updateCid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.sha2_256, update_hash);
+                            byte[] updateBytes = Resolve.this.getIpfsConnection().getIpfs().cat(updateCid);
+                            update = updateBytes == null ? null : BTCR2Update.fromJson(new InputStreamReader(new ByteArrayInputStream(updateBytes), StandardCharsets.UTF_8));
+                            if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in CAS (IPFS) at " + updateCid + ": " + update);
+                        } catch (Exception ex) {
+                            throw new ResolutionException("Cannot get update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " from CAS (IPFS) at " + updateCid + ": " + ex.getMessage(), ex);
+                        }
+                    }
+
+                    if (updateCid != null) updateCids.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, updateCid);
+
+                    // Raise a MISSING_UPDATE_DATA error if the update is not available from either source.
+
+                    if (update == null) throw new ResolutionException("MISSING_UPDATE_DATA", "No update found for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " from either update_lookup_table or CAS (IPFS).");
+
+                    // result
+
+                    return update;
                 };
 
-                if (update_hash == null) {
-                    if (log.isWarnEnabled()) log.warn("Transaction {} with service type {} has no update_hash. Skipping.", beaconTransaction, beaconServiceType);
-                    continue;
-                }
-
-                // Build a tuple with: The transaction’s block metadata (height, time, and confirmations).
-                // The BTCR2 Signed Update (data structure) retrieved from update_lookup_table[update_hash].
-
-                BTCR2Update update = update_lookup_table == null ? null : update_lookup_table.get(BytesArray.bytesArray(update_hash));
-                if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in update_lookup_table: " + update);
-
-                // If the update is not in update_lookup_table, retrieve it from CAS.
-
-                Cid updateCid = null;
-                if (update == null && this.getIpfsConnection() != null) {
-                    try {
-                        updateCid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.sha2_256, update_hash);
-                        byte[] updateBytes = this.getIpfsConnection().getIpfs().cat(updateCid);
-                        update = updateBytes == null ? null : BTCR2Update.fromJson(new InputStreamReader(new ByteArrayInputStream(updateBytes), StandardCharsets.UTF_8));
-                        if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in CAS (IPFS) at " + updateCid + ": " + update);
-                    } catch (Exception ex) {
-                        throw new ResolutionException("Cannot get update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " from CAS (IPFS) at " + updateCid + ": " + ex.getMessage(), ex);
-                    }
-                }
-
-                if (updateCid != null) updateCids.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, updateCid);
-
-                // Raise a MISSING_UPDATE_DATA error if the update is not available from either source.
-
-                if (update == null) throw new ResolutionException("MISSING_UPDATE_DATA", "No update found for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " from either update_lookup_table or CAS (IPFS).");
-
-                Map.Entry<Block, Map.Entry<Tx, BTCR2Update>> updateTuple = Map.entry(beaconBlock, Map.entry(beaconTransaction, update));
+                Map.Entry<Block, Map.Entry<Tx, BTCR2UpdateSupplier>> updateSupplierTuple = Map.entry(beaconBlock, Map.entry(beaconTransaction, btcr2UpdateSupplier));
 
                 // Append the tuple to updates.
 
-                updates.add(updateTuple);
+                updateSuppliers.add(updateSupplierTuple);
             }
 
             /*
@@ -459,7 +468,7 @@ public class Resolve {
 
             // Resolve current_document as didDocument if updates is empty.
 
-            if (updates.isEmpty()) {
+            if (updateSuppliers.isEmpty()) {
                 if (log.isDebugEnabled()) log.debug("No updates. Returning current_document.");
                 break process;
             }
@@ -467,20 +476,23 @@ public class Resolve {
             // 1. Sort updates by BTCR2 Signed Update (data structure) targetVersionId (ascending)
             // with the tuple’s block height as a tiebreaker.
 
-            updates.sort(Comparator
-                    .comparingInt((Map.Entry<Block, Map.Entry<Tx, BTCR2Update>> a) -> a.getValue().getValue().getTargetVersionId())
-                    .thenComparingInt(a -> a.getKey().blockHeight()));
+            /*updates.sort(Comparator
+                    .comparingInt((Map.Entry<Block, Map.Entry<Tx, Supplier<BTCR2Update>>> a) -> a.getValue().getValue().getTargetVersionId())
+                    .thenComparingInt(a -> a.getKey().blockHeight()));*/
 
             // Take the first tuple.
 
-            tuples: for (Map.Entry<Block, Map.Entry<Tx, BTCR2Update>> tuple : updates) {
+            tuples: for (Map.Entry<Block, Map.Entry<Tx, BTCR2UpdateSupplier>> updateSupplierTuple : updateSuppliers) {
+
+                Block beaconBlock = updateSupplierTuple.getKey();
+                Tx beaconTransaction = updateSupplierTuple.getValue().getKey();
 
                 // 2. Set block_confirmations to the tuple’s block confirmations.
 
-                block_confirmations = tuple.getKey().confirmations();
+                block_confirmations = beaconBlock.confirmations();
                 if (block_confirmations == null) {
                     if (blockCount == null) blockCount = bitcoinConnection.getBlockCount();
-                    block_confirmations = blockCount - tuple.getKey().blockHeight() + 1;
+                    block_confirmations = blockCount - beaconBlock.blockHeight() + 1;
                 }
 
                 // 3. If resolutionOptions.versionTime is provided and the tuple’s block time is more recent,
@@ -488,16 +500,19 @@ public class Resolve {
 
                 if (resolutionOptions != null && resolutionOptions.containsKey("versionTime")) {
                     long versionTime = (long) resolutionOptions.get("versionTime");
-                    if (tuple.getKey().blockTime() > versionTime) {
-                        if (log.isDebugEnabled()) log.debug("Block time {} is more recent than resolutionOptions.versionTime {}. Returning current_document.", tuple.getKey().blockTime(), versionTime);
+                    if (beaconBlock.blockTime() > versionTime) {
+                        if (log.isDebugEnabled()) log.debug("Block time {} is more recent than resolutionOptions.versionTime {}. Returning current_document.", beaconBlock.blockTime(), versionTime);
                         break process;
                     }
                 }
 
                 // 4. Set update to the tuple’s BTCR2 Signed Update (data structure) and check update.targetVersionId.
 
-                BTCR2Update update = tuple.getValue().getValue();
+                BTCR2Update update = updateSupplierTuple.getValue().getValue().get();
                 current_document = checkUpdateTargetVersionId(current_document, update, identifier, current_version_id, update_hash_history);
+
+                Map.Entry<Block, Map.Entry<Tx, BTCR2Update>> updateTuple = Map.entry(beaconBlock, Map.entry(beaconTransaction, update));
+                updates.add(updateTuple);
 
                 // 5. Increment current_version_id.
 
@@ -586,6 +601,11 @@ public class Resolve {
         return resolveResult;
     }
 
+    @FunctionalInterface
+    interface BTCR2UpdateSupplier {
+        BTCR2Update get() throws ResolutionException;
+    }
+
     /*
      * Process CAS Beacon
      * See https://dcdpr.github.io/did-btcr2/operations/resolve.html#process-cas-beacon
@@ -621,11 +641,10 @@ public class Resolve {
         // and read update_hash from the announcement entry keyed by did.
 
         String update_hash_string = casAnnouncement.get(did.getDidString());
-        if (update_hash_string == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No update_hash found for DID " + did + " and map_update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash));
 
         // done
 
-        byte[] update_hash = Base64.getUrlDecoder().decode(update_hash_string);
+        byte[] update_hash = update_hash_string == null ? null : Base64.getUrlDecoder().decode(update_hash_string);
         if (log.isDebugEnabled()) log.debug("For did {} and map_update_hash {} found update_hash: {}", did, Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash), Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash));
         return update_hash;
     }
