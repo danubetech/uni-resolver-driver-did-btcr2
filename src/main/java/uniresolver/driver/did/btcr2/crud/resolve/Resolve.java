@@ -48,6 +48,7 @@ import uniresolver.driver.did.btcr2.data.jsonld.BTCR2Update;
 import uniresolver.driver.did.btcr2.data.jsonld.RootCapability;
 import uniresolver.driver.did.btcr2.ipfs.IPFSConnection;
 import uniresolver.driver.did.btcr2.syntax.DidBtcr2IdentifierDecoding;
+import uniresolver.driver.did.btcr2.util.Base64Util;
 import uniresolver.driver.did.btcr2.util.BytesArray;
 import uniresolver.driver.did.btcr2.util.JSONPatchUtil;
 import uniresolver.result.ResolveResult;
@@ -195,7 +196,7 @@ public class Resolve {
             if (genesisDocument != null) {
                 byte[] genesisDocumentHash = JSONDocumentHashing.jsonDocumentHashing(genesisDocument);
                 if (! Arrays.equals(genesisDocumentHash, identifierComponents.genesisBytes())) {
-                    throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Computed hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(genesisDocumentHash) + " does not match genesis_bytes " + Base64.getUrlEncoder().withoutPadding().encodeToString(identifierComponents.genesisBytes()));
+                    throw new ResolutionException(ResolutionException.ERROR_INVALID_DID, "Computed hash " + Base64Util.base64UrlWithoutPaddingEncodeToString(genesisDocumentHash) + " does not match genesis_bytes " + Base64Util.base64UrlWithoutPaddingEncodeToString(identifierComponents.genesisBytes()));
                 }
             }
 
@@ -206,9 +207,9 @@ public class Resolve {
                     genesisDocumentCid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.sha2_256, identifierComponents.genesisBytes());
                     byte[] genesisDocumentBytes = this.getIpfsConnection().getIpfs().cat(genesisDocumentCid);
                     genesisDocument = genesisDocumentBytes == null ? null : DIDDocument.fromJson(new InputStreamReader(new ByteArrayInputStream(genesisDocumentBytes), StandardCharsets.UTF_8));
-                    if (log.isDebugEnabled()) log.debug("Found genesisDocument for genesis_bytes " + Base64.getUrlEncoder().withoutPadding().encodeToString(identifierComponents.genesisBytes()) + " in CAS (IPFS) at " + genesisDocumentCid + ": " + genesisDocument);
+                    if (log.isDebugEnabled()) log.debug("Found genesisDocument for genesis_bytes " + Base64Util.base64UrlWithoutPaddingEncodeToString(identifierComponents.genesisBytes()) + " in CAS (IPFS) at " + genesisDocumentCid + ": " + genesisDocument);
                 } catch (Exception ex) {
-                    throw new ResolutionException("Cannot get genesisDocument for genesis_bytes " + Base64.getUrlEncoder().withoutPadding().encodeToString(identifierComponents.genesisBytes()) + " from CAS (IPFS) at " + genesisDocumentCid + ": " + ex.getMessage(), ex);
+                    throw new ResolutionException("Cannot get genesisDocument for genesis_bytes " + Base64Util.base64UrlWithoutPaddingEncodeToString(identifierComponents.genesisBytes()) + " from CAS (IPFS) at " + genesisDocumentCid + ": " + ex.getMessage(), ex);
                 }
             }
         }
@@ -379,7 +380,7 @@ public class Resolve {
                         if (log.isWarnEnabled()) log.warn("Transaction {} has invalid signal bytes: {}. Skipping.", beaconTransaction, beaconSignalBytesString);
                         continue;
                     }
-                    if (log.isDebugEnabled()) log.debug("Transaction {} has block {} and service type {} and signal bytes {}. Adding.", beaconTransaction, beaconBlock, beaconServiceType, Base64.getUrlEncoder().withoutPadding().encodeToString(beaconSignalBytes));
+                    if (log.isDebugEnabled()) log.debug("Transaction {} has block {} and service type {} and signal bytes {}. Adding.", beaconTransaction, beaconBlock, beaconServiceType, Base64Util.base64UrlWithoutPaddingEncodeToString(beaconSignalBytes));
                     beaconsTransactions.add(beaconTransaction);
                     beaconsBlocks.put(beaconTransaction, beaconBlock);
                     beaconsServiceTypes.put(beaconTransaction, beaconServiceType);
@@ -397,7 +398,7 @@ public class Resolve {
                 String beaconServiceType = beaconsServiceTypes.get(beaconTransaction);
                 byte[] beaconSignalBytes = beaconsSignalBytes.get(beaconTransaction);
 
-                if (log.isDebugEnabled()) log.debug("Processing beacon transaction {} on block {} with beacon service type {} and signal bytes {}", beaconTransaction.txId(), beaconBlock.blockHash(), beaconServiceType, Base64.getUrlEncoder().withoutPadding().encodeToString(beaconSignalBytes));
+                if (log.isDebugEnabled()) log.debug("Processing beacon transaction {} on block {} with beacon service type {} and signal bytes {}", beaconTransaction.txId(), beaconBlock.blockHash(), beaconServiceType, Base64Util.base64UrlWithoutPaddingEncodeToString(beaconSignalBytes));
 
                 BTCR2UpdateSupplier btcr2UpdateSupplier = () -> {
 
@@ -419,7 +420,7 @@ public class Resolve {
                     };
 
                     if (update_hash == null) {
-                        if (log.isWarnEnabled()) log.warn("Transaction {} with service type {} has no update_hash. Skipping.", beaconTransaction, beaconServiceType);
+                        if (log.isInfoEnabled()) log.info("Transaction {} with service type {} has no update_hash. Skipping.", beaconTransaction, beaconServiceType);
                         return null;
                     }
 
@@ -427,7 +428,7 @@ public class Resolve {
                     // The BTCR2 Signed Update (data structure) retrieved from update_lookup_table[update_hash].
 
                     BTCR2Update update = update_lookup_table == null ? null : update_lookup_table.get(BytesArray.bytesArray(update_hash));
-                    if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in update_lookup_table: " + update);
+                    if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64Util.base64UrlWithoutPaddingEncodeToString(update_hash) + " in update_lookup_table: " + update);
 
                     // If the update is not in update_lookup_table, retrieve it from CAS.
 
@@ -437,9 +438,9 @@ public class Resolve {
                             updateCid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.sha2_256, update_hash);
                             byte[] updateBytes = Resolve.this.getIpfsConnection().getIpfs().cat(updateCid);
                             update = updateBytes == null ? null : BTCR2Update.fromJson(new InputStreamReader(new ByteArrayInputStream(updateBytes), StandardCharsets.UTF_8));
-                            if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " in CAS (IPFS) at " + updateCid + ": " + update);
+                            if (log.isDebugEnabled()) log.debug("Found update for update_hash " + Base64Util.base64UrlWithoutPaddingEncodeToString(update_hash) + " in CAS (IPFS) at " + updateCid + ": " + update);
                         } catch (Exception ex) {
-                            throw new ResolutionException("Cannot get update for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " from CAS (IPFS) at " + updateCid + ": " + ex.getMessage(), ex);
+                            throw new ResolutionException("Cannot get update for update_hash " + Base64Util.base64UrlWithoutPaddingEncodeToString(update_hash) + " from CAS (IPFS) at " + updateCid + ": " + ex.getMessage(), ex);
                         }
                     }
 
@@ -447,7 +448,7 @@ public class Resolve {
 
                     // Raise a MISSING_UPDATE_DATA error if the update is not available from either source.
 
-                    if (update == null) throw new ResolutionException("MISSING_UPDATE_DATA", "No update found for update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash) + " from either update_lookup_table or CAS (IPFS).");
+                    if (update == null) throw new ResolutionException("MISSING_UPDATE_DATA", "No update found for update_hash " + Base64Util.base64UrlWithoutPaddingEncodeToString(update_hash) + " from either update_lookup_table or CAS (IPFS).");
 
                     // result
 
@@ -509,6 +510,7 @@ public class Resolve {
                 // 4. Set update to the tuple’s BTCR2 Signed Update (data structure) and check update.targetVersionId.
 
                 BTCR2Update update = updateSupplierTuple.getValue().getValue().get();
+                if (update == null) continue;
                 current_document = checkUpdateTargetVersionId(current_document, update, identifier, current_version_id, update_hash_history);
 
                 Map.Entry<Block, Map.Entry<Tx, BTCR2Update>> updateTuple = Map.entry(beaconBlock, Map.entry(beaconTransaction, update));
@@ -580,7 +582,7 @@ public class Resolve {
             metadataUpdate.put("targetVersionId", x.getValue().getValue().getTargetVersionId());
             metadataUpdate.put("sourceHash", x.getValue().getValue().getSourceHash());
             metadataUpdate.put("targetHash", x.getValue().getValue().getTargetHash());
-            metadataUpdate.put("updateHash", Base64.getUrlEncoder().withoutPadding().encodeToString(JSONDocumentHashing.jsonDocumentHashing(x.getValue().getValue())));
+            metadataUpdate.put("updateHash", Base64Util.base64UrlWithoutPaddingEncodeToString(JSONDocumentHashing.jsonDocumentHashing(x.getValue().getValue())));
             return metadataUpdate;
         }).toList());
         if (! casAnnouncements.isEmpty()) didDocumentMetadata.put("casAnnouncements", casAnnouncements.entrySet().stream().collect(Collectors.toMap(
@@ -619,7 +621,7 @@ public class Resolve {
         // Look up map_update_hash in cas_lookup_table to retrieve a CAS Announcement (data structure)
 
         CASAnnouncement casAnnouncement = cas_lookup_table == null ? null : cas_lookup_table.get(BytesArray.bytesArray(map_update_hash));
-        if (log.isDebugEnabled()) log.debug("Found casAnnouncement for map_update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash) + " in cas_lookup_table: " + casAnnouncement);
+        if (log.isDebugEnabled()) log.debug("Found casAnnouncement for map_update_hash " + Base64Util.base64UrlWithoutPaddingEncodeToString(map_update_hash) + " in cas_lookup_table: " + casAnnouncement);
 
         Cid casAnnouncementCid = null;
         if (casAnnouncement == null && ipfsConnection != null) {
@@ -627,15 +629,15 @@ public class Resolve {
                 casAnnouncementCid = Cid.buildCidV1(Cid.Codec.Raw, Multihash.Type.sha2_256, map_update_hash);
                 byte[] casAnnouncementBytes = ipfsConnection.getIpfs().cat(casAnnouncementCid);
                 casAnnouncement = casAnnouncementBytes == null ? null : CASAnnouncement.fromJson(new InputStreamReader(new ByteArrayInputStream(casAnnouncementBytes), StandardCharsets.UTF_8));
-                if (log.isDebugEnabled()) log.debug("Found casAnnouncement for map_update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash) + " in CAS (IPFS) at " + casAnnouncementCid + ": " + casAnnouncement);
+                if (log.isDebugEnabled()) log.debug("Found casAnnouncement for map_update_hash " + Base64Util.base64UrlWithoutPaddingEncodeToString(map_update_hash) + " in CAS (IPFS) at " + casAnnouncementCid + ": " + casAnnouncement);
             } catch (Exception ex) {
-                throw new ResolutionException("Cannot get casAnnouncement for map_update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash) + " from CAS (IPFS) at " + casAnnouncementCid + ": " + ex.getMessage(), ex);
+                throw new ResolutionException("Cannot get casAnnouncement for map_update_hash " + Base64Util.base64UrlWithoutPaddingEncodeToString(map_update_hash) + " from CAS (IPFS) at " + casAnnouncementCid + ": " + ex.getMessage(), ex);
             }
         }
 
         if (casAnnouncementCid != null) casAnnouncementCidConsumer.accept(casAnnouncementCid);
 
-        if (casAnnouncement == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No CAS Announcement found for map_update_hash " + Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash));
+        if (casAnnouncement == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No CAS Announcement found for map_update_hash " + Base64Util.base64UrlWithoutPaddingEncodeToString(map_update_hash));
         casAnnouncementConsumer.accept(casAnnouncement);
 
         // and read update_hash from the announcement entry keyed by did.
@@ -644,8 +646,8 @@ public class Resolve {
 
         // done
 
-        byte[] update_hash = update_hash_string == null ? null : Base64.getUrlDecoder().decode(update_hash_string);
-        if (log.isDebugEnabled()) log.debug("For did {} and map_update_hash {} found update_hash: {}", did, Base64.getUrlEncoder().withoutPadding().encodeToString(map_update_hash), Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash));
+        byte[] update_hash = update_hash_string == null ? null : Base64Util.base64UrlDecode(update_hash_string);
+        if (log.isDebugEnabled()) log.debug("For did {} and map_update_hash {} found update_hash: {}", did, Base64Util.base64UrlWithoutPaddingEncodeToString(map_update_hash), Base64Util.base64UrlWithoutPaddingEncodeToString(update_hash));
         return update_hash;
     }
 
@@ -662,21 +664,21 @@ public class Resolve {
         // Look up smt_root in smt_lookup_table to retrieve an SMT Proof (data structure).
 
         SMTProof smtProof = smt_lookup_table == null ? null : smt_lookup_table.get(BytesArray.bytesArray(smt_root));
-        if (log.isDebugEnabled()) log.debug("Found smtProof for smt_root " + Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root) + " in smt_lookup_table: " + smtProof);
+        if (log.isDebugEnabled()) log.debug("Found smtProof for smt_root " + Base64Util.base64UrlWithoutPaddingEncodeToString(smt_root) + " in smt_lookup_table: " + smtProof);
 
-        if (smtProof == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No SMT Proof found for smt_root " + Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root));
+        if (smtProof == null) throw new ResolutionException(ResolutionException.ERROR_INVALID_DID_DOCUMENT, "No SMT Proof found for smt_root " + Base64Util.base64UrlWithoutPaddingEncodeToString(smt_root));
         smtProofConsumer.accept(smtProof);
 
         // Validate the proof with the SMT Proof Verification algorithm.
 
         boolean smtProofVerified = SMTProofVerification.smtProofVerification(did.getDidString(), smtProof, smt_root);
-        if (log.isDebugEnabled()) log.debug("Verified smtProof {}, {} --> {}", smtProof, Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root), smtProofVerified);
+        if (log.isDebugEnabled()) log.debug("Verified smtProof {}, {} --> {}", smtProof, Base64Util.base64UrlWithoutPaddingEncodeToString(smt_root), smtProofVerified);
         if (! smtProofVerified) throw new ResolutionException("INVALID_DID_UPDATE", "Cannot verify SMT Proof " + smtProof);
 
         // Use smt_proof.updateId as update_hash.
 
         byte[] update_hash = smtProof.getUpdateId();
-        if (log.isDebugEnabled()) log.debug("For smt_root {} found update_hash: {}", Base64.getUrlEncoder().withoutPadding().encodeToString(smt_root), Base64.getUrlEncoder().withoutPadding().encodeToString(update_hash));
+        if (log.isDebugEnabled()) log.debug("For smt_root {} found update_hash: {}", Base64Util.base64UrlWithoutPaddingEncodeToString(smt_root), Base64Util.base64UrlWithoutPaddingEncodeToString(update_hash));
         return update_hash;
     }
 
@@ -734,7 +736,7 @@ public class Resolve {
         // Raise a LATE_PUBLISHING error if the hashes differ.
 
         if (! BytesArray.bytesArray(unsignedUpdateHash).equals(update_hash_history.get(update.getTargetVersionId() - 2))) {
-            throw new ResolutionException("LATE_PUBLISHING", "unsigned_update hash (" + Hex.encodeHexString(unsignedUpdateHash) + ") differs from update_hash_history[" + (update.getTargetVersionId()-2) + "] (" + Hex.encodeHexString(update_hash_history.get(update.getTargetVersionId() - 2).bytes()) + ")");
+            throw new ResolutionException("LATE_PUBLISHING", "unsigned_update hash (" + Hex.encodeHexString(unsignedUpdateHash) + ") differs from update_hash_history[" + (update.getTargetVersionId()-2) + "] (" + Hex.encodeHexString(update_hash_history.get(update.getTargetVersionId()-2).bytes()) + ")");
         }
     }
 
@@ -751,9 +753,9 @@ public class Resolve {
         // Raise an INVALID_DID_UPDATE error if the result does not match the decoded update.sourceHash.
 
         try {
-            byte[] decodedSourceHash = Base64.getUrlDecoder().decode(update.getSourceHash());
+            byte[] decodedSourceHash = Base64Util.base64UrlDecode(update.getSourceHash());
             if (! Arrays.equals(currentDocumentHash, decodedSourceHash)) {
-                throw new ResolutionException("INVALID_DID_UPDATE", "current_document hash (" + Base64.getUrlEncoder().withoutPadding().encodeToString(currentDocumentHash) + ") differs from decoded update.sourceHash (" + Base64.getUrlEncoder().withoutPadding().encodeToString(decodedSourceHash) + " decoded from " + update.getSourceHash() + ")");
+                throw new ResolutionException("INVALID_DID_UPDATE", "current_document hash (" + Base64Util.base64UrlWithoutPaddingEncodeToString(currentDocumentHash) + ") differs from decoded update.sourceHash (" + Base64Util.base64UrlWithoutPaddingEncodeToString(decodedSourceHash) + " decoded from " + update.getSourceHash() + ")");
             }
         } catch (IllegalArgumentException ex) {
             throw new ResolutionException("INVALID_DID_UPDATE", "Cannot decode update.sourceHash " + update.getSourceHash() + ": " + ex.getMessage(), ex);
@@ -787,9 +789,9 @@ public class Resolve {
         // Raise an INVALID_DID_UPDATE error if the result does not match the decoded update.targetHash.
 
         try {
-            byte[] decodedTargetHash = Base64.getUrlDecoder().decode(update.getTargetHash());
+            byte[] decodedTargetHash = Base64Util.base64UrlDecode(update.getTargetHash());
             if (! Arrays.equals(currentDocumentHash, decodedTargetHash)) {
-                throw new ResolutionException("INVALID_DID_UPDATE", "current_document hash (" + Base64.getUrlEncoder().withoutPadding().encodeToString(currentDocumentHash) + ") differs from decoded update.targetHash (" + Base64.getUrlEncoder().withoutPadding().encodeToString(decodedTargetHash) + " decoded from " + update.getTargetHash() + ")");
+                throw new ResolutionException("INVALID_DID_UPDATE", "current_document hash (" + Base64Util.base64UrlWithoutPaddingEncodeToString(currentDocumentHash) + ") differs from decoded update.targetHash (" + Base64Util.base64UrlWithoutPaddingEncodeToString(decodedTargetHash) + " decoded from " + update.getTargetHash() + ")");
             }
         } catch (IllegalArgumentException ex) {
             throw new ResolutionException("INVALID_DID_UPDATE", "Cannot decode update.targetHash " + update.getTargetHash() + ": " + ex.getMessage(), ex);
@@ -873,7 +875,7 @@ public class Resolve {
      * Helper methods
      */
 
-    public static final byte[] MULTICODEC_SECP256K1_PUB = new byte[] { (byte)0xe7, (byte)0x01 };    //  0xe7
+    private static final byte[] MULTICODEC_SECP256K1_PUB = new byte[] { (byte)0xe7, (byte)0x01 };    //  0xe7
 
     private static String publicKeyMultikey(byte[] publicKeyBytes) {
         byte[] multicodec = new byte[MULTICODEC_SECP256K1_PUB.length + publicKeyBytes.length];
