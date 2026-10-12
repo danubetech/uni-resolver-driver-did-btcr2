@@ -177,7 +177,7 @@ public class Resolve {
         // and build a map from hash to announcement (cas_lookup_table).
 
         List<CASAnnouncement> sidecarCasAnnouncements = sidecar == null ? null : sidecar.getCasUpdates();
-        Map<BytesArray, CASAnnouncement> cas_lookup_table = sidecarCasAnnouncements == null ? null : sidecarCasAnnouncements.stream().collect(Collectors.toMap(casAnnouncement -> BytesArray.bytesArray(JSONDocumentHashing.jsonDocumentHashing(casAnnouncement)), casAnnouncement -> casAnnouncement));
+        Map<BytesArray, CASAnnouncement> cas_lookup_table = sidecarCasAnnouncements == null ? null : sidecarCasAnnouncements.stream().distinct().collect(Collectors.toMap(casAnnouncement -> BytesArray.bytesArray(JSONDocumentHashing.jsonDocumentHashing(casAnnouncement)), casAnnouncement -> casAnnouncement));
 
         // Build a map from sidecar.smtProofs keyed by proof id (smt_lookup_table).
 
