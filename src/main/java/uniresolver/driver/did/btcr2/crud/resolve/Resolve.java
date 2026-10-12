@@ -477,6 +477,9 @@ public class Resolve {
             // 1. Sort updates by BTCR2 Signed Update (data structure) targetVersionId (ascending)
             // with the tuple’s block height as a tiebreaker.
 
+            updateSuppliers.sort(Comparator
+                    .comparingInt(a -> a.getKey().blockHeight()));
+
             /*updates.sort(Comparator
                     .comparingInt((Map.Entry<Block, Map.Entry<Tx, Supplier<BTCR2Update>>> a) -> a.getValue().getValue().getTargetVersionId())
                     .thenComparingInt(a -> a.getKey().blockHeight()));*/
