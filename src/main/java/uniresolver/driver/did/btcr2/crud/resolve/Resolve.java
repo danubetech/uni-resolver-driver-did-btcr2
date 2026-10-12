@@ -182,7 +182,7 @@ public class Resolve {
         // Build a map from sidecar.smtProofs keyed by proof id (smt_lookup_table).
 
         List<SMTProof> sidecarSmtProofs = sidecar == null ? null : sidecar.getSmtProofs();
-        Map<BytesArray, SMTProof> smt_lookup_table = sidecarSmtProofs == null ? null : sidecarSmtProofs.stream().collect(Collectors.toMap(smtProof -> BytesArray.bytesArray(smtProof.getId()), smtProof -> smtProof));
+        Map<BytesArray, SMTProof> smt_lookup_table = sidecarSmtProofs == null ? null : sidecarSmtProofs.stream().distinct().collect(Collectors.toMap(smtProof -> BytesArray.bytesArray(smtProof.getId()), smtProof -> smtProof));
 
         // If genesis_bytes is a SHA-256 hash, hash sidecar.genesisDocument with the JSON Document Hashing algorithm.
         // Raise an INVALID_DID error if the computed hash does not match genesis_bytes.
