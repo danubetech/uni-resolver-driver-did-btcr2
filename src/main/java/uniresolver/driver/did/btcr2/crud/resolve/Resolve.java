@@ -299,6 +299,7 @@ public class Resolve {
 
         Map<Block, Map<Tx, Cid>> updateCids = new LinkedHashMap<>();
         Map<Block, Map<Tx, Cid>> casAnnouncementCids = new LinkedHashMap<>();
+        Map<String, Map<BytesArray, byte[]>> beaconSignalBytesUpdateHashes = new LinkedHashMap<>();
 
         process: do {
 
@@ -349,10 +350,11 @@ public class Resolve {
 
             // then use those Beacon Addresses to find Bitcoin transactions whose last output script contains Signal Bytes.
 
-            List<Tx> beaconsTransactions = new LinkedList<>();
-            HashMap<Tx, Block> beaconsBlocks = new HashMap<>();
-            Map<Tx, String> beaconsServiceTypes = new HashMap<>();
-            Map<Tx, byte[]> beaconsSignalBytes = new HashMap<>();
+            List<Tx> beaconTransactions = new LinkedList<>();
+            HashMap<Tx, Block> beaconTransactionsBlocks = new HashMap<>();
+            Map<Tx, String> beaconTransactionsServiceTypes = new HashMap<>();
+            Map<Tx, byte[]> beaconTransactionsSignalBytes = new HashMap<>();
+            Map<Tx, String> beaconTransactionsBeaconAddresses = new HashMap<>();
 
             for (Map.Entry<String, String> beaconAddressEntry : beaconsAddresses.entrySet()) {
                 String beaconAddress = beaconAddressEntry.getKey();
@@ -381,24 +383,26 @@ public class Resolve {
                         continue;
                     }
                     if (log.isDebugEnabled()) log.debug("Transaction {} has block {} and service type {} and signal bytes {}. Adding.", beaconTransaction, beaconBlock, beaconServiceType, Base64Util.base64UrlWithoutPaddingEncodeToString(beaconSignalBytes));
-                    beaconsTransactions.add(beaconTransaction);
-                    beaconsBlocks.put(beaconTransaction, beaconBlock);
-                    beaconsServiceTypes.put(beaconTransaction, beaconServiceType);
-                    beaconsSignalBytes.put(beaconTransaction, beaconSignalBytes);
+                    beaconTransactions.add(beaconTransaction);
+                    beaconTransactionsBlocks.put(beaconTransaction, beaconBlock);
+                    beaconTransactionsServiceTypes.put(beaconTransaction, beaconServiceType);
+                    beaconTransactionsSignalBytes.put(beaconTransaction, beaconSignalBytes);
+                    beaconTransactionsBeaconAddresses.put(beaconTransaction, beaconAddress);
                 }
             }
 
-            Collections.reverse(beaconsTransactions);
+            Collections.reverse(beaconTransactions);
 
             // For each transaction found:
 
-            for (Tx beaconTransaction : beaconsTransactions) {
+            for (Tx beaconTransaction : beaconTransactions) {
 
-                Block beaconBlock = beaconsBlocks.get(beaconTransaction);
-                String beaconServiceType = beaconsServiceTypes.get(beaconTransaction);
-                byte[] beaconSignalBytes = beaconsSignalBytes.get(beaconTransaction);
+                Block beaconBlock = beaconTransactionsBlocks.get(beaconTransaction);
+                String beaconServiceType = beaconTransactionsServiceTypes.get(beaconTransaction);
+                byte[] beaconSignalBytes = beaconTransactionsSignalBytes.get(beaconTransaction);
+                String beaconAddress = beaconTransactionsBeaconAddresses.get(beaconTransaction);
 
-                if (log.isDebugEnabled()) log.debug("Processing beacon transaction {} on block {} with beacon service type {} and signal bytes {}", beaconTransaction.txId(), beaconBlock.blockHash(), beaconServiceType, Base64Util.base64UrlWithoutPaddingEncodeToString(beaconSignalBytes));
+                if (log.isDebugEnabled()) log.debug("Processing beacon transaction {} on block {} with beacon service type {} and signal bytes {} and beacon address {}", beaconTransaction.txId(), beaconBlock.blockHash(), beaconServiceType, Base64Util.base64UrlWithoutPaddingEncodeToString(beaconSignalBytes), beaconAddress);
 
                 BTCR2UpdateSupplier btcr2UpdateSupplier = () -> {
 
@@ -423,6 +427,9 @@ public class Resolve {
                         if (log.isInfoEnabled()) log.info("Transaction {} with service type {} has no update_hash. Skipping.", beaconTransaction, beaconServiceType);
                         return null;
                     }
+
+                    Map<BytesArray, byte[]> signalBytesUpdateHashes = beaconSignalBytesUpdateHashes.computeIfAbsent(beaconAddress, x -> new LinkedHashMap<>());
+                    signalBytesUpdateHashes.put(BytesArray.bytesArray(beaconSignalBytes), update_hash);
 
                     // Build a tuple with: The transaction’s block metadata (height, time, and confirmations).
                     // The BTCR2 Signed Update (data structure) retrieved from update_lookup_table[update_hash].
@@ -576,6 +583,12 @@ public class Resolve {
         metadataIdentifierComponents.put("network", identifierComponents.network().toString());
         metadataIdentifierComponents.put("genesisBytes", Hex.encodeHexString(identifierComponents.genesisBytes()));
         metadataIdentifierComponents.put("genesisBytesTypes", identifierComponents.genesisBytesType());
+        didDocumentMetadata.put("beaconSignals", beaconSignalBytesUpdateHashes.entrySet().stream().collect(Collectors.toMap(
+                Map.Entry::getKey, x -> x.getValue().entrySet().stream().collect(Collectors.toMap(
+                        y -> Base64Util.base64UrlWithoutPaddingEncodeToString(y.getKey().bytes()),
+                        y -> Base64Util.base64UrlWithoutPaddingEncodeToString(y.getValue()))
+                )
+        )));
         didDocumentMetadata.put("updates", updates.stream().map(x -> {
             Map<String, Object> metadataUpdate = new LinkedHashMap<>();
             metadataUpdate.put("blockHeight", x.getKey().blockHeight());
