@@ -423,13 +423,13 @@ public class Resolve {
                             processSMTBeacon(Resolve.this.getIpfsConnection(), beaconSignalBytes, identifier, smt_lookup_table, smtProof -> smtProofs.computeIfAbsent(beaconBlock, x -> new LinkedHashMap<>()).put(beaconTransaction, smtProof));
                     };
 
+                    Map<BytesArray, byte[]> signalBytesUpdateHashes = beaconSignalBytesUpdateHashes.computeIfAbsent(beaconAddress, x -> new LinkedHashMap<>());
+                    signalBytesUpdateHashes.put(BytesArray.bytesArray(beaconSignalBytes), update_hash);
+
                     if (update_hash == null) {
                         if (log.isInfoEnabled()) log.info("Transaction {} with service type {} has no update_hash. Skipping.", beaconTransaction, beaconServiceType);
                         return null;
                     }
-
-                    Map<BytesArray, byte[]> signalBytesUpdateHashes = beaconSignalBytesUpdateHashes.computeIfAbsent(beaconAddress, x -> new LinkedHashMap<>());
-                    signalBytesUpdateHashes.put(BytesArray.bytesArray(beaconSignalBytes), update_hash);
 
                     // Build a tuple with: The transaction’s block metadata (height, time, and confirmations).
                     // The BTCR2 Signed Update (data structure) retrieved from update_lookup_table[update_hash].
@@ -584,9 +584,11 @@ public class Resolve {
         metadataIdentifierComponents.put("genesisBytes", Hex.encodeHexString(identifierComponents.genesisBytes()));
         metadataIdentifierComponents.put("genesisBytesTypes", identifierComponents.genesisBytesType());
         didDocumentMetadata.put("beaconSignals", beaconSignalBytesUpdateHashes.entrySet().stream().collect(Collectors.toMap(
-                Map.Entry::getKey, x -> x.getValue().entrySet().stream().collect(Collectors.toMap(
-                        y -> Base64Util.base64UrlWithoutPaddingEncodeToString(y.getKey().bytes()),
-                        y -> Base64Util.base64UrlWithoutPaddingEncodeToString(y.getValue()))
+                Map.Entry::getKey, x -> x.getValue().entrySet().stream().collect(HashMap::new,
+                        (m, y) -> m.put(
+                                Base64Util.base64UrlWithoutPaddingEncodeToString(y.getKey().bytes()),
+                                Base64Util.base64UrlWithoutPaddingEncodeToString(y.getValue())),
+                        HashMap::putAll
                 )
         )));
         didDocumentMetadata.put("updates", updates.stream().map(x -> {
